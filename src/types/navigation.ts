@@ -1,5 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
+import type { Permission } from "@/lib/permissions";
+
 export type MobileSlot = "home" | "cars" | "leads";
 
 export type NavItem = {
@@ -7,6 +9,7 @@ export type NavItem = {
   labelKey: string;
   icon: LucideIcon;
   mobile?: MobileSlot;
+  permission?: Permission;
 };
 
 export type NavGroup = {

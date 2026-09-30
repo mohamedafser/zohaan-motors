@@ -104,16 +104,36 @@
       "waiting": "Open the reset link from your email to continue.",
       "continue": "Continue to sign in"
     },
-    "mfa": {
-      "title": "Authenticator",
-      "description": "Enter the 6-digit code from your authenticator app.",
-      "code": "Authentication code",
-      "submit": "Verify",
-      "enrollTitle": "Set up an authenticator",
-      "enrollDescription": "Scan the code with an authenticator app, then enter the first code to finish.",
-      "enrollAction": "Generate setup code",
-      "secret": "Manual setup key",
-      "confirm": "Confirm setup"
+    "invite": {
+      "title": "Accept invitation",
+      "description": "Choose a password for your Zohaan Motors account.",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "submit": "Activate account",
+      "waiting": "Open the invitation link from your email to continue."
+    },
+    "unauthorized": {
+      "title": "You don't have permission",
+      "description": "You are signed in, but this page is not available for your role.",
+      "back": "Back to dashboard"
+    },
+    "bootstrap": {
+      "title": "Bootstrap Super Admin",
+      "description": "One-time setup. Requires the server bootstrap secret. Disabled after the first Super Admin exists.",
+      "secret": "Bootstrap secret",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "submit": "Create Super Admin",
+      "disabled": "Bootstrap is not enabled on this server.",
+      "invalidSecret": "Bootstrap secret is incorrect.",
+      "missingServiceRole": "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
+      "alreadyExists": "A Super Admin already exists. Bootstrap is locked.",
+      "userExists": "That email is already registered.",
+      "schemaMissing": "Database roles are missing. Apply migrations, then try again.",
+      "generic": "Could not create the Super Admin. Check migrations and try again."
     },
     "errors": {
       "invalidCredentials": "Email or password is incorrect.",
@@ -122,7 +142,10 @@
       "weakPassword": "Choose a stronger password.",
       "notConfigured": "Supabase is not configured yet. Add the project URL and anon key.",
       "generic": "Something went wrong. Try again.",
-      "session": "The reset session expired. Request a new link."
+      "session": "The reset session expired. Request a new link.",
+      "accountSuspended": "This account is suspended. Contact an administrator.",
+      "accountDisabled": "This account is disabled. Contact an administrator.",
+      "unauthorized": "You do not have permission to perform this action."
     }
   },
   "validation": {
@@ -361,8 +384,8 @@
     "language": "Language",
     "languageHint": "English is left to right. Arabic switches the workspace to right to left.",
     "security": "Security",
-    "securityHint": "Add an authenticator app for a second sign-in step.",
-    "mfa": "Authenticator setup",
+    "securityHint": "Passwords are managed through your invitation and reset links.",
+    "passwordHint": "Use Forgot password on the sign-in screen if you need to change your password.",
     "preferences": "Dealership preferences",
     "preferencesHint": "Branch, currency display, and document defaults will live here later. Currency is AED and the timezone is Asia/Dubai."
   },

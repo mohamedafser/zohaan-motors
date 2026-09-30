@@ -49,12 +49,19 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 
-export const mfaCodeSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, { error: validationMessages.number }),
-});
+export const bootstrapAdminSchema = z
+  .object({
+    secret: z.string().min(1, { error: validationMessages.required }),
+    firstName: z.string().trim().min(1, { error: validationMessages.required }),
+    lastName: z.string().trim().min(1, { error: validationMessages.required }),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, { error: validationMessages.required }),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    error: validationMessages.passwordMatch,
+    path: ["confirmPassword"],
+  });
 
 export const uaePhoneSchema = z
   .string()
@@ -88,7 +95,7 @@ export const vinSchema = z
 export type LoginValues = z.infer<typeof loginSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
-export type MfaCodeValues = z.infer<typeof mfaCodeSchema>;
+export type BootstrapAdminValues = z.infer<typeof bootstrapAdminSchema>;
 
 export function firstFieldErrors(error: z.ZodError) {
   const fieldErrors: Record<string, string> = {};

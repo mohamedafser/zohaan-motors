@@ -1,0 +1,366 @@
+import { headers } from "next/headers";
+
+import { authErrorKeys, mapAuthError } from "@/lib/auth/errors";
+import {
+  createServiceRoleClient,
+  getBootstrapSecret,
+  hasServiceRoleKey,
+  isBootstrapEnabled,
+  secretsMatch,
+} from "@/lib/supabase/admin";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
+import {
+  authErrorState,
+  authFieldErrorState,
+  authSuccessState,
+  type AuthActionState,
+} from "@/types/auth";
+import {
+  firstFieldErrors,
+  bootstrapAdminSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+  type BootstrapAdminValues,
+  type ForgotPasswordValues,
+  type LoginValues,
+  type ResetPasswordValues,
+} from "@/lib/validation";
+
+async function siteOrigin() {
+  const headerStore = await headers();
+  const origin = headerStore.get("origin");
+  if (origin) return origin;
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
+}
+
+type ProfileStatusRow = {
+  status: "active" | "invited" | "suspended" | "disabled";
+  deleted_at: string | null;
+};
+
+async function loadProfileStatus(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<ProfileStatusRow | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("status, deleted_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as ProfileStatusRow;
+}
+
+async function rejectInactiveSession(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<AuthActionState | null> {
+  const profile = await loadProfileStatus(supabase, userId);
+
+  if (!profile || profile.deleted_at) {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.invalidCredentials);
+  }
+
+  if (profile.status === "suspended") {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.accountSuspended);
+  }
+
+  if (profile.status === "disabled") {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.accountDisabled);
+  }
+
+  return null;
+}
+
+export async function signIn(input: LoginValues): Promise<AuthActionState> {
+  const parsed = loginSchema.safeParse(input);
+  if (!parsed.success) {
+    return authFieldErrorState(firstFieldErrors(parsed.error));
+  }
+  if (!isSupabaseConfigured()) {
+    return authErrorState(authErrorKeys.notConfigured);
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+
+  if (error) return authErrorState(mapAuthError(error));
+
+  const userId = data.user?.id;
+  if (!userId) {
+    return authErrorState(authErrorKeys.generic);
+  }
+
+  const blocked = await rejectInactiveSession(supabase, userId);
+  if (blocked) return blocked;
+
+  const profile = await loadProfileStatus(supabase, userId);
+  if (profile?.status === "invited") {
+    await supabase.rpc("activate_invited_profile");
+  }
+
+  return authSuccessState("/dashboard");
+}
+
+export async function signOutSession(): Promise<AuthActionState> {
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  }
+  return authSuccessState("/login");
+}
+
+export async function requestPasswordReset(
+  input: ForgotPasswordValues,
+): Promise<AuthActionState> {
+  const parsed = forgotPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return authFieldErrorState(firstFieldErrors(parsed.error));
+  }
+  if (!isSupabaseConfigured()) {
+    return authErrorState(authErrorKeys.notConfigured);
+  }
+
+  const supabase = await createClient();
+  const origin = await siteOrigin();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${origin}/reset-password`,
+  });
+
+  if (
+    error &&
+    (error.code === "over_request_rate_limit" || error.message.toLowerCase().includes("rate"))
+  ) {
+    return authErrorState(authErrorKeys.rateLimit);
+  }
+
+  return authSuccessState();
+}
+
+export async function updatePassword(input: ResetPasswordValues): Promise<AuthActionState> {
+  const parsed = resetPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return authFieldErrorState(firstFieldErrors(parsed.error));
+  }
+  if (!isSupabaseConfigured()) {
+    return authErrorState(authErrorKeys.notConfigured);
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) {
+    return authErrorState(authErrorKeys.session);
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return authErrorState(mapAuthError(error));
+
+  return authSuccessState();
+}
+
+export async function acceptInvitation(input: ResetPasswordValues): Promise<AuthActionState> {
+  const parsed = resetPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return authFieldErrorState(firstFieldErrors(parsed.error));
+  }
+  if (!isSupabaseConfigured()) {
+    return authErrorState(authErrorKeys.notConfigured);
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+  if (!userId) {
+    return authErrorState(authErrorKeys.session);
+  }
+
+  const profile = await loadProfileStatus(supabase, userId);
+  if (!profile || profile.deleted_at) {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.generic);
+  }
+  if (profile.status === "suspended") {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.accountSuspended);
+  }
+  if (profile.status === "disabled") {
+    await supabase.auth.signOut();
+    return authErrorState(authErrorKeys.accountDisabled);
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return authErrorState(mapAuthError(error));
+
+  if (profile.status === "invited") {
+    const { error: activateError } = await supabase.rpc("activate_invited_profile");
+    if (activateError) {
+      return authErrorState(authErrorKeys.generic);
+    }
+  }
+
+  return authSuccessState("/dashboard");
+}
+
+export async function bootstrapAdmin(input: BootstrapAdminValues): Promise<AuthActionState> {
+  if (!isBootstrapEnabled()) {
+    return authErrorState("auth.bootstrap.disabled");
+  }
+
+  if (!isSupabaseConfigured()) {
+    return authErrorState("auth.errors.notConfigured");
+  }
+
+  if (!hasServiceRoleKey()) {
+    return authErrorState("auth.bootstrap.missingServiceRole");
+  }
+
+  const parsed = bootstrapAdminSchema.safeParse(input);
+  if (!parsed.success) {
+    return authFieldErrorState(firstFieldErrors(parsed.error));
+  }
+
+  const expected = getBootstrapSecret();
+  if (!secretsMatch(parsed.data.secret, expected)) {
+    return authErrorState("auth.bootstrap.invalidSecret");
+  }
+
+  let admin;
+  try {
+    admin = createServiceRoleClient();
+  } catch {
+    return authErrorState("auth.bootstrap.missingServiceRole");
+  }
+
+  // Seed may not have been applied yet — ensure the Super Admin role exists.
+  const { error: roleUpsertError } = await admin.from("roles").upsert(
+    {
+      key: "super_admin",
+      name: "Super Admin",
+      description: "Full platform access",
+      is_system: true,
+    },
+    { onConflict: "key" },
+  );
+
+  if (roleUpsertError) {
+    return authErrorState(
+      "auth.bootstrap.schemaMissing",
+      {},
+      roleUpsertError.message,
+    );
+  }
+
+  const { data: superAdminRole, error: roleLookupError } = await admin
+    .from("roles")
+    .select("id")
+    .eq("key", "super_admin")
+    .maybeSingle();
+
+  if (roleLookupError || !superAdminRole?.id) {
+    return authErrorState(
+      "auth.bootstrap.schemaMissing",
+      {},
+      roleLookupError?.message ?? "super_admin role not found after upsert",
+    );
+  }
+
+  const roleId = superAdminRole.id as string;
+
+  const { count, error: countError } = await admin
+    .from("user_roles")
+    .select("id", { count: "exact", head: true })
+    .eq("role_id", roleId);
+
+  if (countError) {
+    return authErrorState("auth.bootstrap.generic", {}, countError.message);
+  }
+
+  if ((count ?? 0) > 0) {
+    return authErrorState("auth.bootstrap.alreadyExists");
+  }
+
+  // Optional demo branch for profile.branch_id (ignore failures).
+  await admin.from("branches").upsert(
+    {
+      name: "Zohaan Motors Dubai",
+      code: "DXB-01",
+      emirate: "dubai",
+      address_line_1: "Showroom Road",
+      city: "Dubai",
+      is_active: true,
+    },
+    { onConflict: "code", ignoreDuplicates: true },
+  );
+
+  const { data: branch } = await admin
+    .from("branches")
+    .select("id")
+    .eq("code", "DXB-01")
+    .maybeSingle();
+
+  const fullName = `${parsed.data.firstName} ${parsed.data.lastName}`.trim();
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    email_confirm: true,
+    user_metadata: {
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
+      full_name: fullName,
+    },
+  });
+
+  if (createError || !created.user) {
+    const message = (createError?.message ?? "").toLowerCase();
+    if (message.includes("already") || message.includes("registered")) {
+      return authErrorState("auth.bootstrap.userExists", {}, createError?.message ?? null);
+    }
+    return authErrorState(
+      "auth.bootstrap.generic",
+      {},
+      createError?.message ?? "User creation failed",
+    );
+  }
+
+  const userId = created.user.id;
+
+  // Trigger may create the profile; upsert so bootstrap works either way.
+  const { error: profileError } = await admin.from("profiles").upsert(
+    {
+      id: userId,
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
+      display_name: fullName,
+      status: "active",
+      branch_id: typeof branch?.id === "string" ? branch.id : null,
+      employee_code: "SA-001",
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileError) {
+    return authErrorState("auth.bootstrap.generic", {}, profileError.message);
+  }
+
+  const { error: roleError } = await admin.from("user_roles").insert({
+    user_id: userId,
+    role_id: roleId,
+    branch_id: null,
+    assigned_by: userId,
+  });
+
+  if (roleError) {
+    return authErrorState("auth.bootstrap.generic", {}, roleError.message);
+  }
+
+  return authSuccessState("/login");
+}

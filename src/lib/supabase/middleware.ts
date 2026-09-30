@@ -2,8 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { isProtectedPath } from "@/config/routes";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { getSupabaseAnonKey, isSupabaseConfigured } from "@/lib/supabase/env";
 import type { AuthUser } from "@/types/auth";
+import type { Database } from "@/types/database";
 
 function redirectTo(request: NextRequest, from: NextResponse, pathname: string) {
   const url = request.nextUrl.clone();
@@ -21,15 +22,15 @@ function gate(request: NextRequest, response: NextResponse, user: AuthUser | nul
 
   const { pathname } = request.nextUrl;
 
-  const signedOutFromApp = !user && (isProtectedPath(pathname) || pathname === "/mfa");
-  const signedInOnEntry =
-    user && (pathname === "/" || pathname === "/login" || pathname === "/forgot-password");
-
-  if (signedOutFromApp || (!user && pathname === "/")) {
+  if (!user && (isProtectedPath(pathname) || pathname === "/")) {
     return redirectTo(request, response, "/login");
   }
 
-  if (signedInOnEntry) {
+  // Recovery / invite sessions must keep these routes reachable while signed in.
+  if (
+    user &&
+    (pathname === "/" || pathname === "/login" || pathname === "/forgot-password")
+  ) {
     return redirectTo(request, response, "/dashboard");
   }
 
@@ -42,10 +43,10 @@ export async function updateSession(request: NextRequest, response: NextResponse
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = getSupabaseAnonKey();
   if (!url || !key) return gate(request, response, null);
 
-  const supabase = createServerClient(url, key, {
+  const supabase = createServerClient<Database>(url, key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -64,7 +65,10 @@ export async function updateSession(request: NextRequest, response: NextResponse
   try {
     const { data } = await supabase.auth.getClaims();
     const user = data?.claims
-      ? { id: data.claims.sub, email: data.claims.email ?? null }
+      ? {
+          id: data.claims.sub,
+          email: typeof data.claims.email === "string" ? data.claims.email : null,
+        }
       : null;
     return gate(request, response, user);
   } catch {

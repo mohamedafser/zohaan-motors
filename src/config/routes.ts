@@ -18,9 +18,15 @@ export const protectedPrefixes = [
   "/audit-logs",
   "/notifications",
   "/settings",
+  "/unauthorized",
 ] as const;
 
-const publicAuthPaths = new Set(["/login", "/forgot-password", "/reset-password"]);
+const publicAuthPaths = new Set([
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/accept-invitation",
+]);
 
 export function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(
@@ -54,25 +60,35 @@ export const breadcrumbLabels: Record<string, string> = {
   notifications: "nav.notifications",
   settings: "nav.settings",
   new: "common.new",
-  mfa: "auth.mfa.title",
   login: "auth.login.title",
+  unauthorized: "auth.unauthorized.title",
 };
 
 export const searchGroups = [
-  { id: "vehicles", labelKey: "search.groups.vehicles", href: "/inventory" },
-  { id: "customers", labelKey: "search.groups.customers", href: "/customers" },
-  { id: "leads", labelKey: "search.groups.leads", href: "/leads" },
-  { id: "reservations", labelKey: "search.groups.reservations", href: "/reservations" },
-  { id: "sales", labelKey: "search.groups.sales", href: "/sales" },
-  { id: "payments", labelKey: "search.groups.payments", href: "/payments" },
-  { id: "documents", labelKey: "search.groups.documents", href: "/documents" },
+  { id: "vehicles", labelKey: "search.groups.vehicles", href: "/inventory", permission: "vehicle.view" },
+  { id: "customers", labelKey: "search.groups.customers", href: "/customers", permission: "customer.view" },
+  { id: "leads", labelKey: "search.groups.leads", href: "/leads", permission: "lead.view" },
+  {
+    id: "reservations",
+    labelKey: "search.groups.reservations",
+    href: "/reservations",
+    permission: "reservation.view",
+  },
+  { id: "sales", labelKey: "search.groups.sales", href: "/sales", permission: "sale.view" },
+  { id: "payments", labelKey: "search.groups.payments", href: "/payments", permission: "payment.view" },
+  {
+    id: "documents",
+    labelKey: "search.groups.documents",
+    href: "/documents",
+    permission: "document.view",
+  },
 ] as const;
 
 export const quickActions = [
-  { href: "/inventory/new", labelKey: "quick.vehicle" },
-  { href: "/acquisitions/new", labelKey: "quick.acquisition" },
-  { href: "/inspections/new", labelKey: "quick.inspection" },
-  { href: "/customers/new", labelKey: "quick.customer" },
-  { href: "/reservations/new", labelKey: "quick.reservation" },
-  { href: "/sales/new", labelKey: "quick.sale" },
+  { href: "/inventory/new", labelKey: "quick.vehicle", permission: "vehicle.create" },
+  { href: "/acquisitions/new", labelKey: "quick.acquisition", permission: "acquisition.create" },
+  { href: "/inspections/new", labelKey: "quick.inspection", permission: "inspection.create" },
+  { href: "/customers/new", labelKey: "quick.customer", permission: "customer.create" },
+  { href: "/reservations/new", labelKey: "quick.reservation", permission: "reservation.create" },
+  { href: "/sales/new", labelKey: "quick.sale", permission: "sale.create" },
 ] as const;

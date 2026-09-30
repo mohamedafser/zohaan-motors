@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 
@@ -11,30 +11,34 @@ import { LoadingButton } from "@/components/shared/loading-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { loginAction } from "@/lib/auth/actions";
+import { useAuthSubmit } from "@/hooks/use-auth-submit";
 import { Link } from "@/lib/i18n/navigation";
 import { loginSchema, type LoginValues } from "@/lib/validation";
-import { initialAuthState } from "@/types/auth";
 
 export function LoginForm() {
   const t = useTranslations();
   const translate = useTranslatedMessage();
   const [showPassword, setShowPassword] = useState(false);
-  const [state, submit, pending] = useActionState(loginAction, initialAuthState);
+  const { state, pending, submit } = useAuthSubmit("/api/auth/login");
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
   useEffect(() => {
-    if (!state.fieldErrors) return;
     for (const [key, message] of Object.entries(state.fieldErrors)) {
       form.setError(key as keyof LoginValues, { message });
     }
   }, [state, form]);
 
   return (
-    <form className="grid gap-4" onSubmit={form.handleSubmit((values) => submit(values))} noValidate>
+    <form
+      className="grid gap-4"
+      onSubmit={form.handleSubmit((values) => {
+        void submit(values);
+      })}
+      noValidate
+    >
       {state.formError ? (
         <Alert variant="destructive">
           <AlertDescription>{translate(state.formError)}</AlertDescription>

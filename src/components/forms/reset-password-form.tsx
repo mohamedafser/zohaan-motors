@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 
@@ -9,11 +9,10 @@ import { FormField, useTranslatedMessage } from "@/components/forms/form-field";
 import { LoadingButton } from "@/components/shared/loading-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { signOut, resetAction } from "@/lib/auth/actions";
+import { signOutClient, useAuthSubmit } from "@/hooks/use-auth-submit";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/lib/validation";
-import { initialAuthState } from "@/types/auth";
 
 export function ResetPasswordForm() {
   const t = useTranslations();
@@ -21,7 +20,7 @@ export function ResetPasswordForm() {
   const configured = isSupabaseConfigured();
   const [ready, setReady] = useState(false);
   const [checked, setChecked] = useState(!configured);
-  const [state, submit, pending] = useActionState(resetAction, initialAuthState);
+  const { state, pending, submit } = useAuthSubmit("/api/auth/reset-password");
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: "", confirmPassword: "" },
@@ -44,7 +43,6 @@ export function ResetPasswordForm() {
   }, [configured]);
 
   useEffect(() => {
-    if (!state.fieldErrors) return;
     for (const [key, message] of Object.entries(state.fieldErrors)) {
       form.setError(key as keyof ResetPasswordValues, { message });
     }
@@ -68,7 +66,7 @@ export function ResetPasswordForm() {
         <Alert>
           <AlertDescription>{t("auth.reset.success")}</AlertDescription>
         </Alert>
-        <LoadingButton type="button" className="h-11" onClick={() => signOut()}>
+        <LoadingButton type="button" className="h-11" onClick={() => void signOutClient()}>
           {t("auth.reset.continue")}
         </LoadingButton>
       </div>
@@ -84,7 +82,13 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form className="grid gap-4" onSubmit={form.handleSubmit((values) => submit(values))} noValidate>
+    <form
+      className="grid gap-4"
+      onSubmit={form.handleSubmit((values) => {
+        void submit(values);
+      })}
+      noValidate
+    >
       {state.formError ? (
         <Alert variant="destructive">
           <AlertDescription>{translate(state.formError)}</AlertDescription>
@@ -100,8 +104,6 @@ export function ResetPasswordForm() {
           type="password"
           autoComplete="new-password"
           className="h-11 md:h-10"
-          aria-invalid={Boolean(form.formState.errors.password) || undefined}
-          aria-describedby={form.formState.errors.password ? "password-error" : undefined}
           {...form.register("password")}
         />
       </FormField>
@@ -115,10 +117,6 @@ export function ResetPasswordForm() {
           type="password"
           autoComplete="new-password"
           className="h-11 md:h-10"
-          aria-invalid={Boolean(form.formState.errors.confirmPassword) || undefined}
-          aria-describedby={
-            form.formState.errors.confirmPassword ? "confirmPassword-error" : undefined
-          }
           {...form.register("confirmPassword")}
         />
       </FormField>

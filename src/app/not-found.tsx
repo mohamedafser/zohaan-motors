@@ -2,8 +2,9 @@ import Link from "next/link";
 
 export default function RootNotFound() {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         style={{
           margin: 0,
           minHeight: "100vh",

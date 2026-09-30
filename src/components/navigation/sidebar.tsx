@@ -1,12 +1,14 @@
 "use client";
 
 import { ChevronLeftIcon } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { BrandMark } from "@/components/shared/brand-mark";
 import { NavLink } from "@/components/navigation/nav-link";
 import { Button } from "@/components/ui/button";
-import { navigation } from "@/config/navigation";
+import { filterNavigation, navigation } from "@/config/navigation";
+import { usePermission } from "@/hooks/use-permission";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({
@@ -17,6 +19,8 @@ export function Sidebar({
   onToggle: () => void;
 }) {
   const t = useTranslations();
+  const { can } = usePermission();
+  const items = useMemo(() => filterNavigation(navigation, can), [can]);
 
   return (
     <aside
@@ -25,11 +29,16 @@ export function Sidebar({
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className={cn("flex h-14 items-center border-b border-sidebar-border px-3", collapsed && "justify-center px-2")}>
+      <div
+        className={cn(
+          "flex h-14 items-center border-b border-sidebar-border px-3",
+          collapsed && "justify-center px-2",
+        )}
+      >
         <BrandMark showName={!collapsed} className="text-sidebar-foreground" />
       </div>
       <nav aria-label={t("app.name")} className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
-        {navigation.map((group) => (
+        {items.map((group) => (
           <div key={group.id} className="space-y-1">
             {group.labelKey && !collapsed ? (
               <p className="text-sidebar-foreground/55 px-3 pb-1 text-[0.7rem] font-medium tracking-wide uppercase">

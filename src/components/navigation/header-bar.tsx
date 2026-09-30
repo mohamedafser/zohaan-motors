@@ -9,9 +9,9 @@ import { NotificationMenu } from "@/components/navigation/notification-menu";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
 import { UserMenu } from "@/components/navigation/user-menu";
 import { BrandMark } from "@/components/shared/brand-mark";
-import type { AuthUser } from "@/types/auth";
+import type { UserContext } from "@/types/auth";
 
-export function HeaderBar({ user }: { user: AuthUser }) {
+export function HeaderBar({ user }: { user: UserContext }) {
   const t = useTranslations();
   const [searchOpen, setSearchOpen] = useState(false);
 

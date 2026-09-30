@@ -2,17 +2,18 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import { requireSupabaseEnv } from "@/lib/supabase/env";
+import type { Database } from "@/types/database";
 
 /**
  * Server client for Server Components, Server Actions, and Route Handlers.
- * Uses the anon key plus the user session. The service-role key is intentionally
- * not read here and must never be exposed to the browser.
+ * Uses the anon/publishable key plus the user session. The service-role key is
+ * intentionally not read here and must never be exposed to the browser.
  */
 export async function createClient() {
   const { url, key } = requireSupabaseEnv();
   const cookieStore = await cookies();
 
-  return createServerClient(url, key, {
+  return createServerClient<Database>(url, key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

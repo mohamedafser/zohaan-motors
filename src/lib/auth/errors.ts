@@ -6,6 +6,9 @@ const authErrorKeys = {
   notConfigured: "auth.errors.notConfigured",
   generic: "auth.errors.generic",
   session: "auth.errors.session",
+  accountSuspended: "auth.errors.accountSuspended",
+  accountDisabled: "auth.errors.accountDisabled",
+  unauthorized: "auth.errors.unauthorized",
 } as const;
 
 export function mapAuthError(error: { message?: string; code?: string | null }) {

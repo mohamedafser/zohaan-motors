@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { LanguageSwitcher } from "@/components/navigation/language-switcher";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "@/lib/i18n/navigation";
+import { requirePagePermission } from "@/lib/auth/authorize";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SettingsPage() {
+  await requirePagePermission("settings.view");
   const t = await getTranslations();
 
   return (
@@ -43,9 +44,7 @@ export default async function SettingsPage() {
             <CardDescription>{t("settings.securityHint")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/mfa" className="text-sm font-medium underline-offset-4 hover:underline">
-              {t("settings.mfa")}
-            </Link>
+            <p className="text-muted-foreground text-sm">{t("settings.passwordHint")}</p>
           </CardContent>
         </Card>
         <Card>

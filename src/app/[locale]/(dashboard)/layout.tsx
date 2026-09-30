@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { getSessionUser, mfaStatus } from "@/lib/auth/session";
+import { requireUserContext } from "@/lib/auth/session";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
+  const context = await requireUserContext();
 
-  const status = await mfaStatus();
-  if (status === "required") redirect("/mfa");
+  if (context.status === "INVITED") {
+    redirect("/accept-invitation");
+  }
 
-  return <AppShell user={user}>{children}</AppShell>;
+  return <AppShell user={context}>{children}</AppShell>;
 }

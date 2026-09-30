@@ -3,24 +3,25 @@
 import { LogOutIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { signOut } from "@/lib/auth/actions";
+import { signOutClient } from "@/hooks/use-auth-submit";
 import { Link } from "@/lib/i18n/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { AuthUser } from "@/types/auth";
+import type { UserContext } from "@/types/auth";
 
-export function UserMenu({ user }: { user: AuthUser }) {
+export function UserMenu({ user }: { user: UserContext }) {
   const t = useTranslations();
-  const label = user.email ?? t("common.account");
-  const initial = (user.email ?? "Z").slice(0, 1).toUpperCase();
+  const label = user.displayName || user.email || t("common.account");
+  const initial = (user.displayName || user.email || "Z").slice(0, 1).toUpperCase();
 
   return (
     <DropdownMenu>
@@ -28,20 +29,29 @@ export function UserMenu({ user }: { user: AuthUser }) {
         render={<Button variant="ghost" size="icon" aria-label={t("common.account")} />}
       >
         <Avatar className="size-7">
+          {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
           <AvatarFallback>{initial}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="truncate font-normal">{label}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="space-y-0.5 font-normal">
+            <p className="truncate font-medium">{label}</p>
+            {user.email ? <p className="text-muted-foreground truncate text-xs">{user.email}</p> : null}
+            {user.employeeCode ? (
+              <p className="text-muted-foreground truncate text-xs">{user.employeeCode}</p>
+            ) : null}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem nativeButton={false} render={<Link href="/settings" />}>
           {t("nav.settings")}
         </DropdownMenuItem>
-        <DropdownMenuItem nativeButton={false} render={<Link href="/mfa" />}>
-          {t("auth.mfa.title")}
+        <DropdownMenuItem nativeButton={false} render={<Link href="/notifications" />}>
+          {t("nav.notifications")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => signOut()}>
+        <DropdownMenuItem variant="destructive" onClick={() => void signOutClient()}>
           <LogOutIcon />
           {t("common.signOut")}
         </DropdownMenuItem>

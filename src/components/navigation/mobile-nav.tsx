@@ -1,7 +1,7 @@
 "use client";
 
 import { EllipsisIcon, PlusIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { NavLink } from "@/components/navigation/nav-link";
@@ -12,20 +12,31 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { navigation } from "@/config/navigation";
+import { filterNavigation, isNavItemActive, navigation } from "@/config/navigation";
 import { quickActions } from "@/config/routes";
-import { isNavItemActive } from "@/config/navigation";
+import { usePermission } from "@/hooks/use-permission";
 import { Link, usePathname } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
   const t = useTranslations();
   const pathname = usePathname();
+  const { can } = usePermission();
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const home = navigation[0]?.items[0];
-  const cars = navigation[1]?.items[0];
-  const leads = navigation[2]?.items[1];
+  const filtered = useMemo(() => filterNavigation(navigation, can), [can]);
+  const allowedQuickActions = useMemo(
+    () => quickActions.filter((action) => can(action.permission)),
+    [can],
+  );
+
+  const home = filtered.find((group) => group.id === "overview")?.items[0];
+  const cars = filtered.find((group) => group.id === "operations")?.items.find(
+    (item) => item.href === "/inventory",
+  );
+  const leads = filtered
+    .find((group) => group.id === "crm")
+    ?.items.find((item) => item.href === "/leads");
 
   const slots = [
     home ? { item: home, label: t("nav.home") } : null,
@@ -52,9 +63,7 @@ export function MobileNav() {
               <PlusIcon className="size-5" />
             </button>
           </li>
-          {leads ? (
-            <MobileSlot item={leads} label={t("nav.leads")} pathname={pathname} />
-          ) : null}
+          {leads ? <MobileSlot item={leads} label={t("nav.leads")} pathname={pathname} /> : null}
           <li>
             <button
               type="button"
@@ -78,7 +87,7 @@ export function MobileNav() {
             <SheetDescription>{t("app.name")}</SheetDescription>
           </SheetHeader>
           <div className="space-y-4 overflow-y-auto px-4 pb-6">
-            {navigation.map((group) => (
+            {filtered.map((group) => (
               <div key={group.id} className="space-y-1">
                 {group.labelKey ? (
                   <p className="text-muted-foreground px-2 text-xs font-medium">
@@ -106,7 +115,7 @@ export function MobileNav() {
             <SheetDescription>{t("common.comingSoon")}</SheetDescription>
           </SheetHeader>
           <ul className="grid gap-1 px-4 pb-6">
-            {quickActions.map((action) => (
+            {allowedQuickActions.map((action) => (
               <li key={action.href}>
                 <Link
                   href={action.href}

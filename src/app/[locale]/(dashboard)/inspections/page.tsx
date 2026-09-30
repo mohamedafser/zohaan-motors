@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function Page() {
   return (
     <ModuleScreen
+      permission="inspection.view"
       titleKey="modules.inspections.title"
       descriptionKey="modules.inspections.description"
     />
