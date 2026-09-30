@@ -1,0 +1,78 @@
+export const protectedPrefixes = [
+  "/dashboard",
+  "/inventory",
+  "/acquisitions",
+  "/inspections",
+  "/workshop",
+  "/customers",
+  "/leads",
+  "/reservations",
+  "/sales",
+  "/payments",
+  "/invoices",
+  "/documents",
+  "/reports",
+  "/branches",
+  "/users",
+  "/roles",
+  "/audit-logs",
+  "/notifications",
+  "/settings",
+] as const;
+
+const publicAuthPaths = new Set(["/login", "/forgot-password", "/reset-password"]);
+
+export function isProtectedPath(pathname: string) {
+  return protectedPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+export function isPublicAuthPath(pathname: string) {
+  return publicAuthPaths.has(pathname);
+}
+
+export const breadcrumbLabels: Record<string, string> = {
+  dashboard: "nav.dashboard",
+  inventory: "nav.inventory",
+  acquisitions: "nav.acquisitions",
+  inspections: "nav.inspections",
+  workshop: "nav.workshop",
+  orders: "nav.workshopOrders",
+  customers: "nav.customers",
+  leads: "nav.leads",
+  reservations: "nav.reservations",
+  sales: "nav.sales",
+  payments: "nav.payments",
+  invoices: "nav.invoices",
+  documents: "nav.documents",
+  reports: "nav.reports",
+  branches: "nav.branches",
+  users: "nav.users",
+  roles: "nav.roles",
+  "audit-logs": "nav.auditLogs",
+  notifications: "nav.notifications",
+  settings: "nav.settings",
+  new: "common.new",
+  mfa: "auth.mfa.title",
+  login: "auth.login.title",
+};
+
+export const searchGroups = [
+  { id: "vehicles", labelKey: "search.groups.vehicles", href: "/inventory" },
+  { id: "customers", labelKey: "search.groups.customers", href: "/customers" },
+  { id: "leads", labelKey: "search.groups.leads", href: "/leads" },
+  { id: "reservations", labelKey: "search.groups.reservations", href: "/reservations" },
+  { id: "sales", labelKey: "search.groups.sales", href: "/sales" },
+  { id: "payments", labelKey: "search.groups.payments", href: "/payments" },
+  { id: "documents", labelKey: "search.groups.documents", href: "/documents" },
+] as const;
+
+export const quickActions = [
+  { href: "/inventory/new", labelKey: "quick.vehicle" },
+  { href: "/acquisitions/new", labelKey: "quick.acquisition" },
+  { href: "/inspections/new", labelKey: "quick.inspection" },
+  { href: "/customers/new", labelKey: "quick.customer" },
+  { href: "/reservations/new", labelKey: "quick.reservation" },
+  { href: "/sales/new", labelKey: "quick.sale" },
+] as const;

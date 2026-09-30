@@ -1,0 +1,155 @@
+"use client";
+
+import { EllipsisIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+
+import { NavLink } from "@/components/navigation/nav-link";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { navigation } from "@/config/navigation";
+import { quickActions } from "@/config/routes";
+import { isNavItemActive } from "@/config/navigation";
+import { Link, usePathname } from "@/lib/i18n/navigation";
+import { cn } from "@/lib/utils";
+
+export function MobileNav() {
+  const t = useTranslations();
+  const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const home = navigation[0]?.items[0];
+  const cars = navigation[1]?.items[0];
+  const leads = navigation[2]?.items[1];
+
+  const slots = [
+    home ? { item: home, label: t("nav.home") } : null,
+    cars ? { item: cars, label: t("nav.cars") } : null,
+  ].filter((slot) => slot !== null);
+
+  return (
+    <>
+      <nav
+        aria-label={t("nav.more")}
+        className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1 backdrop-blur lg:hidden"
+        style={{ paddingBottom: "calc(0.4rem + env(safe-area-inset-bottom))" }}
+      >
+        <ul className="grid grid-cols-5 items-end">
+          {slots[0] ? <MobileSlot item={slots[0].item} label={slots[0].label} pathname={pathname} /> : null}
+          {slots[1] ? <MobileSlot item={slots[1].item} label={slots[1].label} pathname={pathname} /> : null}
+          <li className="flex justify-center">
+            <button
+              type="button"
+              className="bg-primary text-primary-foreground focus-visible:ring-ring -mt-4 flex size-12 items-center justify-center rounded-full shadow-sm outline-none focus-visible:ring-2"
+              onClick={() => setCreateOpen(true)}
+              aria-label={t("quick.title")}
+            >
+              <PlusIcon className="size-5" />
+            </button>
+          </li>
+          {leads ? (
+            <MobileSlot item={leads} label={t("nav.leads")} pathname={pathname} />
+          ) : null}
+          <li>
+            <button
+              type="button"
+              className={cn(
+                "flex w-full flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                moreOpen ? "text-foreground" : "text-muted-foreground",
+              )}
+              onClick={() => setMoreOpen(true)}
+            >
+              <EllipsisIcon className="size-5" aria-hidden />
+              {t("nav.more")}
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="max-h-[80svh] rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>{t("nav.more")}</SheetTitle>
+            <SheetDescription>{t("app.name")}</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4 overflow-y-auto px-4 pb-6">
+            {navigation.map((group) => (
+              <div key={group.id} className="space-y-1">
+                {group.labelKey ? (
+                  <p className="text-muted-foreground px-2 text-xs font-medium">
+                    {t(group.labelKey as Parameters<typeof t>[0])}
+                  </p>
+                ) : null}
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    tone="surface"
+                    onNavigate={() => setMoreOpen(false)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>{t("quick.title")}</SheetTitle>
+            <SheetDescription>{t("common.comingSoon")}</SheetDescription>
+          </SheetHeader>
+          <ul className="grid gap-1 px-4 pb-6">
+            {quickActions.map((action) => (
+              <li key={action.href}>
+                <Link
+                  href={action.href}
+                  onClick={() => setCreateOpen(false)}
+                  className="hover:bg-muted focus-visible:ring-ring flex rounded-lg px-3 py-3 text-sm font-medium outline-none focus-visible:ring-2"
+                >
+                  {t(action.labelKey as Parameters<typeof t>[0])}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+function MobileSlot({
+  item,
+  label,
+  pathname,
+}: {
+  item: { href: string; icon: NavItemIcon };
+  label: string;
+  pathname: string;
+}) {
+  const active = isNavItemActive(pathname, item.href);
+  const Icon = item.icon;
+  return (
+    <li>
+      <Link
+        href={item.href}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          active ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        <Icon className="size-5" aria-hidden />
+        {label}
+      </Link>
+    </li>
+  );
+}
+
+type NavItemIcon = (typeof navigation)[number]["items"][number]["icon"];

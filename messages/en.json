@@ -1,0 +1,378 @@
+{
+  "app": {
+    "name": "Zohaan Motors",
+    "tagline": "Used car operations, built for the UAE.",
+    "region": "United Arab Emirates",
+    "footnote": "Inventory, workshop, sales, and documents in one showroom workspace.",
+    "skip": "Skip to content"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "acquisitions": "Acquisitions",
+    "inspections": "Inspections",
+    "workshop": "Workshop",
+    "workshopOrders": "Work orders",
+    "customers": "Customers",
+    "leads": "Leads",
+    "reservations": "Reservations",
+    "sales": "Sales",
+    "payments": "Payments",
+    "invoices": "Invoices",
+    "documents": "Documents",
+    "reports": "Reports",
+    "branches": "Branches",
+    "users": "Users",
+    "roles": "Roles",
+    "auditLogs": "Audit logs",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "groups": {
+      "operations": "Operations",
+      "crm": "Customers",
+      "finance": "Sales",
+      "insights": "Records",
+      "admin": "Administration",
+      "system": "System"
+    },
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "more": "More",
+    "home": "Home",
+    "cars": "Cars"
+  },
+  "common": {
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "close": "Close",
+    "loading": "Loading",
+    "new": "New",
+    "viewAll": "View all",
+    "sample": "Sample",
+    "signOut": "Sign out",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "account": "Account",
+    "comingSoon": "This module is ready for a later phase.",
+    "required": "Required",
+    "optional": "Optional",
+    "delete": "Delete",
+    "moveEarlier": "Move earlier",
+    "moveLater": "Move later",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "quick": {
+    "title": "Create",
+    "vehicle": "New vehicle",
+    "acquisition": "New acquisition",
+    "inspection": "New inspection",
+    "customer": "New customer",
+    "reservation": "New reservation",
+    "sale": "New sale"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "description": "Use the email and password issued for your showroom account.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "forgot": {
+      "title": "Reset password",
+      "description": "We will email a reset link if the account exists.",
+      "submit": "Send reset link",
+      "success": "If an account exists for that email, a reset link is on its way.",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "description": "Use at least 8 characters, with upper and lower case letters and a number.",
+      "password": "New password",
+      "confirm": "Confirm password",
+      "submit": "Update password",
+      "success": "Password updated. You can sign in with it now.",
+      "waiting": "Open the reset link from your email to continue.",
+      "continue": "Continue to sign in"
+    },
+    "mfa": {
+      "title": "Authenticator",
+      "description": "Enter the 6-digit code from your authenticator app.",
+      "code": "Authentication code",
+      "submit": "Verify",
+      "enrollTitle": "Set up an authenticator",
+      "enrollDescription": "Scan the code with an authenticator app, then enter the first code to finish.",
+      "enrollAction": "Generate setup code",
+      "secret": "Manual setup key",
+      "confirm": "Confirm setup"
+    },
+    "errors": {
+      "invalidCredentials": "Email or password is incorrect.",
+      "emailNotConfirmed": "Confirm the email address before signing in.",
+      "rateLimit": "Too many attempts. Wait a moment and try again.",
+      "weakPassword": "Choose a stronger password.",
+      "notConfigured": "Supabase is not configured yet. Add the project URL and anon key.",
+      "generic": "Something went wrong. Try again.",
+      "session": "The reset session expired. Request a new link."
+    }
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "passwordMin": "Use at least 8 characters.",
+    "passwordLower": "Include a lowercase letter.",
+    "passwordUpper": "Include an uppercase letter.",
+    "passwordNumber": "Include a number.",
+    "passwordMatch": "Passwords do not match.",
+    "phone": "Enter a valid UAE phone number.",
+    "number": "Enter a valid number.",
+    "currency": "Enter an amount of zero or more.",
+    "date": "Choose a valid date.",
+    "vin": "Enter a 17-character VIN."
+  },
+  "empty": {
+    "vehicles": "No vehicles found",
+    "vehiclesHint": "Stock will appear here once inventory is connected.",
+    "leads": "No leads found",
+    "leadsHint": "Showroom enquiries will appear here once leads are connected.",
+    "customers": "No customers found",
+    "customersHint": "Buyer records will appear here once customers are connected.",
+    "notifications": "No notifications",
+    "notificationsHint": "Updates from the showroom will appear here.",
+    "moduleTitle": "Nothing here yet",
+    "moduleDescription": "This screen is a placeholder. Business records will be added in a later phase."
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "The page could not be loaded. You can try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "That address is not part of Zohaan Motors.",
+    "notReady": "This data source is not connected yet.",
+    "generic": "Something went wrong. Try again.",
+    "home": "Go to dashboard"
+  },
+  "search": {
+    "placeholder": "Search vehicles, customers, leads…",
+    "title": "Search",
+    "description": "Find a page or a recent search.",
+    "recent": "Recent searches",
+    "pages": "Pages",
+    "empty": "No matching pages. Record search will connect in a later phase.",
+    "groupEmpty": "No records yet",
+    "shortcut": "Search",
+    "groups": {
+      "vehicles": "Vehicles",
+      "customers": "Customers",
+      "leads": "Leads",
+      "reservations": "Reservations",
+      "sales": "Sales",
+      "payments": "Payments",
+      "documents": "Documents"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "{count} unread",
+    "markRead": "Mark as read",
+    "markAllRead": "Mark all as read",
+    "sampleNote": "These notices are sample layout data, not live showroom events.",
+    "items": {
+      "lead": {
+        "title": "New lead assigned",
+        "body": "A showroom enquiry is waiting for follow-up."
+      },
+      "inspection": {
+        "title": "Inspection due",
+        "body": "A vehicle is waiting for inspection."
+      },
+      "payment": {
+        "title": "Payment recorded",
+        "body": "A sample payment notice for the layout."
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "A snapshot of stock, pipeline, and work waiting on the floor.",
+    "sample": "These figures are sample placeholders. Live numbers will come from Supabase in a later phase.",
+    "kpis": {
+      "stock": "Vehicles in stock",
+      "available": "Available",
+      "reserved": "Reserved",
+      "sales": "Sales this month"
+    },
+    "salesChart": "Sales",
+    "inventoryChart": "Inventory mix",
+    "chartCaption": "Sample chart. It is not connected to sales or stock.",
+    "aging": "Inventory aging",
+    "agingCaption": "Sample age bands for stock that is still unsold.",
+    "pending": "Pending actions",
+    "recentVehicles": "Recent vehicles",
+    "recentLeads": "Recent leads",
+    "recentSales": "Recent sales",
+    "columns": {
+      "stock": "Stock",
+      "vehicle": "Vehicle",
+      "price": "Price",
+      "status": "Status",
+      "branch": "Branch",
+      "customer": "Customer",
+      "source": "Source",
+      "reference": "Reference",
+      "amount": "Amount"
+    },
+    "status": {
+      "available": "Available",
+      "reserved": "Reserved",
+      "workshop": "Workshop",
+      "sold": "Sold",
+      "new": "New",
+      "contacted": "Contacted",
+      "qualified": "Qualified",
+      "draft": "Draft",
+      "confirmed": "Confirmed"
+    },
+    "agingBands": {
+      "fresh": "0–30 days",
+      "mid": "31–60 days",
+      "aging": "61–90 days",
+      "old": "90+ days"
+    },
+    "actions": {
+      "inspection": "Inspection waiting",
+      "reservation": "Reservation to confirm",
+      "workshop": "Workshop order open"
+    }
+  },
+  "modules": {
+    "inventory": {
+      "title": "Inventory",
+      "description": "Vehicles on the floor, in transit, and ready for sale."
+    },
+    "inventoryNew": {
+      "title": "New vehicle",
+      "description": "Photo capture is ready. Vehicle details and storage come in a later phase."
+    },
+    "acquisitions": {
+      "title": "Acquisitions",
+      "description": "Purchase files for cars coming into stock."
+    },
+    "acquisitionsNew": {
+      "title": "New acquisition",
+      "description": "The purchase form will be added with the acquisitions module."
+    },
+    "inspections": {
+      "title": "Inspections",
+      "description": "Condition checks before a car is offered for sale."
+    },
+    "inspectionsNew": {
+      "title": "New inspection",
+      "description": "The inspection form will be added with the inspections module."
+    },
+    "workshop": {
+      "title": "Workshop",
+      "description": "Reconditioning work for stock vehicles."
+    },
+    "workshopOrders": {
+      "title": "Work orders",
+      "description": "Open jobs for the workshop."
+    },
+    "customers": {
+      "title": "Customers",
+      "description": "Buyers and contacts across the showroom."
+    },
+    "customersNew": {
+      "title": "New customer",
+      "description": "The customer form will be added with the customers module."
+    },
+    "leads": {
+      "title": "Leads",
+      "description": "Enquiries that have not become a sale yet."
+    },
+    "reservations": {
+      "title": "Reservations",
+      "description": "Cars held for a buyer."
+    },
+    "reservationsNew": {
+      "title": "New reservation",
+      "description": "The reservation form will be added with the reservations module."
+    },
+    "sales": {
+      "title": "Sales",
+      "description": "Deals from reservation through handover."
+    },
+    "salesNew": {
+      "title": "New sale",
+      "description": "The sale form will be added with the sales module."
+    },
+    "payments": {
+      "title": "Payments",
+      "description": "Receipts and balances in AED."
+    },
+    "invoices": {
+      "title": "Invoices",
+      "description": "Sales invoices and supporting documents."
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Mulkiya, service history, and deal files."
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Stock, sales, and branch summaries."
+    },
+    "branches": {
+      "title": "Branches",
+      "description": "Showrooms and yards."
+    },
+    "users": {
+      "title": "Users",
+      "description": "People who can sign in to this workspace."
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "Role definitions will be enforced in the authorization phase."
+    },
+    "auditLogs": {
+      "title": "Audit logs",
+      "description": "A record of sensitive changes, once audit storage is connected."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Showroom updates for your account."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Appearance, language, and account preferences."
+    }
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "appearanceHint": "Light, dark, or match this device.",
+    "language": "Language",
+    "languageHint": "English is left to right. Arabic switches the workspace to right to left.",
+    "security": "Security",
+    "securityHint": "Add an authenticator app for a second sign-in step.",
+    "mfa": "Authenticator setup",
+    "preferences": "Dealership preferences",
+    "preferencesHint": "Branch, currency display, and document defaults will live here later. Currency is AED and the timezone is Asia/Dubai."
+  },
+  "media": {
+    "title": "Photos",
+    "hint": "Photos stay on this device. Nothing is uploaded yet.",
+    "add": "Choose photos",
+    "camera": "Use camera",
+    "empty": "Add photos from the camera or from files.",
+    "remove": "Remove photo",
+    "count": "{count} photos"
+  }
+}
