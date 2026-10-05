@@ -1,7 +1,6 @@
 import {
   Banknote,
   Bell,
-  Bookmark,
   Building2,
   Car,
   ChartColumn,
@@ -13,11 +12,9 @@ import {
   ScrollText,
   Settings,
   Shield,
-  ShoppingBag,
   UserCog,
   UserPlus,
   Users,
-  Wrench,
 } from "lucide-react";
 
 import type { Permission } from "@/lib/permissions";
@@ -48,18 +45,11 @@ export const navigation: NavGroup[] = [
         permission: "vehicle.view",
       },
       {
-        href: "/acquisitions",
-        labelKey: "nav.acquisitions",
-        icon: ShoppingBag,
-        permission: "acquisition.view",
-      },
-      {
         href: "/inspections",
         labelKey: "nav.inspections",
         icon: ClipboardCheck,
         permission: "inspection.view",
       },
-      { href: "/workshop", labelKey: "nav.workshop", icon: Wrench, permission: "workshop.view" },
     ],
   },
   {
@@ -73,12 +63,6 @@ export const navigation: NavGroup[] = [
         icon: UserPlus,
         mobile: "leads",
         permission: "lead.view",
-      },
-      {
-        href: "/reservations",
-        labelKey: "nav.reservations",
-        icon: Bookmark,
-        permission: "reservation.view",
       },
     ],
   },

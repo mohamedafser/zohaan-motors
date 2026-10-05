@@ -1,19 +1,9 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-import { ModuleScreen } from "@/components/layout/module-screen";
+import { requirePagePermission } from "@/lib/auth/authorize";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
-  return { title: t("modules.reservationsNew.title") };
-}
-
-export default function Page() {
-  return (
-    <ModuleScreen
-      permission="reservation.create"
-      titleKey="modules.reservationsNew.title"
-      descriptionKey="modules.reservationsNew.description"
-    />
-  );
+/** New reservation entry is retired from the main navigation. */
+export default async function NewReservationPage() {
+  await requirePagePermission("reservation.create");
+  redirect("/inventory");
 }

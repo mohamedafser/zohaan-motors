@@ -6,7 +6,7 @@ export type SampleRecord = {
   sample: true;
 };
 
-export type VehicleStatus = "available" | "reserved" | "workshop" | "sold";
+export type VehicleStatus = "available" | "reserved" | "sold";
 
 export type LeadStatus = "new" | "contacted" | "qualified";
 

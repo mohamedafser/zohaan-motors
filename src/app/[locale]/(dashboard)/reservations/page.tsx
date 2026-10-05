@@ -1,19 +1,9 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-import { ModuleScreen } from "@/components/layout/module-screen";
+import { requirePagePermission } from "@/lib/auth/authorize";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
-  return { title: t("modules.reservations.title") };
-}
-
-export default function Page() {
-  return (
-    <ModuleScreen
-      permission="reservation.view"
-      titleKey="modules.reservations.title"
-      descriptionKey="modules.reservations.description"
-    />
-  );
+/** Reservations list is retired from the main navigation. */
+export default async function ReservationsPage() {
+  await requirePagePermission("reservation.view");
+  redirect("/inventory");
 }

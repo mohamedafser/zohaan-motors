@@ -1,17 +1,21 @@
-import { notImplemented, type RepositoryResult } from "@/lib/repositories/types";
+export {
+  listVehicles,
+  getVehicle,
+  createVehicle,
+  updateVehicle,
+  changeVehicleStatus,
+  transferVehicle,
+  archiveVehicle,
+  getVehicleReadyForSaleEligibility,
+  markVehicleReadyForSale,
+  getVehicleStatusHistory,
+  getVehicleActivity,
+  getInventorySummary,
+  listBranches,
+  listLocations,
+  listMakes,
+  listModels,
+  findDuplicateVehicle,
+} from "@/lib/vehicles/service";
 
-export type VehicleRecord = {
-  id: string;
-  stockNumber: string;
-  title: string;
-};
-
-/**
- * Vehicle queries belong here, not in UI components.
- * The database phase will replace `notImplemented` with Supabase calls.
- */
-export const vehiclesRepository = {
-  async list(): Promise<RepositoryResult<VehicleRecord[]>> {
-    return notImplemented();
-  },
-};
+export type { VehicleServiceError, ServiceResult } from "@/lib/vehicles/service";

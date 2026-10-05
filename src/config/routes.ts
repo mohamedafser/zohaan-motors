@@ -3,7 +3,7 @@ export const protectedPrefixes = [
   "/inventory",
   "/acquisitions",
   "/inspections",
-  "/workshop",
+  "/pricing",
   "/customers",
   "/leads",
   "/reservations",
@@ -43,8 +43,7 @@ export const breadcrumbLabels: Record<string, string> = {
   inventory: "nav.inventory",
   acquisitions: "nav.acquisitions",
   inspections: "nav.inspections",
-  workshop: "nav.workshop",
-  orders: "nav.workshopOrders",
+  pricing: "nav.pricing",
   customers: "nav.customers",
   leads: "nav.leads",
   reservations: "nav.reservations",
@@ -60,20 +59,22 @@ export const breadcrumbLabels: Record<string, string> = {
   notifications: "nav.notifications",
   settings: "nav.settings",
   new: "common.new",
+  edit: "inventory.actions.edit",
+  review: "inspections.actions.review",
   login: "auth.login.title",
   unauthorized: "auth.unauthorized.title",
 };
 
 export const searchGroups = [
   { id: "vehicles", labelKey: "search.groups.vehicles", href: "/inventory", permission: "vehicle.view" },
+  {
+    id: "inspections",
+    labelKey: "search.groups.inspections",
+    href: "/inspections",
+    permission: "inspection.view",
+  },
   { id: "customers", labelKey: "search.groups.customers", href: "/customers", permission: "customer.view" },
   { id: "leads", labelKey: "search.groups.leads", href: "/leads", permission: "lead.view" },
-  {
-    id: "reservations",
-    labelKey: "search.groups.reservations",
-    href: "/reservations",
-    permission: "reservation.view",
-  },
   { id: "sales", labelKey: "search.groups.sales", href: "/sales", permission: "sale.view" },
   { id: "payments", labelKey: "search.groups.payments", href: "/payments", permission: "payment.view" },
   {
@@ -86,9 +87,7 @@ export const searchGroups = [
 
 export const quickActions = [
   { href: "/inventory/new", labelKey: "quick.vehicle", permission: "vehicle.create" },
-  { href: "/acquisitions/new", labelKey: "quick.acquisition", permission: "acquisition.create" },
   { href: "/inspections/new", labelKey: "quick.inspection", permission: "inspection.create" },
   { href: "/customers/new", labelKey: "quick.customer", permission: "customer.create" },
-  { href: "/reservations/new", labelKey: "quick.reservation", permission: "reservation.create" },
   { href: "/sales/new", labelKey: "quick.sale", permission: "sale.create" },
 ] as const;

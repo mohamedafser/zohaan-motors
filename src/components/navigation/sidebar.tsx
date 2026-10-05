@@ -11,13 +11,7 @@ import { filterNavigation, navigation } from "@/config/navigation";
 import { usePermission } from "@/hooks/use-permission";
 import { cn } from "@/lib/utils";
 
-export function Sidebar({
-  collapsed,
-  onToggle,
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
+export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const t = useTranslations();
   const { can } = usePermission();
   const items = useMemo(() => filterNavigation(navigation, can), [can]);
@@ -25,13 +19,13 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-svh shrink-0 flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex",
+        "border-sidebar-border bg-sidebar text-sidebar-foreground hidden h-full shrink-0 flex-col border-e lg:flex",
         collapsed ? "w-16" : "w-64",
       )}
     >
       <div
         className={cn(
-          "flex h-14 items-center border-b border-sidebar-border px-3",
+          "border-sidebar-border flex h-14 items-center border-b px-3",
           collapsed && "justify-center px-2",
         )}
       >
@@ -51,7 +45,7 @@ export function Sidebar({
           </div>
         ))}
       </nav>
-      <div className="border-t border-sidebar-border p-2">
+      <div className="border-sidebar-border border-t p-2">
         <Button
           type="button"
           variant="ghost"
@@ -59,7 +53,9 @@ export function Sidebar({
           onClick={onToggle}
           aria-pressed={collapsed}
         >
-          <ChevronLeftIcon className={cn("rtl:rotate-180", collapsed && "rotate-180 rtl:rotate-0")} />
+          <ChevronLeftIcon
+            className={cn("rtl:rotate-180", collapsed && "rotate-180 rtl:rotate-0")}
+          />
           <span className={cn(collapsed && "sr-only")}>
             {collapsed ? t("nav.expand") : t("nav.collapse")}
           </span>

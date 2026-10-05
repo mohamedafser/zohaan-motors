@@ -12,6 +12,7 @@
     "acquisitions": "المشتريات",
     "inspections": "الفحوصات",
     "workshop": "الورشة",
+    "pricing": "التسعير",
     "workshopOrders": "أوامر العمل",
     "customers": "العملاء",
     "leads": "العملاء المحتملون",
@@ -39,7 +40,9 @@
     "expand": "توسيع الشريط الجانبي",
     "more": "المزيد",
     "home": "الرئيسية",
-    "cars": "السيارات"
+    "cars": "السيارات",
+    "workshopJobs": "المهام",
+    "myWorkshopJobs": "مهامي"
   },
   "common": {
     "search": "بحث",
@@ -61,11 +64,18 @@
     "comingSoon": "هذه الوحدة جاهزة لمرحلة لاحقة.",
     "required": "مطلوب",
     "optional": "اختياري",
+    "clear": "مسح",
+    "noResults": "لا نتائج",
     "delete": "حذف",
     "moveEarlier": "تحريك للأمام",
     "moveLater": "تحريك للخلف",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "phoneCountry": "رمز الدولة",
+    "searchCountry": "ابحث عن دولة…",
+    "noCountry": "لا توجد دولة",
+    "yes": "نعم",
+    "no": "لا"
   },
   "quick": {
     "title": "إنشاء",
@@ -74,7 +84,8 @@
     "inspection": "فحص جديد",
     "customer": "عميل جديد",
     "reservation": "حجز جديد",
-    "sale": "عملية بيع جديدة"
+    "sale": "عملية بيع جديدة",
+    "workshop": "أمر ورشة جديد"
   },
   "auth": {
     "login": {
@@ -157,6 +168,7 @@
     "passwordNumber": "أضف رقمًا.",
     "passwordMatch": "كلمتا المرور غير متطابقتين.",
     "phone": "أدخل رقم هاتف إماراتي صالحًا.",
+    "phoneInternational": "أدخل رقم هاتف دولي صالحًا.",
     "number": "أدخل رقمًا صالحًا.",
     "currency": "أدخل مبلغًا صفرًا أو أكثر.",
     "date": "اختر تاريخًا صالحًا.",
@@ -199,7 +211,10 @@
       "reservations": "الحجوزات",
       "sales": "المبيعات",
       "payments": "المدفوعات",
-      "documents": "المستندات"
+      "documents": "المستندات",
+      "acquisitions": "عمليات الاستحواذ",
+      "inspections": "الفحوصات",
+      "workshop": "الورشة"
     }
   },
   "notifications": {
@@ -273,7 +288,7 @@
     "actions": {
       "inspection": "فحص بانتظار التنفيذ",
       "reservation": "حجز بانتظار التأكيد",
-      "workshop": "أمر عمل مفتوح في الورشة"
+      "pricing": "تسعير بانتظار التعيين"
     }
   },
   "modules": {
@@ -283,15 +298,15 @@
     },
     "inventoryNew": {
       "title": "مركبة جديدة",
-      "description": "التقاط الصور جاهز. تفاصيل المركبة والتخزين يأتيان في مرحلة لاحقة."
+      "description": "أضف مركبة عبر خطوات واضحة — التفاصيل، الاستحواذ، الصور، ثم الحفظ."
     },
     "acquisitions": {
       "title": "المشتريات",
-      "description": "ملفات شراء السيارات الداخلة إلى المخزون."
+      "description": "ملفات شراء المركبات الداخلة إلى المخزون."
     },
     "acquisitionsNew": {
       "title": "عملية شراء جديدة",
-      "description": "سيُضاف نموذج الشراء مع وحدة المشتريات."
+      "description": "أدخل بيانات المركبة والمصدر وشروط الشراء."
     },
     "inspections": {
       "title": "الفحوصات",
@@ -299,11 +314,15 @@
     },
     "inspectionsNew": {
       "title": "فحص جديد",
-      "description": "سيُضاف نموذج الفحص مع وحدة الفحوصات."
+      "description": "اختر المركبة ونوع الفحص والقالب ثم ابدأ قائمة التحقق."
     },
     "workshop": {
       "title": "الورشة",
-      "description": "أعمال التجهيز لمركبات المخزون."
+      "description": "أعمال الإصلاح والتجهيز لإعداد المركبات للبيع."
+    },
+    "pricing": {
+      "title": "التسعير",
+      "description": "تكلفة المركبة وأسعار البيع والربحية الإجمالية."
     },
     "workshopOrders": {
       "title": "أوامر العمل",
@@ -397,5 +416,1863 @@
     "empty": "أضف صورًا من الكاميرا أو من الملفات.",
     "remove": "إزالة الصورة",
     "count": "{count} صور"
+  },
+  "inventory": {
+    "summary": {
+      "total": "إجمالي المركبات",
+      "readyForSale": "جاهزة للبيع",
+      "underInspection": "قيد الفحص",
+      "underRepair": "قيد الإصلاح",
+      "reserved": "محجوزة",
+      "sold": "مباعة",
+      "available": "جاهزة للبيع"
+    },
+    "status": {
+      "acquired": "تم الاستحواذ",
+      "under_inspection": "قيد الفحص",
+      "inspection_failed": "فشل الفحص",
+      "under_repair": "قيد الإصلاح",
+      "ready_for_sale": "جاهزة للبيع",
+      "reserved": "محجوزة",
+      "sold": "مباعة",
+      "delivered": "تم التسليم",
+      "returned": "مرتجعة",
+      "archived": "مؤرشفة"
+    },
+    "fields": {
+      "stockId": "رقم المخزون",
+      "stockIdHint": "يُنشأ تلقائياً عند حفظ المركبة.",
+      "vin": "رقم الهيكل (VIN)",
+      "vinHint": "17 خانة. اتركه فارغاً إذا كان غير معروف.",
+      "chassis": "رقم الشاسيه",
+      "make": "الماركة",
+      "model": "الطراز",
+      "variant": "الفئة / التجهيز",
+      "year": "السنة",
+      "mileage": "المسافة المقطوعة",
+      "mileageUnit": "الوحدة",
+      "bodyType": "نوع الهيكل",
+      "transmission": "ناقل الحركة",
+      "fuelType": "نوع الوقود",
+      "engineSize": "سعة المحرك",
+      "engineCylinders": "عدد الأسطوانات",
+      "driveType": "نوع الدفع",
+      "seats": "عدد المقاعد",
+      "doors": "عدد الأبواب",
+      "exteriorColor": "اللون الخارجي",
+      "interiorColor": "اللون الداخلي",
+      "customColor": "اسم لون مخصص",
+      "origin": "المنشأ",
+      "countryOfOrigin": "بلد المنشأ",
+      "branch": "الفرع",
+      "location": "الموقع",
+      "purchaseDate": "تاريخ الشراء",
+      "registrationDate": "تاريخ التسجيل",
+      "registrationExpiry": "انتهاء التسجيل",
+      "notes": "ملاحظات",
+      "notesHint": "ملاحظات داخلية عن هذه المركبة.",
+      "status": "الحالة",
+      "source": "المصدر",
+      "condition": "الحالة الفنية",
+      "sellingPrice": "سعر البيع",
+      "minimumPrice": "الحد الأدنى للسعر",
+      "acquisitionCost": "إجمالي تكلفة الاستحواذ",
+      "createdAt": "تاريخ الإنشاء",
+      "updatedAt": "آخر تحديث",
+      "createdBy": "أنشأها",
+      "updatedBy": "حدّثها",
+      "notSet": "غير محدد",
+      "selectPlaceholder": "اختر",
+      "noneOption": "لا شيء",
+      "stockNumber": "رقم المخزون",
+      "chassisNumber": "رقم الهيكل",
+      "originType": "المصدر",
+      "reason": "السبب",
+      "acquisitionNumber": "رقم الاستحواذ",
+      "acquisitionStatus": "حالة الاستحواذ",
+      "acquisitionType": "نوع الاستحواذ",
+      "purchasePrice": "سعر الشراء"
+    },
+    "enums": {
+      "transmission": {
+        "automatic": "أوتوماتيك",
+        "manual": "يدوي",
+        "cvt": "CVT",
+        "other": "أخرى"
+      },
+      "fuel": {
+        "petrol": "بنزين",
+        "diesel": "ديزل",
+        "hybrid": "هجين",
+        "electric": "كهربائي",
+        "other": "أخرى"
+      },
+      "drive": {
+        "fwd": "دفع أمامي",
+        "rwd": "دفع خلفي",
+        "awd": "دفع رباعي دائم",
+        "four_wd": "دفع رباعي",
+        "other": "أخرى"
+      },
+      "origin": {
+        "gcc": "خليجي",
+        "imported": "مستورد",
+        "unknown": "غير معروف"
+      },
+      "countryRegion": {
+        "gcc": "دول الخليج",
+        "asia": "آسيا",
+        "europe": "أوروبا",
+        "americas": "الأمريكتان",
+        "africa": "أفريقيا",
+        "oceania": "أوقيانوسيا",
+        "other": "أخرى"
+      },
+      "mileageUnit": {
+        "km": "كم",
+        "mi": "ميل"
+      },
+      "bodyType": {
+        "sedan": "سيدان",
+        "suv": "دفع رباعي (SUV)",
+        "crossover": "كروس أوفر",
+        "hatchback": "هاتشباك",
+        "coupe": "كوبيه",
+        "convertible": "مكشوفة",
+        "pickup": "بيك أب",
+        "van": "فان",
+        "wagon": "ستيشن",
+        "sports_car": "سيارة رياضية",
+        "other": "أخرى"
+      }
+    },
+    "sections": {
+      "basic": "المعلومات الأساسية",
+      "specs": "المواصفات",
+      "appearance": "المظهر",
+      "origin": "المنشأ",
+      "location": "الفرع والموقع",
+      "notes": "ملاحظات",
+      "identification": "التعريف",
+      "vehicle": "المركبة",
+      "metadata": "البيانات الوصفية",
+      "acquisition": "الاستحواذ"
+    },
+    "filters": {
+      "searchPlaceholder": "ابحث برقم المخزون أو VIN أو الماركة أو الموديل",
+      "searchLabel": "بحث في المركبات",
+      "status": "الحالة",
+      "allStatuses": "كل الحالات",
+      "branch": "الفرع",
+      "allBranches": "كل الفروع",
+      "location": "الموقع",
+      "allLocations": "كل المواقع",
+      "make": "الماركة",
+      "model": "الطراز",
+      "yearFrom": "من سنة",
+      "yearTo": "إلى سنة",
+      "origin": "المنشأ",
+      "allOrigins": "كل المناشئ",
+      "fuelType": "نوع الوقود",
+      "allFuelTypes": "كل أنواع الوقود",
+      "transmission": "ناقل الحركة",
+      "allTransmissions": "كل أنواع ناقل الحركة",
+      "bodyType": "نوع الهيكل",
+      "allBodyTypes": "كل أنواع الهيكل",
+      "includeArchived": "تضمين المؤرشفة",
+      "sort": "ترتيب حسب",
+      "order": "الاتجاه",
+      "asc": "تصاعدي",
+      "desc": "تنازلي",
+      "more": "مزيد من عوامل التصفية",
+      "less": "إخفاء عوامل التصفية",
+      "clear": "مسح الكل",
+      "active": "{count} عوامل تصفية نشطة",
+      "title": "عوامل التصفية",
+      "search": "بحث",
+      "any": "الكل",
+      "anyMake": "أي ماركة",
+      "anyModel": "أي طراز",
+      "year": "السنة",
+      "groupVehicle": "المركبة",
+      "groupSpecs": "المواصفات",
+      "select": "اختر"
+    },
+    "sort": {
+      "created_at": "تاريخ الإضافة",
+      "updated_at": "آخر تحديث",
+      "stock_number": "رقم المخزون",
+      "year": "السنة",
+      "mileage": "المسافة المقطوعة",
+      "status": "الحالة",
+      "purchase_date": "تاريخ الشراء",
+      "make": "الماركة",
+      "model": "الطراز"
+    },
+    "table": {
+      "vehicle": "المركبة",
+      "stockId": "رقم المخزون",
+      "vin": "VIN",
+      "year": "السنة",
+      "mileage": "المسافة",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "location": "الموقع",
+      "price": "السعر",
+      "actions": "الإجراءات",
+      "view": "عرض"
+    },
+    "pagination": {
+      "summary": "عرض {from}–{to} من {total}",
+      "pageOf": "صفحة {page} من {pages}",
+      "pageSize": "عدد الصفوف",
+      "previous": "السابق",
+      "next": "التالي",
+      "showing": "عرض {from}–{to} من {total}"
+    },
+    "actions": {
+      "add": "إضافة مركبة",
+      "edit": "تعديل",
+      "changeStatus": "تغيير الحالة",
+      "transfer": "نقل الفرع",
+      "archive": "أرشفة",
+      "back": "العودة إلى المخزون",
+      "createSubmit": "إنشاء المركبة",
+      "updateSubmit": "تحديث المركبة",
+      "updating": "جارٍ التحديث…",
+      "noChangesHint": "عدّل شيئاً لتفعيل التحديث",
+      "confirm": "تأكيد",
+      "cancel": "إلغاء",
+      "viewExisting": "عرض المركبة الموجودة",
+      "create": "إنشاء مركبة",
+      "save": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ…",
+      "retry": "إعادة المحاولة",
+      "loading": "جارٍ التحديث",
+      "backToList": "العودة إلى المخزون",
+      "viewAcquisition": "عرض الاستحواذ",
+      "createAcquisition": "إنشاء استحواذ",
+      "markReadyForSale": "تعيين جاهزة للبيع",
+      "addAcquisition": "إضافة تفاصيل الاستحواذ"
+    },
+    "readyForSale": {
+      "panelTitle": "حالة المركبة",
+      "alreadyReady": "هذه المركبة متاحة للبيع بالفعل.",
+      "loadFailed": "تعذر تحميل أهلية الجاهزية للبيع.",
+      "eligibleTitle": "جاهزة للتعيين للبيع",
+      "blockedTitle": "غير جاهزة للبيع",
+      "outstanding": "المتطلبات المعلقة:",
+      "overrideOpen": "تجاوز وتعيين جاهزة للبيع",
+      "overrideTitle": "تجاوز فحوصات الأهلية",
+      "overrideHint": "استخدم هذا فقط عند وجود صلاحية لتجاوز المتطلبات. سبب التجاوز مطلوب ويُسجَّل في التدقيق.",
+      "overrideToggle": "تجاوز فحوصات الأهلية",
+      "overrideReason": "سبب التجاوز",
+      "overrideReasonPlaceholder": "لماذا تتجاوز فحوصات الجاهزية للبيع؟",
+      "reasonOptional": "ملاحظة (اختياري)",
+      "reasonPlaceholder": "ملاحظة اختيارية لسجل الحالة",
+      "confirm": {
+        "vehicle": "المركبة",
+        "inspection": "الفحص",
+        "workshop": "الورشة",
+        "hint": "ستصبح هذه المركبة متاحة للبيع."
+      },
+      "actions": {
+        "view_inspection": "عرض الفحص",
+        "create_inspection": "إنشاء فحص",
+        "view_workshop": "عرض الورشة",
+        "create_workshop": "إنشاء أمر ورشة",
+        "complete_quality_check": "إكمال فحص الجودة",
+        "view_documents": "عرض المستندات"
+      },
+      "checks": {
+        "inspection_completed": "اكتمل الفحص",
+        "inspection_result": "نتيجة الفحص مقبولة",
+        "critical_findings": "لا توجد ملاحظات حرجة غير محلولة",
+        "repairs": "لا توجد إصلاحات معلقة",
+        "workshop": "متطلبات الورشة مستوفاة",
+        "quality_check": "متطلبات فحص الجودة مستوفاة",
+        "documents": "المستندات مكتملة",
+        "status": "الحالة الحالية تسمح بالجاهزية للبيع"
+      },
+      "summary": {
+        "inspection": {
+          "missing": "غير موجود",
+          "expired": "منتهٍ",
+          "passed": "ناجح",
+          "passed_with_advisories": "ناجح مع توصيات",
+          "pass_with_repairs": "ناجح مع إصلاحات",
+          "failed": "راسب"
+        },
+        "workshop": {
+          "not_required": "غير مطلوب",
+          "required": "مطلوب",
+          "pending": "معلق",
+          "completed": "مكتمل",
+          "quality_check_pending": "فحص الجودة معلق"
+        }
+      }
+    },
+    "dialogs": {
+      "status": {
+        "title": "تغيير الحالة",
+        "description": "الحالة الحالية: {status}. اختر المرحلة التالية وسجّل السبب.",
+        "newStatus": "الحالة الجديدة",
+        "reason": "السبب",
+        "reasonPlaceholder": "لماذا تتغير الحالة؟",
+        "noTransitions": "لا توجد تغييرات حالة أخرى متاحة لهذه المركبة.",
+        "submit": "تحديث الحالة"
+      },
+      "transfer": {
+        "title": "النقل إلى فرع آخر",
+        "description": "انقل {stock} إلى فرع أو موقع مختلف.",
+        "branch": "الفرع الوجهة",
+        "location": "الموقع الوجهة",
+        "reason": "السبب",
+        "reasonPlaceholder": "لماذا تُنقل المركبة؟",
+        "submit": "نقل المركبة",
+        "sameBranch": "اختر فرعاً أو موقعاً مختلفاً."
+      },
+      "archive": {
+        "title": "أرشفة المركبة",
+        "description": "ستُزال {stock} من المخزون النشط مع الاحتفاظ بسجلها.",
+        "reason": "السبب",
+        "reasonPlaceholder": "لماذا تتم أرشفة هذه المركبة؟",
+        "submit": "أرشفة المركبة"
+      },
+      "readyForSale": {
+        "title": "تعيين المركبة جاهزة للبيع؟",
+        "description": "تأكيد الجاهزية للبيع لـ {stock}."
+      }
+    },
+    "toasts": {
+      "created": "تم إنشاء المركبة بنجاح.",
+      "updated": "تم تحديث المركبة بنجاح.",
+      "statusChanged": "تم تغيير حالة المركبة.",
+      "transferred": "تم نقل المركبة بنجاح.",
+      "archived": "تمت أرشفة المركبة.",
+      "readyForSale": "تم تعيين المركبة جاهزة للبيع.",
+      "error": "حدث خطأ ما. حاول مرة أخرى.",
+      "duplicateVin": "توجد مركبة بهذا الرقم (VIN) مسبقاً.",
+      "duplicateChassis": "توجد مركبة برقم الشاسيه نفسه مسبقاً."
+    },
+    "empty": {
+      "title": "المخزون فارغ",
+      "description": "أضف أول مركبة لبدء تتبع المخزون.",
+      "noResults": "لا توجد مركبات مطابقة",
+      "noResultsHint": "جرّب بحثاً مختلفاً أو امسح عوامل التصفية.",
+      "loadFailed": "تعذّر تحميل المركبات",
+      "notFound": "المركبة غير موجودة",
+      "notFoundHint": "ربما أُزيلت أو ليست لديك صلاحية الوصول إليها.",
+      "hint": "أضف أول مركبة لبدء إدارة المخزون.",
+      "filteredTitle": "لا توجد مركبات",
+      "filteredHint": "جرّب تغيير عوامل التصفية أو كلمات البحث."
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "acquisition": "الاستحواذ",
+      "photos": "الصور",
+      "inspection": "الفحص",
+      "costs": "التكاليف",
+      "pricing": "التسعير",
+      "documents": "المستندات",
+      "workshop": "الورشة",
+      "history": "السجل",
+      "sales": "المبيعات"
+    },
+    "acquisition": {
+      "emptyTitle": "لا يوجد استحواذ مرتبط",
+      "emptyHint": "أضف تفاصيل الاستحواذ أثناء تعديل هذه المركبة في المخزون.",
+      "previousTitle": "الاستحواذ السابق",
+      "formHint": "أدخل كيفية الاستحواذ على هذه المركبة. اترك الحقول فارغة لإضافة التفاصيل لاحقًا.",
+      "seller": "البائع",
+      "totalLabel": "إجمالي تكلفة الاستحواذ",
+      "totalHint": "سعر الشراء بالإضافة إلى المزاد والنقل والجمارك والتسجيل والفحص والمصروفات الأخرى.",
+      "costsHidden": "حقول تكلفة الاستحواذ مخفية حسب صلاحيتك.",
+      "purchasePriceRequired": "أدخل سعر الشراء لحفظ تفاصيل الاستحواذ.",
+      "noCreatePermission": "ليست لديك صلاحية إنشاء سجلات الاستحواذ.",
+      "uploadingMedia": "جارٍ رفع الصور والمستندات…",
+      "partialUpload": "تم حفظ المركبة، لكن تعذر رفع بعض الملفات.",
+      "retrySuccess": "تم رفع الملفات المتبقية بنجاح",
+      "savingAcquisition": "جارٍ حفظ الاستحواذ…",
+      "expenses": {
+        "auction": "رسوم المزاد",
+        "transportation": "تكلفة النقل",
+        "customs": "تكلفة الجمارك / الاستيراد",
+        "registration": "تكلفة التسجيل",
+        "inspection": "تكلفة فحص الاستحواذ",
+        "other": "مصروفات استحواذ أخرى"
+      }
+    },
+    "stepper": {
+      "navLabel": "خطوات إضافة مركبة",
+      "progress": "الخطوة {current} من {total}",
+      "optional": "اختياري",
+      "continue": "متابعة",
+      "back": "رجوع",
+      "skip": "تخطِّ الآن",
+      "editStep": "تعديل",
+      "fixVehicle": "أكمل بيانات المركبة المطلوبة قبل المتابعة.",
+      "steps": {
+        "vehicle": "المركبة",
+        "acquisition": "الاستحواذ",
+        "photos": "الصور",
+        "review": "مراجعة"
+      },
+      "hints": {
+        "vehicle": "الهوية والمواصفات والمظهر والموقع.",
+        "acquisition": "مصدر الشراء والسعر والمستندات. يمكنك التخطي.",
+        "photos": "أضف الصور الآن أو لاحقًا من صفحة المركبة.",
+        "review": "تأكد من صحة البيانات ثم أنشئ المركبة."
+      },
+      "review": {
+        "vehicleTitle": "تفاصيل المركبة",
+        "acquisitionTitle": "الاستحواذ",
+        "photosTitle": "الصور",
+        "documentsTitle": "المستندات",
+        "documentsNone": "لم تُضف مستندات بعد.",
+        "missingVehicle": "تفاصيل المركبة غير مكتملة.",
+        "acquisitionIncluded": "سيتم حفظ تفاصيل الاستحواذ ({documents} مستند/مستندات).",
+        "acquisitionSkipped": "لن يُضاف استحواذ الآن — يمكنك إضافته لاحقًا.",
+        "photosCount": "{count} صورة جاهزة للرفع",
+        "photosNone": "لم تُضف صور بعد."
+      }
+    },
+    "tabEmpty": {
+      "photos": {
+        "title": "لا توجد صور بعد",
+        "description": "أضف الصور عند إنشاء أو تعديل هذه المركبة."
+      },
+      "inspection": {
+        "title": "لا توجد فحوصات بعد",
+        "description": "ستظهر تقارير الفحص هنا عند ربط الفحوصات."
+      },
+      "costs": {
+        "title": "لا توجد تكاليف مسجلة",
+        "description": "ستظهر تكاليف الاستحواذ والورشة هنا عند توفرها."
+      },
+      "pricing": {
+        "title": "لم يتم إعداد التسعير",
+        "description": "افتح تبويب التسعير لتعيين أسعار البيع لهذه المركبة."
+      },
+      "documents": {
+        "title": "لا توجد مستندات بعد",
+        "description": "ستظهر مستندات الاستحواذ والفحص والورشة هنا."
+      },
+      "workshop": {
+        "title": "لا توجد أعمال ورشة",
+        "description": "ستظهر أعمال الورشة لهذه المركبة في تبويب الورشة."
+      },
+      "sales": {
+        "title": "لا يوجد نشاط مبيعات",
+        "description": "ستظهر الحجوزات والمبيعات الخاصة بهذه المركبة هنا في مرحلة لاحقة."
+      }
+    },
+    "documents": {
+      "title": "المستندات",
+      "view": "عرض",
+      "download": "تنزيل",
+      "image": "صورة",
+      "unavailable": "المعاينة غير متاحة",
+      "uploadedBy": "رفع بواسطة {name}",
+      "loadFailed": "تعذّر تحميل المستندات",
+      "costLoadFailed": "تعذّر تحميل التكاليف",
+      "costRestricted": "ليس لديك صلاحية عرض تكاليف المركبة.",
+      "emptyTitle": "لا توجد مستندات لهذه المركبة.",
+      "emptySource": "لم يتم رفع مستندات {source} بعد.",
+      "emptyHint": "المستندات المرفوعة في الاستحواذ أو الفحص أو الورشة أو ملفات المركبة تظهر هنا.",
+      "sourceLoadFailed": "تعذّر تحميل مستندات {source}.",
+      "costSummaryTitle": "ملخص التكاليف الداعمة",
+      "costSummaryHint": "تُحسب التكاليف من الاستحواذ والورشة. التسعير يحسب الربح بشكل منفصل.",
+      "purchaseCost": "تكلفة الشراء",
+      "acquisitionExpenses": "مصروفات الاستحواذ",
+      "workshopCost": "إعادة التأهيل / الورشة",
+      "otherCosts": "تكاليف أخرى",
+      "totalCost": "إجمالي تكلفة المركبة",
+      "filters": {
+        "all": "الكل",
+        "general": "عام",
+        "acquisition": "الاستحواذ",
+        "inspection": "الفحص",
+        "reconditioning": "إعادة التأهيل",
+        "pricing": "التسعير"
+      },
+      "sources": {
+        "general": "عام",
+        "acquisition": "الاستحواذ",
+        "inspection": "الفحص",
+        "reconditioning": "إعادة التأهيل",
+        "pricing": "التسعير"
+      }
+    },
+    "detail": {
+      "summary": "الملخص",
+      "identity": "التعريف",
+      "specs": "المواصفات",
+      "appearance": "المظهر",
+      "originLocation": "المنشأ والموقع",
+      "audit": "السجل",
+      "restricted": "مقيّد",
+      "mileageValue": "{value} {unit}"
+    },
+    "history": {
+      "statusHistory": "سجل الحالات",
+      "activity": "النشاط",
+      "initial": "تم الإنشاء",
+      "changedBy": "بواسطة {name}",
+      "system": "النظام",
+      "reason": "السبب",
+      "noStatus": "لا توجد تغييرات حالة بعد",
+      "noStatusHint": "ستُسجل تغييرات الحالة هنا.",
+      "noActivity": "لا يوجد نشاط بعد",
+      "noActivityHint": "ستُسجل التعديلات وعمليات النقل والأرشفة هنا.",
+      "loadFailed": "تعذّر تحميل السجل.",
+      "statusTitle": "سجل الحالة",
+      "activityTitle": "النشاط",
+      "emptyStatus": "لا تغييرات حالة بعد.",
+      "emptyActivity": "لا نشاط مسجّل بعد."
+    },
+    "form": {
+      "createTitle": "مركبة جديدة",
+      "editTitle": "تعديل المركبة",
+      "createDescription": "أدخل تفاصيل المركبة. تبدأ الحالة كـ «تم الاستحواذ» وتتغير عبر مراحل الدورة.",
+      "editDescription": "حدّث تفاصيل المركبة. استخدم «تغيير الحالة» لنقلها عبر مراحل الدورة.",
+      "metaFailed": "تعذّر تحميل الفروع والمواقع.",
+      "noLocation": "بدون موقع محدد",
+      "selectBranch": "اختر فرعاً",
+      "yearPlaceholder": "مثال: 2022",
+      "dateHint": "اختياري"
+    },
+    "title": "المخزون",
+    "description": "المركبات في المعرض وفي الطريق والجاهزة للبيع.",
+    "newTitle": "إضافة مركبة",
+    "newDescription": "أدخل تفاصيل المركبة. يتم إنشاء رقم المخزون تلقائيًا. تبدأ الحالة كـ تم الاستحواذ.",
+    "editTitle": "تعديل المركبة",
+    "editDescription": "حدّث تفاصيل المركبة. استخدم تغيير الحالة للتنقل في دورة الحياة.",
+    "detailTitle": "مركبة",
+    "hints": {
+      "stockAuto": "يُنشأ تلقائيًا عند الحفظ"
+    },
+    "columns": {
+      "stock": "المخزون",
+      "vehicle": "المركبة",
+      "year": "السنة",
+      "mileage": "المسافة",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "created": "تاريخ الإنشاء"
+    },
+    "transmission": {
+      "automatic": "أوتوماتيك",
+      "manual": "يدوي",
+      "cvt": "CVT",
+      "other": "أخرى"
+    },
+    "fuel": {
+      "petrol": "بنزين",
+      "diesel": "ديزل",
+      "hybrid": "هجين",
+      "electric": "كهربائي",
+      "other": "أخرى"
+    },
+    "drive": {
+      "fwd": "دفع أمامي",
+      "rwd": "دفع خلفي",
+      "awd": "دفع كلي",
+      "four_wd": "رباعي",
+      "other": "أخرى"
+    },
+    "origin": {
+      "gcc": "خليجي",
+      "imported": "غير خليجي",
+      "unknown": "غير معروف"
+    },
+    "statusDialog": {
+      "current": "الحالية",
+      "next": "الحالة الجديدة"
+    },
+    "transferDialog": {
+      "current": "الفرع الحالي"
+    },
+    "archiveDialog": {
+      "confirm": "هل أنت متأكد؟ ستُزال المركبة من المخزون النشط مع الاحتفاظ بالسجل."
+    },
+    "errors": {
+      "generic": "تعذّر إكمال الطلب. حاول مرة أخرى.",
+      "reasonRequired": "السبب مطلوب.",
+      "transferRequired": "اختر فرعًا وأدخل سببًا.",
+      "loadTitle": "تعذّر تحميل المخزون",
+      "notFoundTitle": "المركبة غير موجودة",
+      "notFoundHint": "قد تكون أُزيلت أو ليس لديك صلاحية الوصول."
+    },
+    "placeholders": {
+      "photosTitle": "لا توجد صور بعد",
+      "photosHint": "أضف الصور من تبويب الصور أو عند تعديل المركبة.",
+      "inspectionTitle": "لم يبدأ الفحص",
+      "inspectionHint": "ابدأ فحصًا من تبويب الفحص.",
+      "costsTitle": "التكاليف غير متاحة",
+      "restricted": "ليس لديك صلاحية عرض هذه المعلومات.",
+      "pricingHint": "افتح تبويب التسعير لإدارة أسعار البيع.",
+      "documentsTitle": "لا توجد مستندات بعد",
+      "documentsHint": "مستندات الاستحواذ والفحص والورشة تظهر في تبويب المستندات.",
+      "workshopTitle": "لا توجد أعمال ورشة",
+      "workshopHint": "أعمال الورشة تظهر في تبويب الورشة.",
+      "salesTitle": "لا نشاط مبيعات",
+      "salesHint": "الحجوزات والمبيعات تأتي لاحقًا."
+    },
+    "photos": {
+      "title": "صور المركبة",
+      "hint": "الصور اختيارية. أضف من المعرض أو الكاميرا. يمكن تعيين صورة واحدة كأساسية.",
+      "add": "إضافة صورة",
+      "camera": "الكاميرا",
+      "remove": "إزالة الصورة",
+      "primary": "أساسية",
+      "setPrimary": "تعيين كأساسية",
+      "moveLeft": "تحريك لليسار",
+      "moveRight": "تحريك لليمين",
+      "emptyTitle": "لا توجد صور بعد",
+      "emptyHint": "أضف صور الأمام والداخل والأضرار وغيرها لهذه المركبة.",
+      "emptyCategory": "لا توجد صور في هذه الفئة.",
+      "retryUpload": "إعادة رفع الصور",
+      "uploadToCategory": "الرفع إلى: {category}",
+      "filters": {
+        "all": "الكل",
+        "exterior": "الخارج",
+        "interior": "الداخلية",
+        "engine": "المحرك",
+        "damage": "الأضرار",
+        "other": "أخرى"
+      },
+      "categories": {
+        "front": "الأمام",
+        "rear": "الخلف",
+        "left": "الجانب الأيسر",
+        "right": "الجانب الأيمن",
+        "interior": "الداخلية",
+        "dashboard": "لوحة القيادة",
+        "odometer": "عداد المسافة",
+        "engine": "المحرك",
+        "tyres": "الإطارات",
+        "vin": "رقم الهيكل",
+        "damage": "الأضرار",
+        "other": "أخرى"
+      },
+      "errors": {
+        "invalidType": "يجب أن تكون الصورة JPG أو PNG أو WebP.",
+        "tooLarge": "يجب أن يكون حجم الصورة أقل من 10 ميجابايت.",
+        "uploadFailed": "فشل رفع الصورة.",
+        "deleteFailed": "تعذّر حذف الصورة. حاول مرة أخرى.",
+        "loadFailed": "تعذّر تحميل الصور",
+        "generic": "حدث خطأ في الصور. حاول مرة أخرى."
+      },
+      "progress": {
+        "title": "جارٍ رفع الصور",
+        "uploading": "جارٍ الرفع {percent}%",
+        "saving": "جارٍ حفظ الصورة…"
+      },
+      "toasts": {
+        "uploaded": "تم رفع الصورة",
+        "uploadedMany": "تم رفع {count} صور",
+        "removed": "تمت إزالة الصورة",
+        "primarySet": "تم تحديث الصورة الأساسية",
+        "partialUpload": "تم إنشاء المركبة، لكن تعذّر رفع بعض الصور.",
+        "retrySuccess": "تم رفع الصور بنجاح"
+      }
+    }
+  },
+  "acquisitions": {
+    "title": "عمليات الاستحواذ",
+    "description": "إدارة شراء المركبات وإدخالها إلى المخزون.",
+    "actions": {
+      "add": "استحواذ جديد",
+      "retry": "إعادة المحاولة",
+      "loading": "جارٍ التحديث…",
+      "previous": "السابق",
+      "next": "التالي",
+      "addExpense": "إضافة مصروف",
+      "approve": "موافقة",
+      "back": "العودة للقائمة",
+      "cancel": "إلغاء",
+      "cancelAcquisition": "إلغاء الاستحواذ",
+      "changeStatus": "تغيير الحالة",
+      "createSubmit": "إنشاء الاستحواذ",
+      "delete": "حذف",
+      "edit": "تعديل",
+      "receive": "تأكيد الاستلام",
+      "reject": "رفض",
+      "updateSubmit": "تحديث الاستحواذ",
+      "updating": "جارٍ التحديث…",
+      "noChangesHint": "عدّل شيئاً لتفعيل التحديث",
+      "viewExisting": "عرض الاستحواذ",
+      "viewExistingVehicle": "عرض المركبة الحالية",
+      "viewVehicle": "عرض المركبة",
+      "addViaInventory": "إضافة مركبة"
+    },
+    "vehiclePicker": {
+      "modeLabel": "مصدر المركبة",
+      "useExisting": "استخدام مركبة موجودة",
+      "createNew": "إنشاء مركبة جديدة",
+      "selectExisting": "اختر مركبة موجودة",
+      "placeholder": "ابحث عن مركبة…",
+      "searchPlaceholder": "رقم المخزون أو VIN أو الهيكل أو الماركة أو الموديل",
+      "empty": "لا توجد مركبات مستحوذ عليها",
+      "emptyHint": "لا توجد مركبات مستحوذ عليها في المخزون بعد. أضف مركبة أولاً، أو أنشئ واحدة جديدة هنا.",
+      "loadFailed": "تعذر تحميل المركبات. حاول مرة أخرى.",
+      "clear": "مسح",
+      "hint": "ابحث في المخزون عن مركبات بحالة مستحوذ عليها.",
+      "createNewHint": "أدخل تفاصيل المركبة أدناه. سيتم إنشاء سجل مخزون جديد مع هذا الاستحواذ.",
+      "required": "اختر مركبة من المخزون.",
+      "noVehicleView": "تحتاج صلاحية عرض المركبات لاختيار مركبة من المخزون.",
+      "stock": "رقم المخزون: {stock}",
+      "vin": "VIN: {vin}",
+      "branch": "الفرع: {branch}"
+    },
+    "pagination": {
+      "showing": "عرض {from}–{to} من {total}",
+      "pageSize": "عدد الصفوف",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "empty": {
+      "title": "لا توجد عمليات استحواذ بعد",
+      "hint": "أضف مركبة من المخزون وأدخل تفاصيل الاستحواذ هناك.",
+      "filteredTitle": "لم يتم العثور على نتائج",
+      "filteredHint": "جرّب تغيير عوامل التصفية.",
+      "expensesTitle": "لم يتم تسجيل أي مصروفات استحواذ",
+      "expensesHint": "أضف تكاليف النقل أو المزاد أو غيرها.",
+      "notFound": "الاستحواذ غير موجود",
+      "notFoundHint": "قد يكون قد حُذف أو ليس لديك صلاحية الوصول."
+    },
+    "errors": {
+      "loadTitle": "تعذر تحميل عمليات الاستحواذ",
+      "generic": "تعذر إكمال الطلب. يرجى المحاولة مرة أخرى.",
+      "duplicateActive": "هذه المركبة لديها استحواذ نشط بالفعل.",
+      "duplicateActiveHint": "هل تريد فتح الاستحواذ الحالي؟"
+    },
+    "summary": {
+      "total": "الإجمالي",
+      "draft": "مسودة",
+      "pendingApproval": "بانتظار الموافقة",
+      "approved": "موافق عليه",
+      "purchased": "مشترى",
+      "documentsPending": "مستندات معلّقة",
+      "received": "مستلم",
+      "cancelled": "ملغى"
+    },
+    "status": {
+      "draft": "مسودة",
+      "sourcing": "توريد",
+      "negotiating": "تفاوض",
+      "pending_approval": "بانتظار الموافقة",
+      "approved": "موافق عليه",
+      "purchased": "مشترى",
+      "documents_pending": "مستندات معلّقة",
+      "received": "مستلم",
+      "cancelled": "ملغى",
+      "rejected": "مرفوض"
+    },
+    "sourceTypes": {
+      "individual_owner": "مالك فرد",
+      "dealer": "تاجر",
+      "auction": "مزاد",
+      "trade_in": "استبدال",
+      "fleet": "أسطول",
+      "importer": "مستورد",
+      "company": "شركة",
+      "broker": "وسيط",
+      "other": "أخرى"
+    },
+    "expenseTypes": {
+      "purchase": "سعر الشراء",
+      "transportation": "نقل",
+      "auction": "رسوم مزاد",
+      "broker_fee": "عمولة وسيط",
+      "registration": "تسجيل",
+      "insurance": "تأمين",
+      "import_duty": "رسوم استيراد",
+      "clearance": "تخليص",
+      "inspection": "فحص",
+      "customs": "جمارك",
+      "other": "أخرى"
+    },
+    "enums": {
+      "paymentStatus": {
+        "not_paid": "غير مدفوع",
+        "partially_paid": "مدفوع جزئياً",
+        "paid": "مدفوع"
+      },
+      "documentStatus": {
+        "pending": "معلّق",
+        "partial": "جزئي",
+        "complete": "مكتمل"
+      },
+      "registrationStatus": {
+        "not_started": "لم يبدأ",
+        "in_progress": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "not_required": "غير مطلوب"
+      }
+    },
+    "sort": {
+      "created_at": "تاريخ الإنشاء",
+      "updated_at": "تاريخ التحديث",
+      "acquisition_number": "رقم الاستحواذ",
+      "purchase_date": "تاريخ الشراء",
+      "status": "الحالة",
+      "source_type": "نوع المصدر"
+    },
+    "table": {
+      "number": "رقم الاستحواذ",
+      "vehicle": "المركبة",
+      "source": "المصدر",
+      "branch": "الفرع",
+      "purchasePrice": "سعر الشراء",
+      "status": "الحالة",
+      "purchaseDate": "تاريخ الشراء",
+      "createdBy": "أنشئ بواسطة",
+      "actions": "إجراءات",
+      "view": "عرض",
+      "expenseType": "النوع",
+      "description": "الوصف",
+      "amount": "المبلغ",
+      "vendor": "المورد",
+      "expenseDate": "التاريخ"
+    },
+    "filters": {
+      "searchLabel": "بحث",
+      "searchPlaceholder": "الرقم، المخزون، VIN، المصدر، الماركة، الموديل…",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "sourceType": "نوع المصدر",
+      "make": "الماركة",
+      "model": "الموديل",
+      "purchaseDateFrom": "الشراء من",
+      "purchaseDateTo": "الشراء إلى",
+      "createdFrom": "الإنشاء من",
+      "createdTo": "الإنشاء إلى",
+      "paymentStatus": "حالة الدفع",
+      "documentStatus": "حالة المستندات",
+      "registrationStatus": "حالة التسجيل",
+      "priceMin": "أدنى سعر",
+      "priceMax": "أعلى سعر",
+      "sort": "ترتيب حسب",
+      "order": "الاتجاه",
+      "asc": "تصاعدي",
+      "desc": "تنازلي",
+      "clear": "مسح الكل",
+      "more": "المزيد من الفلاتر",
+      "less": "إخفاء الفلاتر",
+      "allStatuses": "كل الحالات",
+      "allBranches": "كل الفروع",
+      "allSourceTypes": "كل المصادر",
+      "allPaymentStatuses": "كل حالات الدفع",
+      "allDocumentStatuses": "كل حالات المستندات",
+      "allRegistrationStatuses": "كل حالات التسجيل",
+      "anyMake": "أي ماركة",
+      "anyModel": "أي موديل",
+      "groupSource": "المصدر والمركبة",
+      "groupStatus": "الحالات",
+      "groupDates": "التواريخ",
+      "groupPrice": "السعر",
+      "active": "{count} نشط"
+    },
+    "fields": {
+      "number": "رقم الاستحواذ",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "sourceType": "نوع المصدر",
+      "sourceName": "اسم المصدر",
+      "sourceCompany": "الشركة",
+      "sourcePhone": "الهاتف",
+      "sourceEmail": "البريد الإلكتروني",
+      "sourceReference": "المرجع",
+      "lotNumber": "رقم اللوت",
+      "askingPrice": "السعر المطلوب",
+      "purchasePrice": "سعر الشراء المتفق عليه",
+      "expenseTotal": "مصروفات إضافية",
+      "totalAcquisitionCost": "إجمالي تكلفة الاستحواذ",
+      "currency": "العملة",
+      "purchaseDate": "تاريخ الشراء",
+      "expectedArrivalDate": "الوصول المتوقع",
+      "receivedDate": "تاريخ الاستلام",
+      "paymentStatus": "حالة الدفع",
+      "documentStatus": "حالة المستندات",
+      "registrationStatus": "حالة التسجيل",
+      "notes": "ملاحظات",
+      "notSet": "غير محدد",
+      "selectPlaceholder": "اختر…",
+      "vin": "رقم الهيكل (VIN)",
+      "vinHint": "١٧ حرفاً. اتركه فارغاً إن لم يكن معروفاً.",
+      "chassis": "رقم الشاصي",
+      "make": "الماركة",
+      "model": "الموديل",
+      "variant": "الفئة",
+      "year": "السنة",
+      "mileage": "المسافة المقطوعة",
+      "origin": "حالة الخليج",
+      "countryOfOrigin": "بلد المنشأ",
+      "stockNumber": "رقم المخزون",
+      "vehicle": "المركبة",
+      "expenseType": "نوع المصروف",
+      "amount": "المبلغ",
+      "expenseDate": "تاريخ المصروف",
+      "vendor": "المورد",
+      "reference": "المرجع",
+      "description": "الوصف",
+      "approvedBy": "وافق عليه",
+      "approvedAt": "تاريخ الموافقة",
+      "approvalNote": "ملاحظة الموافقة",
+      "rejectedBy": "رفضه",
+      "rejectedAt": "تاريخ الرفض",
+      "rejectionReason": "سبب الرفض",
+      "cancelReason": "سبب الإلغاء",
+      "createdAt": "تاريخ الإنشاء",
+      "createdBy": "أنشئ بواسطة",
+      "updatedAt": "تاريخ التحديث",
+      "updatedBy": "حدّث بواسطة"
+    },
+    "sections": {
+      "vehicle": "المركبة",
+      "source": "المصدر",
+      "purchase": "الشراء",
+      "expenses": "المصروفات",
+      "notes": "ملاحظات",
+      "linkedVehicle": "المركبة المرتبطة",
+      "documents": "مستندات الاستحواذ"
+    },
+    "detail": {
+      "overview": "نظرة عامة",
+      "purchase": "الشراء واللوجستيات",
+      "financial": "المالية",
+      "approval": "الموافقة",
+      "audit": "معلومات السجل"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "vehicle": "المركبة",
+      "expenses": "المصروفات",
+      "timeline": "السجل",
+      "documents": "المستندات"
+    },
+    "form": {
+      "editTitle": "تعديل الاستحواذ",
+      "editDescription": "حدّث المصدر أو شروط الشراء أو بيانات المركبة.",
+      "metaFailed": "تعذر تحميل خيارات النموذج. يمكنك إدخال القيم يدوياً."
+    },
+    "dialogs": {
+      "status": {
+        "title": "تغيير الحالة",
+        "newStatus": "الحالة الجديدة",
+        "reason": "السبب",
+        "reasonPlaceholder": "لماذا يتم تغيير الحالة؟",
+        "submit": "تحديث الحالة",
+        "noTransitions": "لا توجد تغييرات حالة متاحة.",
+        "description": "الحالة الحالية: {status}"
+      },
+      "approval": {
+        "approveTitle": "الموافقة على الاستحواذ",
+        "approveDescription": "أكد شروط الشراء ووافق على هذا الاستحواذ.",
+        "approveSubmit": "موافقة",
+        "rejectTitle": "رفض الاستحواذ",
+        "rejectDescription": "أدخل سبباً لرفض هذا الاستحواذ.",
+        "rejectSubmit": "رفض",
+        "note": "ملاحظة الموافقة",
+        "notePlaceholder": "ملاحظة اختيارية للسجل",
+        "reason": "سبب الرفض",
+        "reasonPlaceholder": "سبب مطلوب"
+      },
+      "cancel": {
+        "reasonPrompt": "سبب إلغاء هذا الاستحواذ:"
+      },
+      "expense": {
+        "addTitle": "إضافة مصروف",
+        "editTitle": "تعديل المصروف",
+        "description": "تكاليف مرتبطة بهذا الاستحواذ.",
+        "addSubmit": "إضافة مصروف",
+        "updateSubmit": "حفظ المصروف"
+      }
+    },
+    "history": {
+      "statusHistory": "سجل الحالات",
+      "activity": "النشاط",
+      "initial": "تم الإنشاء",
+      "changedBy": "بواسطة {name}",
+      "system": "النظام",
+      "noStatus": "لا توجد تغييرات حالة بعد",
+      "noStatusHint": "ستظهر تحديثات الحالة هنا.",
+      "noActivity": "لا يوجد نشاط بعد",
+      "noActivityHint": "ستظهر الموافقات والمصروفات والتحديثات هنا."
+    },
+    "toasts": {
+      "created": "تم إنشاء الاستحواذ {number}",
+      "updated": "تم تحديث الاستحواذ",
+      "approved": "تمت الموافقة على الاستحواذ",
+      "rejected": "تم رفض الاستحواذ",
+      "cancelled": "تم إلغاء الاستحواذ",
+      "received": "تم تأكيد استلام الاستحواذ",
+      "statusChanged": "تم تحديث الحالة",
+      "expenseAdded": "تمت إضافة المصروف",
+      "expenseUpdated": "تم تحديث المصروف",
+      "expenseRemoved": "تم حذف المصروف",
+      "error": "حدث خطأ. يرجى المحاولة مرة أخرى."
+    },
+    "documents": {
+      "title": "مستندات الاستحواذ",
+      "description": "قم برفع المستندات المتعلقة بهذا الشراء.",
+      "addTitle": "إضافة مستند",
+      "addDescription": "اختر نوع المستند والملف لهذا الاستحواذ.",
+      "addDocument": "إضافة مستند",
+      "category": "نوع المستند",
+      "file": "ملف",
+      "fileHint": "PDF أو JPG أو PNG أو WEBP بحد أقصى 20 ميجابايت.",
+      "chooseFile": "انقر لرفع ملف",
+      "dropHint": "أو اسحبه وأفلته هنا",
+      "changeFile": "تغيير",
+      "removeFile": "إزالة الملف",
+      "documentName": "اسم المستند",
+      "referenceNumber": "رقم المرجع",
+      "referencePlaceholder": "INV-2026-1024",
+      "notes": "ملاحظات",
+      "view": "عرض",
+      "download": "تنزيل",
+      "remove": "إزالة",
+      "replace": "استبدال",
+      "image": "صورة",
+      "uploading": "جارٍ الرفع…",
+      "saving": "جارٍ الحفظ…",
+      "waiting": "بانتظار",
+      "failed": "فشل",
+      "retryUpload": "إعادة رفع",
+      "confirmDelete": "هل تريد حذف هذا المستند؟ لا يمكن التراجع عن ذلك.",
+      "emptyTitle": "لا توجد مستندات بعد",
+      "emptyHint": "أضف فواتير الشراء أو مستندات المزاد أو مستندات النقل.",
+      "loadFailed": "تعذر تحميل المستندات",
+      "errors": {
+        "invalidType": "يُسمح فقط بملفات PDF و JPG و PNG و WEBP.",
+        "tooLarge": "يجب أن يكون حجم الملف أقل من 20 ميجابايت.",
+        "fileRequired": "اختر ملفًا للرفع."
+      },
+      "toasts": {
+        "uploaded": "تم رفع المستند",
+        "uploadFailed": "فشل رفع المستند",
+        "deleted": "تم حذف المستند",
+        "deleteFailed": "تعذر حذف المستند",
+        "replaced": "تم استبدال المستند",
+        "replaceFailed": "تعذر استبدال المستند",
+        "partialUpload": "تم إنشاء الاستحواذ، لكن تعذر رفع بعض المستندات.",
+        "retrySuccess": "تم رفع المستندات بنجاح"
+      },
+      "categories": {
+        "purchase_invoice": "فاتورة الشراء",
+        "auction_invoice": "فاتورة المزاد",
+        "seller_invoice": "فاتورة البائع",
+        "purchase_agreement": "اتفاقية الشراء",
+        "payment_receipt": "إيصال الدفع",
+        "transport_document": "مستند النقل",
+        "customs_document": "مستند الجمارك",
+        "import_document": "مستند الاستيراد",
+        "registration_document": "مستند التسجيل",
+        "inspection_document": "مستند الفحص",
+        "ownership_document": "مستند الملكية",
+        "other": "أخرى"
+      },
+      "uploadingBatch": "جارٍ رفع المستندات",
+      "uploadingBatchHint": "يرجى الانتظار أثناء رفع الملفات. لا تغلق هذه الصفحة."
+    }
+  },
+  "inspections": {
+    "title": "الفحوصات",
+    "description": "فحوصات حالة المركبة قبل البيع أو الإرجاع أو التجهيز.",
+    "actions": {
+      "add": "فحص جديد",
+      "retry": "إعادة المحاولة",
+      "loading": "جارٍ التحديث…",
+      "previous": "السابق",
+      "next": "التالي",
+      "back": "العودة إلى القائمة",
+      "cancel": "إلغاء",
+      "cancelInspection": "إلغاء الفحص",
+      "createSubmit": "إنشاء وبدء القائمة",
+      "assign": "تعيين",
+      "perform": "تنفيذ",
+      "submit": "إرسال",
+      "saveDraft": "حفظ المسودة",
+      "approve": "اعتماد",
+      "reject": "رفض",
+      "review": "مراجعة",
+      "reinspect": "طلب إعادة فحص",
+      "addFinding": "إضافة ملاحظة",
+      "editFinding": "تعديل الملاحظة",
+      "removeFinding": "إزالة الملاحظة",
+      "noChangesHint": "عدّل شيئاً لتفعيل التحديث",
+      "view": "عرض"
+    },
+    "pagination": {
+      "showing": "عرض {from}–{to} من {total}",
+      "pageSize": "عدد الصفوف",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "empty": {
+      "title": "لا توجد فحوصات بعد",
+      "hint": "أنشئ فحصًا لبدء قائمة التحقق من حالة المركبة.",
+      "filteredTitle": "لم يتم العثور على فحوصات",
+      "filteredHint": "جرّب تغيير عوامل التصفية.",
+      "notFound": "الفحص غير موجود",
+      "notFoundHint": "قد يكون قد أُزيل، أو قد لا تملك صلاحية الوصول.",
+      "findingsTitle": "لا توجد ملاحظات مسجلة",
+      "findingsHint": "يمكن تسجيل العناصر الفاشلة أو التحذيرية كملاحظات.",
+      "photosTitle": "لا توجد صور بعد",
+      "photosHint": "التقط صور الضرر ورقم الهيكل والعداد أثناء الفحص.",
+      "recommendationsTitle": "لا توجد توصيات",
+      "recommendationsHint": "ستظهر هنا توصيات الإصلاح أو المتابعة."
+    },
+    "errors": {
+      "loadTitle": "تعذر تحميل الفحوصات",
+      "generic": "تعذر إكمال الطلب. حاول مرة أخرى."
+    },
+    "summary": {
+      "pending": "معلّق",
+      "myInspections": "خاصتي",
+      "inProgress": "قيد التنفيذ",
+      "awaitingReview": "بانتظار المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "criticalFindings": "حرج"
+    },
+    "status": {
+      "draft": "مسودة",
+      "assigned": "معيّن",
+      "in_progress": "قيد التنفيذ",
+      "submitted": "مُرسل",
+      "under_review": "قيد المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "cancelled": "ملغى"
+    },
+    "types": {
+      "full_inspection": "فحص كامل",
+      "basic_inspection": "فحص أساسي",
+      "pre_purchase_inspection": "قبل الشراء",
+      "return_inspection": "فحص الإرجاع",
+      "re_inspection": "إعادة فحص"
+    },
+    "results": {
+      "pass": "ناجح",
+      "pass_with_advisories": "ناجح مع تحذيرات",
+      "repair_required": "يتطلب إصلاحًا",
+      "fail": "فشل"
+    },
+    "itemResults": {
+      "pass": "ناجح",
+      "fail": "فشل",
+      "advisory": "تحذير",
+      "not_applicable": "غير منطبق",
+      "not_tested": "غير مختبر"
+    },
+    "severities": {
+      "info": "معلومة",
+      "minor": "طفيف",
+      "moderate": "متوسط",
+      "major": "كبير",
+      "critical": "حرج"
+    },
+    "recommendations": {
+      "no_action": "لا إجراء",
+      "monitor": "مراقبة",
+      "repair_before_sale": "إصلاح قبل البيع",
+      "repair_urgently": "إصلاح عاجل",
+      "replace": "استبدال",
+      "reinspect": "إعادة فحص"
+    },
+    "photoCategories": {
+      "front": "الأمام",
+      "rear": "الخلف",
+      "left_side": "الجانب الأيسر",
+      "right_side": "الجانب الأيمن",
+      "interior": "المقصورة",
+      "dashboard": "لوحة القيادة",
+      "odometer": "عداد المسافة",
+      "vin": "رقم الهيكل",
+      "engine": "المحرك",
+      "tyre": "الإطار",
+      "damage": "ضرر",
+      "undercarriage": "أسفل المركبة",
+      "other": "أخرى"
+    },
+    "damageTypes": {
+      "scratch": "خدش",
+      "dent": "انبعاج",
+      "paint_damage": "ضرر طلاء",
+      "crack": "شرخ",
+      "rust": "صدأ",
+      "panel_damage": "ضرر لوحة",
+      "glass_damage": "ضرر زجاج",
+      "mechanical_damage": "ضرر ميكانيكي",
+      "electrical_damage": "ضرر كهربائي",
+      "accident_damage": "ضرر حادث",
+      "wear_and_tear": "تآكل طبيعي",
+      "other": "أخرى"
+    },
+    "damageLocations": {
+      "front": "الأمام",
+      "rear": "الخلف",
+      "left_side": "الجانب الأيسر",
+      "right_side": "الجانب الأيمن",
+      "roof": "السقف",
+      "interior": "المقصورة",
+      "engine_bay": "حجرة المحرك",
+      "undercarriage": "أسفل المركبة",
+      "other": "أخرى"
+    },
+    "sort": {
+      "created_at": "تاريخ الإنشاء",
+      "updated_at": "تاريخ التحديث",
+      "inspection_number": "رقم الفحص",
+      "status": "الحالة",
+      "result": "النتيجة",
+      "overall_score": "الدرجة",
+      "submitted_at": "تاريخ الإرسال"
+    },
+    "table": {
+      "number": "رقم الفحص",
+      "vehicle": "المركبة",
+      "type": "النوع",
+      "branch": "الفرع",
+      "assignee": "المُعيَّن",
+      "status": "الحالة",
+      "result": "النتيجة",
+      "score": "الدرجة",
+      "updated": "محدَّث",
+      "actions": "إجراءات",
+      "view": "عرض"
+    },
+    "filters": {
+      "searchLabel": "بحث",
+      "searchPlaceholder": "الرقم، المخزون، الهيكل، الماركة، الموديل…",
+      "status": "الحالة",
+      "branch": "الفرع",
+      "type": "النوع",
+      "result": "النتيجة",
+      "assignedTo": "معيّن إلى",
+      "mine": "معيّنة لي",
+      "mineYes": "فحوصاتي",
+      "hasCritical": "بها ملاحظات حرجة",
+      "repairRequired": "يتطلب إصلاحًا",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "sort": "ترتيب حسب",
+      "order": "الاتجاه",
+      "asc": "تصاعدي",
+      "desc": "تنازلي",
+      "clear": "مسح الكل",
+      "more": "مزيد من التصفية",
+      "less": "إخفاء التصفية",
+      "allStatuses": "كل الحالات",
+      "allBranches": "كل الفروع",
+      "allTypes": "كل الأنواع",
+      "allResults": "كل النتائج",
+      "anyAssignee": "أي معيّن",
+      "any": "الكل",
+      "yes": "نعم",
+      "groupType": "النوع والتعيين",
+      "groupFlags": "العلامات",
+      "groupDates": "التواريخ",
+      "active": "{count} نشط"
+    },
+    "fields": {
+      "number": "رقم الفحص",
+      "status": "الحالة",
+      "result": "النتيجة",
+      "score": "الدرجة الإجمالية",
+      "branch": "الفرع",
+      "vehicle": "المركبة",
+      "inspectionType": "نوع الفحص",
+      "template": "القالب",
+      "defaultTemplate": "استخدام القالب الافتراضي",
+      "assignedTo": "معيّن إلى",
+      "unassigned": "غير معيّن",
+      "inspectedBy": "فحص بواسطة",
+      "assignedAt": "وقت التعيين",
+      "submittedAt": "وقت الإرسال",
+      "startedAt": "البدء",
+      "odometer": "قراءة العداد",
+      "odometerUnit": "وحدة العداد",
+      "mileage": "مسافة المركبة",
+      "vin": "رقم الهيكل",
+      "verifiedVin": "رقم الهيكل المتحقق",
+      "vinVerified": "تم التحقق من رقم الهيكل",
+      "notes": "ملاحظات",
+      "summary": "الملخص",
+      "recommendation": "التوصية",
+      "recommendedAction": "الإجراء الموصى به",
+      "findingTitle": "عنوان الملاحظة",
+      "itemResult": "نتيجة البند",
+      "severity": "الخطورة",
+      "description": "الوصف",
+      "damageType": "نوع الضرر",
+      "damageLocation": "موقع الضرر",
+      "estimatedCost": "التكلفة التقديرية",
+      "photoCategory": "فئة الصورة",
+      "photos": "الصور",
+      "criticalFindings": "ملاحظات حرجة",
+      "failedItems": "بنود فاشلة",
+      "reviewedBy": "راجعه",
+      "reviewedAt": "وقت المراجعة",
+      "reviewNote": "ملاحظة المراجعة",
+      "rejectionReason": "سبب الرفض",
+      "cancelReason": "سبب الإلغاء",
+      "approvedAt": "وقت الاعتماد",
+      "createdAt": "أُنشئ",
+      "createdBy": "أنشأه",
+      "updatedAt": "حُدّث",
+      "updatedBy": "حدّثه",
+      "notSet": "غير محدد",
+      "selectPlaceholder": "اختر…"
+    },
+    "sections": {
+      "vehicle": "المركبة",
+      "setup": "إعداد الفحص",
+      "notes": "ملاحظات",
+      "vehicle_identity": "هوية المركبة",
+      "exterior": "الخارج",
+      "interior": "المقصورة",
+      "engine": "المحرك",
+      "transmission": "ناقل الحركة",
+      "electrical": "الكهرباء",
+      "air_conditioning": "التكييف",
+      "brakes": "الفرامل",
+      "suspension": "التعليق",
+      "steering": "التوجيه",
+      "tyres_wheels": "الإطارات والعجلات",
+      "fluids": "السوائل",
+      "lights": "الأضواء",
+      "safety": "السلامة",
+      "undercarriage": "أسفل المركبة",
+      "accident_damage": "ضرر الحادث",
+      "road_test": "اختبار الطريق",
+      "documents": "المستندات",
+      "final_assessment": "التقييم النهائي"
+    },
+    "detail": {
+      "overview": "نظرة عامة",
+      "progress": "التقدم",
+      "assignment": "التعيين",
+      "review": "المراجعة",
+      "audit": "معلومات السجل",
+      "critical": "حرج",
+      "photoUnavailable": "المعاينة غير متاحة",
+      "latest": "أحدث فحص",
+      "historyList": "سجل الفحوصات"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "checklist": "قائمة التحقق",
+      "findings": "الملاحظات",
+      "photos": "الصور",
+      "recommendations": "التوصيات",
+      "review": "المراجعة",
+      "history": "السجل"
+    },
+    "form": {
+      "metaFailed": "تعذر تحميل خيارات النموذج. يمكنك إدخال القيم يدويًا."
+    },
+    "dialogs": {
+      "approval": {
+        "approveTitle": "اعتماد الفحص",
+        "approveDescription": "أكد نتيجة القائمة واعتمد هذا الفحص.",
+        "approveSubmit": "اعتماد",
+        "rejectTitle": "رفض الفحص",
+        "rejectDescription": "قدّم سببًا لرفض هذا الفحص.",
+        "rejectSubmit": "رفض",
+        "note": "ملاحظة المراجعة",
+        "notePlaceholder": "ملاحظة اختيارية للسجل",
+        "reason": "سبب الرفض",
+        "reasonPlaceholder": "سبب مطلوب",
+        "overrideCritical": "تجاوز الملاحظات الحرجة والاعتماد على أي حال"
+      },
+      "assign": {
+        "title": "تعيين الفحص",
+        "description": "اختر الفاحص المسؤول عن هذه القائمة.",
+        "reason": "ملاحظة",
+        "reasonPlaceholder": "ملاحظة تعيين اختيارية",
+        "submit": "تعيين"
+      },
+      "submit": {
+        "title": "إرسال الفحص",
+        "description": "راجع التقدم قبل الإرسال للاعتماد.",
+        "progressSummary": "اكتمل {completed} من {total} بندًا",
+        "failedCount": "{count} بنود فاشلة",
+        "criticalCount": "{count} ملاحظات حرجة",
+        "overrideIncomplete": "أرسل حتى لو كانت البنود المطلوبة غير مكتملة",
+        "submit": "إرسال للمراجعة"
+      },
+      "reinspect": {
+        "title": "طلب إعادة فحص",
+        "description": "أنشئ فحص متابعة مرتبطًا بهذا السجل.",
+        "reason": "السبب",
+        "reasonPlaceholder": "لماذا يلزم إعادة الفحص؟",
+        "submit": "إنشاء إعادة فحص"
+      },
+      "finding": {
+        "title": "إضافة ملاحظة",
+        "editTitle": "تعديل الملاحظة",
+        "description": "سجّل الضرر أو العيوب أو التحذيرات أثناء الفحص.",
+        "editDescription": "حدّث تفاصيل هذه الملاحظة.",
+        "submit": "حفظ الملاحظة",
+        "updateSubmit": "تحديث الملاحظة"
+      },
+      "deleteFinding": {
+        "title": "إزالة الملاحظة؟",
+        "description": "ستُزال «{title}» نهائيًا من هذا الفحص.",
+        "submit": "إزالة الملاحظة"
+      },
+      "cancel": {
+        "title": "إلغاء الفحص",
+        "description": "سيُغلق هذا الفحص ولن يعود قابلاً للتعديل.",
+        "reason": "سبب الإلغاء",
+        "reasonPlaceholder": "سبب مطلوب",
+        "submit": "إلغاء الفحص"
+      }
+    },
+    "history": {
+      "statusHistory": "سجل الحالات",
+      "activity": "النشاط",
+      "initial": "أُنشئ",
+      "changedBy": "بواسطة {name}",
+      "system": "النظام",
+      "noStatus": "لا تغييرات حالة بعد",
+      "noStatusHint": "ستظهر تحديثات الحالة هنا.",
+      "noActivity": "لا نشاط بعد",
+      "noActivityHint": "ستظهر التعيينات والملاحظات والمراجعات هنا."
+    },
+    "toasts": {
+      "created": "تم إنشاء الفحص {number}",
+      "updated": "تم تحديث الفحص",
+      "assigned": "تم تعيين الفحص",
+      "submitted": "تم إرسال الفحص",
+      "approved": "تم اعتماد الفحص",
+      "rejected": "تم رفض الفحص",
+      "cancelled": "تم إلغاء الفحص",
+      "reinspect": "تم إنشاء إعادة الفحص {number}",
+      "findingAdded": "تمت إضافة الملاحظة",
+      "findingUpdated": "تم تحديث الملاحظة",
+      "findingRemoved": "تمت إزالة الملاحظة",
+      "photoAdded": "تم رفع الصورة",
+      "photosAdded": "تم رفع {count} صور",
+      "photoRemoved": "تمت إزالة الصورة",
+      "error": "حدث خطأ. حاول مرة أخرى."
+    },
+    "progress": {
+      "items": "{completed} من {total} بندًا",
+      "sections": "{completed} من {total} قسمًا",
+      "critical": "{count} حرج"
+    },
+    "perform": {
+      "title": "تنفيذ الفحص",
+      "sectionNav": "أقسام الفحص",
+      "identity": "هوية المركبة",
+      "photos": "الصور",
+      "capture": "الكاميرا",
+      "gallery": "المعرض",
+      "photoCount": "{count} صور مرفقة",
+      "findingCount": "{count} ملاحظات مسجلة",
+      "itemFindings": "{count} ملاحظات على هذا البند",
+      "sectionFindings": "ملاحظات القسم",
+      "sectionFindingsHint": "ملاحظات غير مرتبطة ببند محدد في القائمة",
+      "noSectionFindings": "لا توجد ملاحظات على مستوى القسم بعد.",
+      "noItemFindings": "لا توجد ملاحظات على هذا البند بعد.",
+      "required": "مطلوب",
+      "itemResult": "نتيجة البند",
+      "saving": "جارٍ الحفظ…",
+      "saved": "تم الحفظ",
+      "unsaved": "تغييرات غير محفوظة",
+      "saveError": "فشل الحفظ",
+      "uploading": "جارٍ رفع الصور…",
+      "uploadingPercent": "جارٍ الرفع {percent}%",
+      "savingPhoto": "جارٍ حفظ الصورة…",
+      "uploadFailed": "فشل الرفع",
+      "removePhoto": "إزالة الصورة",
+      "dismissFailedUpload": "تجاهل الرفع الفاشل"
+    },
+    "offline": {
+      "online": "متصل",
+      "offline": "مسودة دون اتصال"
+    },
+    "warnings": {
+      "odometerTitle": "قراءة العداد تختلف عن مسافة المركبة",
+      "odometerBody": "سجل المركبة يظهر {vehicle} كم؛ القراءة المدخلة {reading} كم.",
+      "vinTitle": "عدم تطابق رقم الهيكل",
+      "vinBody": "رقم هيكل المركبة {vehicle}؛ الرقم المتحقق {verified}."
+    },
+    "review": {
+      "title": "مراجعة الفحص",
+      "summary": "ملخص المراجعة",
+      "criticalTitle": "توجد ملاحظات حرجة",
+      "criticalBody": "{count} ملاحظات حرجة تتطلب الانتباه قبل الاعتماد.",
+      "notReviewableTitle": "غير جاهز للمراجعة",
+      "notReviewableBody": "الحالة الحالية هي {status}."
+    }
+  },
+  "workshop": {
+    "title": "الورشة",
+    "description": "أعمال الإصلاح والتجهيز لإعداد المركبات للبيع.",
+    "actions": {
+      "add": "أمر ورشة جديد",
+      "edit": "Edit order",
+      "save": "Save changes",
+      "create": "Create order",
+      "back": "Back to workshop",
+      "retry": "Retry",
+      "loading": "Updating…",
+      "myJobs": "مهامي",
+      "submitApproval": "Submit for approval",
+      "approve": "اعتماد",
+      "reject": "رفض / إعادة",
+      "schedule": "Schedule",
+      "start": "بدء العمل",
+      "submitQuality": "Submit for quality check",
+      "qualityCheck": "فحص الجودة",
+      "cancel": "إلغاء الأمر",
+      "startJob": "Start",
+      "completeJob": "Complete",
+      "waitingParts": "Waiting for parts",
+      "waitingVendor": "Waiting for vendor",
+      "resumeJob": "Resume",
+      "viewOrder": "View order",
+      "viewVehicle": "عرض المركبة",
+      "qualityCheckAction": "Quality check"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "لا توجد أوامر ورشة.",
+      "hint": "Create a workshop order from a vehicle or approved inspection findings.",
+      "filteredTitle": "No workshop orders match your filters.",
+      "filteredHint": "Try changing search or filters.",
+      "notFound": "Workshop order not found",
+      "notFoundHint": "It may have been removed, or you may not have access.",
+      "jobsTitle": "No jobs yet",
+      "jobsHint": "Add jobs manually or convert inspection findings.",
+      "photosTitle": "No photos uploaded.",
+      "myJobsTitle": "لا توجد مهام معينة.",
+      "myJobsHint": "Assigned workshop jobs will appear here.",
+      "jobNotFound": "Job not found"
+    },
+    "errors": {
+      "loadTitle": "Unable to load workshop data",
+      "generic": "Unable to complete the request. Please try again.",
+      "required": "This field is required",
+      "budgetExceeded": "Budget exceeded"
+    },
+    "summary": {
+      "openOrders": "أوامر مفتوحة",
+      "scheduled": "Scheduled",
+      "inProgress": "قيد التنفيذ",
+      "waitingForParts": "Waiting for parts",
+      "waitingForVendor": "Waiting for vendor",
+      "qualityCheck": "Quality check",
+      "completed": "Completed",
+      "overdue": "متأخر",
+      "estimatedCost": "التكلفة التقديرية",
+      "actualCost": "التكلفة الفعلية",
+      "costVariance": "فرق التكلفة",
+      "costs": "Cost summary"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Order #, stock ID, VIN, make, model…",
+      "status": "Status",
+      "priority": "Priority",
+      "workshopType": "Workshop type",
+      "overdue": "Overdue only",
+      "allStatuses": "All statuses",
+      "allPriorities": "All priorities",
+      "allTypes": "All types",
+      "clear": "Clear filters"
+    },
+    "columns": {
+      "order": "Order #",
+      "vehicle": "Vehicle",
+      "stockId": "Stock ID",
+      "priority": "Priority",
+      "status": "Status",
+      "jobs": "Jobs",
+      "estimated": "Estimated",
+      "actual": "Actual",
+      "updated": "Updated"
+    },
+    "fields": {
+      "vehicle": "Vehicle",
+      "vehicleId": "Vehicle ID",
+      "branch": "Branch",
+      "branchDefault": "Use vehicle branch",
+      "workshopType": "Workshop type",
+      "priority": "Priority",
+      "description": "Description",
+      "notes": "Notes",
+      "estimated": "Estimated cost",
+      "actual": "Actual cost",
+      "variance": "Variance",
+      "jobs": "Jobs",
+      "scheduledStart": "Scheduled start",
+      "scheduledEnd": "Scheduled end",
+      "inspectionFinding": "Inspection finding"
+    },
+    "status": {
+      "draft": "مسودة",
+      "pending_approval": "بانتظار الاعتماد",
+      "approved": "معتمد",
+      "scheduled": "مجدول",
+      "in_progress": "قيد التنفيذ",
+      "waiting_for_parts": "بانتظار قطع",
+      "waiting_for_vendor": "بانتظار المورد",
+      "quality_check": "فحص الجودة",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "on_hold": "موقوف",
+      "pending": "Pending",
+      "assigned": "Assigned"
+    },
+    "jobStatus": {
+      "pending": "Pending",
+      "assigned": "Assigned",
+      "in_progress": "In progress",
+      "waiting_for_parts": "Waiting for parts",
+      "waiting_for_vendor": "Waiting for vendor",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "عادي",
+      "high": "High",
+      "urgent": "عاجل",
+      "critical": "حرج"
+    },
+    "workshopType": {
+      "internal": "Internal",
+      "external_vendor": "External vendor"
+    },
+    "jobType": {
+      "mechanical": "Mechanical",
+      "electrical": "Electrical",
+      "body_repair": "Body repair",
+      "paint": "Paint",
+      "tyres": "Tyres",
+      "brakes": "Brakes",
+      "suspension": "Suspension",
+      "ac": "AC",
+      "detailing": "Detailing",
+      "cleaning": "Cleaning",
+      "glass": "Glass",
+      "diagnostics": "Diagnostics",
+      "general": "General",
+      "other": "Other"
+    },
+    "photoCategory": {
+      "before": "Before",
+      "during": "During",
+      "after": "After",
+      "part": "Part",
+      "damage": "Damage",
+      "repair": "Repair",
+      "other": "Other"
+    },
+    "badges": {
+      "overdue": "متأخر",
+      "budgetExceeded": "تجاوز الميزانية"
+    },
+    "costs": {
+      "restricted": "تفاصيل التكلفة مخفية لصلاحيتك.",
+      "breakdown": "Cost breakdown",
+      "parts": "Parts",
+      "labour": "Labour",
+      "expenses": "Other expenses"
+    },
+    "sections": {
+      "jobs": "Jobs",
+      "photos": "Photos",
+      "history": "History"
+    },
+    "quality": {
+      "title": "فحص الجودة",
+      "pass": "نجاح",
+      "fail": "فشل",
+      "rework": "يحتاج إعادة عمل",
+      "notesPlaceholder": "Quality notes…",
+      "checklist": {
+        "jobsCompleted": "All required jobs completed",
+        "partsRecorded": "Required parts recorded",
+        "photosPresent": "Required photos present",
+        "criticalResolved": "Critical repair findings resolved",
+        "conditionAcceptable": "Vehicle condition acceptable"
+      }
+    },
+    "myJobs": {
+      "title": "مهام الورشة الخاصة بي",
+      "description": "Jobs assigned to you.",
+      "groups": {
+        "inProgress": "In progress",
+        "waiting": "Waiting",
+        "assigned": "Assigned",
+        "completed": "Completed"
+      }
+    },
+    "vehiclePanel": {
+      "title": "Workshop orders",
+      "empty": "No workshop orders for this vehicle yet."
+    },
+    "vehiclePicker": {
+      "placeholder": "ابحث عن مركبة في المخزون…",
+      "searchPlaceholder": "رقم المخزون أو VIN أو الهيكل أو الماركة أو الموديل",
+      "empty": "لا توجد مركبات مؤهلة",
+      "emptyHint": "اختر مركبة من المخزون تحتاج أعمال الورشة.",
+      "loadFailed": "تعذر تحميل المركبات. حاول مرة أخرى.",
+      "clear": "مسح",
+      "hint": "اربط أمر الورشة بمركبة موجودة في المخزون.",
+      "noVehicleView": "تحتاج صلاحية عرض المركبات لاختيار مركبة من المخزون.",
+      "stock": "رقم المخزون: {stock}",
+      "vin": "VIN: {vin}",
+      "branch": "الفرع: {branch}"
+    },
+    "fromInspection": {
+      "title": "إنشاء أمر ورشة",
+      "hint": "Select inspection findings that require workshop action.",
+      "create": "إنشاء أمر ورشة"
+    },
+    "prompts": {
+      "rejectReason": "Reason for rejection / return",
+      "cancelReason": "Cancellation reason"
+    },
+    "toasts": {
+      "created": "Workshop order created",
+      "updated": "Workshop order updated",
+      "createdFromInspection": "Workshop order created from inspection",
+      "submitted": "Submitted for approval",
+      "approved": "Workshop order approved",
+      "rejected": "Returned for changes",
+      "scheduled": "Workshop order scheduled",
+      "started": "Workshop work started",
+      "qualitySubmitted": "Submitted for quality check",
+      "qualityPassed": "Quality check passed",
+      "qualityFailed": "Quality check failed / rework required",
+      "cancelled": "Workshop order cancelled",
+      "jobStarted": "Job started",
+      "jobCompleted": "Job completed",
+      "waitingParts": "Marked waiting for parts",
+      "waitingVendor": "Marked waiting for vendor",
+      "jobResumed": "Job resumed"
+    }
+  },
+  "pricing": {
+    "list": {
+      "title": "التسعير",
+      "description": "تحديد أسعار البيع ومراجعة الربحية الإجمالية حسب المركبة."
+    },
+    "panel": {
+      "title": "التسعير والربحية"
+    },
+    "sections": {
+      "costBreakdown": "ملخص تكلفة المركبة",
+      "profitability": "الربحية",
+      "edit": "تعديل التسعير",
+      "history": "سجل الأسعار",
+      "approval": "الموافقة مطلوبة"
+    },
+    "fields": {
+      "minimum": "الحد الأدنى لسعر البيع",
+      "target": "سعر البيع المستهدف",
+      "advertised": "السعر المعلن",
+      "current": "سعر البيع الحالي",
+      "maxDiscountAmount": "الحد الأقصى للخصم (مبلغ)",
+      "maxDiscountPercent": "الحد الأقصى للخصم %",
+      "notes": "ملاحظات التسعير",
+      "changeReason": "سبب التغيير",
+      "overrideMinimum": "تجاوز الحد الأدنى لسعر البيع",
+      "overrideReason": "سبب التجاوز"
+    },
+    "cost": {
+      "purchase": "سعر الشراء",
+      "acquisitionExpenses": "مصروفات الاستحواذ",
+      "workshop": "الورشة / الإصلاحات",
+      "other": "تكاليف أخرى"
+    },
+    "summary": {
+      "totalCost": "إجمالي تكلفة المركبة",
+      "expectedProfit": "إجمالي الربح المتوقع",
+      "margin": "هامش الربح المتوقع",
+      "discount": "الخصم"
+    },
+    "status": {
+      "draft": "مسودة",
+      "pending_approval": "بانتظار الموافقة",
+      "approved": "معتمد",
+      "active": "نشط",
+      "discount_approval_required": "موافقة خصم مطلوبة",
+      "below_minimum": "أقل من الحد الأدنى",
+      "sold": "مباع",
+      "cancelled": "ملغى"
+    },
+    "reasons": {
+      "market_adjustment": "تعديل السوق",
+      "competitor_pricing": "تسعير المنافسين",
+      "customer_negotiation": "تفاوض مع العميل",
+      "clearance": "تصفية",
+      "vehicle_condition": "حالة المركبة",
+      "management_decision": "قرار إداري",
+      "promotion": "عرض ترويجي",
+      "initial_pricing": "تسعير أولي",
+      "cost_refresh": "تحديث التكلفة",
+      "approval": "موافقة",
+      "override": "تجاوز",
+      "other": "أخرى"
+    },
+    "warnings": {
+      "belowMinimumTitle": "أقل من الحد الأدنى",
+      "belowMinimumBody": "سعر البيع الحالي أقل من الحد الأدنى المعتمد.",
+      "lossTitle": "خسارة متوقعة",
+      "lossBody": "إجمالي الربح المتوقع سالب عند سعر البيع الحالي."
+    },
+    "actions": {
+      "save": "حفظ التسعير",
+      "approve": "موافقة",
+      "reject": "رفض",
+      "openFull": "فتح صفحة التسعير",
+      "viewVehicle": "عرض المركبة",
+      "back": "العودة إلى التسعير"
+    },
+    "table": {
+      "vehicle": "المركبة",
+      "stock": "رقم المخزون",
+      "status": "حالة التسعير"
+    },
+    "history": {
+      "unknownUser": "مستخدم غير معروف"
+    },
+    "restricted": {
+      "title": "التسعير مقيد",
+      "description": "ليست لديك صلاحية عرض تسعير هذه المركبة."
+    },
+    "empty": {
+      "title": "لا توجد مركبات",
+      "description": "عدّل عوامل التصفية أو أضف مركبات إلى المخزون أولاً.",
+      "loadFailed": "تعذر تحميل التسعير",
+      "loadFailedHint": "حاول مرة أخرى بعد لحظات.",
+      "notFound": "التسعير غير موجود",
+      "notFoundHint": "قد تكون المركبة غير موجودة أو ليست لديك صلاحية الوصول."
+    },
+    "toasts": {
+      "saved": "تم حفظ التسعير.",
+      "approved": "تمت الموافقة على التسعير.",
+      "rejected": "أُعيد التسعير إلى المسودة.",
+      "error": "حدث خطأ. حاول مرة أخرى."
+    },
+    "validation": {
+      "minExceedsTarget": "لا يمكن أن يتجاوز الحد الأدنى السعر المستهدف.",
+      "currentExceedsAdvertised": "لا يمكن أن يتجاوز السعر الحالي السعر المعلن."
+    }
   }
 }

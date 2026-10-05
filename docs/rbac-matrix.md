@@ -33,10 +33,10 @@ No separate `user_branch_access` table — Phase 3 `user_roles.branch_id` covers
 | Module | Permissions |
 | --- | --- |
 | dashboard | `dashboard.view` |
-| vehicle | `vehicle.view`, `.create`, `.edit`, `.delete`, `.cost.view`, `.cost.edit`, `.price.view`, `.price.edit`, `.profit.view` |
-| acquisition | `acquisition.view`, `.create`, `.edit` |
-| inspection | `inspection.view`, `.create`, `.edit`, `.approve` |
-| workshop | `workshop.view`, `.create`, `.edit` |
+| vehicle | `vehicle.view`, `.create`, `.edit`, `.delete`, `.status.change`, `.branch.transfer`, `.archive`, `.cost.view`, `.cost.edit`, `.price.view`, `.price.edit`, `.profit.view` |
+| acquisition | `acquisition.view`, `.create`, `.edit`, `.approve`, `.cancel`, `.cost.view`, `.cost.edit`, `.expense.view`, `.expense.create`, `.expense.edit` |
+| inspection | `inspection.view`, `.create`, `.edit`, `.approve`, `.submit`, `.review`, `.reject`, `.reinspect`, `.finding.view`, `.finding.create`, `.finding.edit`, `.photo.view`, `.photo.create`, `.photo.delete`, `.cost.view`, `.override` |
+| workshop | `workshop.view`, `.create`, `.edit`, `.approve`, `.cancel`, `.job.*`, `.parts.*`, `.labour.*`, `.expense.*`, `.cost.view/edit/override`, `.quality_check`, `.photo.*` |
 | customer | `customer.view`, `.create`, `.edit` |
 | lead | `lead.view`, `.create`, `.edit` |
 | reservation | `reservation.view`, `.create`, `.cancel` |
@@ -59,7 +59,7 @@ No separate `user_branch_access` table — Phase 3 `user_roles.branch_id` covers
 | Inventory Manager | Vehicles, costs, prices, acquisitions, related docs |
 | Sales Manager | CRM + sales pipeline; vehicle view/price; limited payments |
 | Sales Executive | CRM + sales actions; vehicle view/price; **no** costs, payments, admin |
-| Inspector | Inspections + vehicle view |
+| Inspector | Inspections (view/create/edit/submit, findings, photos) + vehicle view; **no** approve/reject/review/override/cost |
 | Workshop Manager | Workshop + vehicle view/costs |
 | Accountant | Payments, invoices, financial reports, vehicle cost/profit view |
 | Document Officer | Documents + limited vehicle/customer/sale view |

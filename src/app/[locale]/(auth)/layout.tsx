@@ -8,7 +8,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const t = await getTranslations();
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="grid h-svh overflow-y-auto lg:grid-cols-2">
       <section className="bg-sidebar text-sidebar-foreground hidden flex-col justify-between p-10 lg:flex">
         <BrandMark className="text-sidebar-foreground" />
         <div>
@@ -21,7 +21,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         </div>
         <p className="text-sidebar-foreground/70 max-w-sm text-sm">{t("app.footnote")}</p>
       </section>
-      <div className="flex min-h-svh flex-col px-4 py-6 sm:px-8">
+      <div className="flex min-h-full flex-col px-4 py-6 sm:px-8">
         <div className="mb-8 flex items-center justify-between gap-3">
           <div className="lg:hidden">
             <BrandMark />

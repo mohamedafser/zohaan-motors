@@ -22,19 +22,33 @@ export function FormField({
   htmlFor,
   error,
   hint,
+  required = false,
   children,
 }: {
   label: string;
   htmlFor: string;
   error?: string;
   hint?: string;
+  /** Shows a required asterisk next to the label. */
+  required?: boolean;
   children: React.ReactNode;
 }) {
+  const t = useTranslations();
   const message = useTranslatedMessage()(error);
 
   return (
     <div className="grid gap-2">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <Label htmlFor={htmlFor}>
+        {label}
+        {required ? (
+          <>
+            <span className="text-destructive ms-0.5" aria-hidden>
+              *
+            </span>
+            <span className="sr-only"> ({t("validation.required")})</span>
+          </>
+        ) : null}
+      </Label>
       {children}
       {hint && !message ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
       {message ? (

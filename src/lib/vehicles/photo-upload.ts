@@ -1,0 +1,65 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import { requireSupabaseEnv } from "@/lib/supabase/env";
+import type { VehiclePhotoCategory } from "@/types/vehicle-photo";
+
+export function safePhotoFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 80) || "photo.jpg";
+}
+
+export function buildVehiclePhotoPath(
+  vehicleId: string,
+  category: VehiclePhotoCategory,
+  fileName: string,
+) {
+  return `${vehicleId}/${category}/${crypto.randomUUID()}-${safePhotoFileName(fileName)}`;
+}
+
+export async function uploadVehiclePhotoFile(
+  file: File,
+  path: string,
+  onProgress?: (percent: number) => void,
+) {
+  const supabase = createClient();
+  const { url, key } = requireSupabaseEnv();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Authentication required.");
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${url}/storage/v1/object/vehicle-photos/${path}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+    xhr.setRequestHeader("apikey", key);
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.setRequestHeader("cache-control", "3600");
+    if (file.type) xhr.setRequestHeader("Content-Type", file.type);
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      onProgress?.(Math.round((event.loaded / event.total) * 90));
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress?.(90);
+        resolve();
+        return;
+      }
+      let message = `Upload failed (${xhr.status})`;
+      try {
+        const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+        message = body.message || body.error || message;
+      } catch {
+        // keep default
+      }
+      reject(new Error(message));
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload."));
+    xhr.send(file);
+  });
+}

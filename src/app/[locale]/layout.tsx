@@ -78,7 +78,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${latin.variable} ${arabic.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full" suppressHydrationWarning>
+      <body className="h-full overflow-hidden" suppressHydrationWarning>
         <AppProviders locale={localeParam} direction={directionFor(localeParam)} messages={messages}>
           {children}
         </AppProviders>

@@ -17,7 +17,12 @@
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "db:types:linked": "supabase gen types typescript --linked > src/types/database.ts",
     "db:test:constraints": "supabase db query -f supabase/tests/constraint_checks.sql",
-    "db:test:security": "supabase db query -f supabase/tests/rls_security_checks.sql"
+    "db:test:security": "supabase db query -f supabase/tests/rls_security_checks.sql",
+    "db:test:inventory": "supabase db query -f supabase/tests/phase5_inventory.sql",
+    "db:test:acquisitions": "supabase db query -f supabase/tests/phase6_acquisitions.sql",
+    "db:test:inspections": "supabase db query -f supabase/tests/phase7_inspections.sql",
+    "test": "node scripts/test-vehicle-transitions.mjs && node scripts/test-acquisition-transitions.mjs && node scripts/test-inspection-transitions.mjs && node scripts/test-vehicle-photo-validation.mjs && node scripts/test-acquisition-document-validation.mjs",
+    "test:transitions": "node scripts/test-vehicle-transitions.mjs && node scripts/test-acquisition-transitions.mjs && node scripts/test-inspection-transitions.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

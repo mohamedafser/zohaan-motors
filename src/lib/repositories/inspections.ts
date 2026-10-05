@@ -1,0 +1,27 @@
+export {
+  getInspectionSummary,
+  listInspections,
+  getInspection,
+  createInspection,
+  updateInspection,
+  saveInspectionDraft,
+  assignInspection,
+  startInspection,
+  submitInspection,
+  approveInspection,
+  rejectInspection,
+  cancelInspection,
+  requestReinspection,
+  changeInspectionStatus,
+  addFinding,
+  updateFinding,
+  deleteFinding,
+  addInspectionPhoto,
+  deleteInspectionPhoto,
+  getInspectionHistory,
+  getInspectionActivity,
+  getInspectionMeta,
+  listInspectionsForVehicle,
+} from "@/lib/inspections/service";
+
+export type { InspectionServiceError, ServiceResult } from "@/lib/inspections/service";

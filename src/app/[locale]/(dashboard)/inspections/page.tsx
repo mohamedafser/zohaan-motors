@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 
-import { ModuleScreen } from "@/components/layout/module-screen";
+import { InspectionsPageClient } from "@/components/inspections/inspections-page-client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { requirePagePermission } from "@/lib/auth/authorize";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   return { title: t("modules.inspections.title") };
 }
 
-export default function Page() {
+export default async function Page() {
+  await requirePagePermission("inspection.view");
+
   return (
-    <ModuleScreen
-      permission="inspection.view"
-      titleKey="modules.inspections.title"
-      descriptionKey="modules.inspections.description"
-    />
+    <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+      <InspectionsPageClient />
+    </Suspense>
   );
 }

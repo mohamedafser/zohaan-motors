@@ -45,7 +45,7 @@ export const dashboardSample = {
   inventoryMix: [
     { key: "available" as const, value: 31 },
     { key: "reserved" as const, value: 9 },
-    { key: "workshop" as const, value: 8 },
+    { key: "sold" as const, value: 8 },
   ],
   aging: [
     { key: "fresh" as const, count: 18 },
@@ -77,7 +77,7 @@ export const dashboardSample = {
       stockNumber: "SAMPLE-1101",
       title: "Sample crossover",
       priceAed: 74_000,
-      status: "workshop",
+      status: "sold",
       branch: "Sample yard",
       sample: true,
     },
@@ -86,7 +86,7 @@ export const dashboardSample = {
       stockNumber: "SAMPLE-1114",
       title: "Sample hatchback",
       priceAed: 42_000,
-      status: "sold",
+      status: "available",
       branch: "Sample branch",
       sample: true,
     },
@@ -139,7 +139,6 @@ export const dashboardSample = {
   ] satisfies SampleSale[],
   actions: [
     { id: "a1", labelKey: "dashboard.actions.inspection", href: "/inspections" },
-    { id: "a2", labelKey: "dashboard.actions.reservation", href: "/reservations" },
-    { id: "a3", labelKey: "dashboard.actions.workshop", href: "/workshop/orders" },
+    { id: "a2", labelKey: "dashboard.actions.pricing", href: "/inventory" },
   ],
 };

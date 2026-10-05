@@ -86,11 +86,38 @@ export type Database = {
       role_permissions: GenericTable;
       vehicles: GenericTable;
       vehicle_expenses: GenericTable;
+      vehicle_status_history: GenericTable;
+      vehicle_photos: GenericTable;
+      vehicle_price_history: GenericTable;
+      vehicle_pricing: GenericTable;
+      vehicle_pricing_history: GenericTable;
+      vehicle_makes: GenericTable;
+      vehicle_models: GenericTable;
+      branch_locations: GenericTable;
       acquisitions: GenericTable;
       inspections: GenericTable;
+      inspection_templates: GenericTable;
+      inspection_template_items: GenericTable;
+      inspection_sections: GenericTable;
+      inspection_items: GenericTable;
+      inspection_findings: GenericTable;
+      inspection_recommendations: GenericTable;
+      inspection_photos: GenericTable;
+      inspection_status_history: GenericTable;
       workshop_orders: GenericTable;
+      workshop_items: GenericTable;
+      workshop_jobs: GenericTable;
+      workshop_job_parts: GenericTable;
+      workshop_job_labour: GenericTable;
+      workshop_expenses: GenericTable;
+      workshop_status_history: GenericTable;
+      workshop_photos: GenericTable;
+      workshop_quality_checks: GenericTable;
+      vendors: GenericTable;
       customers: GenericTable;
       leads: GenericTable;
+      acquisition_status_history: GenericTable;
+      suppliers: GenericTable;
       reservations: GenericTable;
       sales: GenericTable;
       payments: GenericTable;
@@ -138,9 +165,407 @@ export type Database = {
         };
         Returns: undefined;
       };
+      next_vehicle_stock_number: { Args: Record<PropertyKey, never>; Returns: string };
+      change_vehicle_status: {
+        Args: {
+          p_vehicle_id: string;
+          p_new_status: string;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      transfer_vehicle: {
+        Args: {
+          p_vehicle_id: string;
+          p_branch_id: string;
+          p_location_id?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      archive_vehicle: {
+        Args: {
+          p_vehicle_id: string;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      set_vehicle_photo_primary: {
+        Args: { p_photo_id: string };
+        Returns: Record<string, unknown>;
+      };
+      get_vehicle_total_cost: {
+        Args: { p_vehicle_id: string };
+        Returns: {
+          purchase_cost: number;
+          acquisition_expenses: number;
+          acquisition_total: number;
+          workshop_cost: number;
+          other_costs: number;
+          total_vehicle_cost: number;
+        }[];
+      };
+      get_vehicle_cost_breakdown: {
+        Args: { p_vehicle_id: string };
+        Returns: Record<string, unknown>;
+      };
+      get_vehicle_profitability: {
+        Args: { p_vehicle_id: string; p_selling_price?: number | null };
+        Returns: Record<string, unknown>;
+      };
+      upsert_vehicle_pricing: {
+        Args: {
+          p_vehicle_id: string;
+          p_minimum_selling_price?: number | null;
+          p_target_selling_price?: number | null;
+          p_advertised_price?: number | null;
+          p_current_selling_price?: number | null;
+          p_maximum_discount_amount?: number | null;
+          p_maximum_discount_percent?: number | null;
+          p_pricing_notes?: string | null;
+          p_change_reason?: string;
+          p_change_notes?: string | null;
+          p_override_minimum?: boolean;
+          p_override_reason?: string | null;
+          p_submit_for_approval?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      approve_vehicle_pricing: {
+        Args: {
+          p_vehicle_id: string;
+          p_note?: string | null;
+          p_approve?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      evaluate_vehicle_ready_for_sale: {
+        Args: { p_vehicle_id: string };
+        Returns: Record<string, unknown>;
+      };
+      mark_vehicle_ready_for_sale: {
+        Args: {
+          p_vehicle_id: string;
+          p_reason?: string | null;
+          p_override?: boolean;
+          p_override_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      next_acquisition_number: { Args: Record<PropertyKey, never>; Returns: string };
+      read_acquisition_costs: {
+        Args: { p_acquisition_id: string };
+        Returns: {
+          asking_price: number | null;
+          purchase_price: number;
+          expense_total: number;
+          total_acquisition_cost: number;
+        }[];
+      };
+      read_acquisitions_costs: {
+        Args: { p_ids: string[] };
+        Returns: {
+          acquisition_id: string;
+          asking_price: number | null;
+          purchase_price: number;
+          expense_total: number;
+          total_acquisition_cost: number;
+        }[];
+      };
+      change_acquisition_status: {
+        Args: {
+          p_acquisition_id: string;
+          p_new_status: string;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      approve_acquisition: {
+        Args: { p_acquisition_id: string; p_note?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      reject_acquisition: {
+        Args: { p_acquisition_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      cancel_acquisition: {
+        Args: { p_acquisition_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      confirm_acquisition_purchase: {
+        Args: { p_acquisition_id: string; p_reason?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      receive_acquisition: {
+        Args: { p_acquisition_id: string; p_reason?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      next_inspection_number: { Args: Record<PropertyKey, never>; Returns: string };
+      populate_inspection_checklist: {
+        Args: { p_inspection_id: string };
+        Returns: Record<string, unknown>;
+      };
+      read_inspection_costs: {
+        Args: { p_inspection_id: string };
+        Returns: {
+          finding_id: string | null;
+          finding_title: string | null;
+          finding_estimated_cost: number | null;
+          recommendation_id: string | null;
+          recommendation_estimated_cost: number | null;
+          currency: string | null;
+          findings_total: number | null;
+          recommendations_total: number | null;
+        }[];
+      };
+      change_inspection_status: {
+        Args: {
+          p_inspection_id: string;
+          p_new_status: string;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      assign_inspection: {
+        Args: {
+          p_inspection_id: string;
+          p_assigned_to: string;
+          p_reason?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      start_inspection: {
+        Args: { p_inspection_id: string };
+        Returns: Record<string, unknown>;
+      };
+      submit_inspection: {
+        Args: {
+          p_inspection_id: string;
+          p_overall_result?: string | null;
+          p_overall_score?: number | null;
+          p_summary?: string | null;
+          p_recommendation?: string | null;
+          p_notes?: string | null;
+          p_override_incomplete?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      approve_inspection: {
+        Args: {
+          p_inspection_id: string;
+          p_note?: string | null;
+          p_override_critical?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      reject_inspection: {
+        Args: { p_inspection_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      cancel_inspection: {
+        Args: { p_inspection_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      request_reinspection: {
+        Args: {
+          p_inspection_id: string;
+          p_reason: string;
+          p_assigned_to?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      next_workshop_order_number: { Args: Record<PropertyKey, never>; Returns: string };
+      next_workshop_job_number: { Args: Record<PropertyKey, never>; Returns: string };
+      read_workshop_costs: {
+        Args: { p_order_id: string };
+        Returns: {
+          parts_total: number;
+          labour_total: number;
+          expenses_total: number;
+          actual_total: number;
+          estimated_total: number;
+          variance: number;
+        }[];
+      };
+      recalculate_workshop_order_costs: {
+        Args: { p_order_id: string };
+        Returns: undefined;
+      };
+      workshop_cost_approval_threshold: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      submit_workshop_for_approval: {
+        Args: { p_order_id: string };
+        Returns: Record<string, unknown>;
+      };
+      approve_workshop_order: {
+        Args: { p_order_id: string; p_note?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      reject_workshop_order: {
+        Args: { p_order_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      return_workshop_for_changes: {
+        Args: { p_order_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      schedule_workshop_order: {
+        Args: {
+          p_order_id: string;
+          p_start?: string | null;
+          p_end?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      start_workshop_order: {
+        Args: { p_order_id: string };
+        Returns: Record<string, unknown>;
+      };
+      hold_workshop_order: {
+        Args: {
+          p_order_id: string;
+          p_reason: string;
+          p_notes?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      cancel_workshop_order: {
+        Args: { p_order_id: string; p_reason: string };
+        Returns: Record<string, unknown>;
+      };
+      submit_workshop_quality_check: {
+        Args: { p_order_id: string };
+        Returns: Record<string, unknown>;
+      };
+      perform_workshop_quality_check: {
+        Args: {
+          p_order_id: string;
+          p_result: string;
+          p_notes?: string | null;
+          p_checklist?: Json;
+        };
+        Returns: Record<string, unknown>;
+      };
+      assign_workshop_job: {
+        Args: {
+          p_job_id: string;
+          p_assigned_to?: string | null;
+          p_vendor_id?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      start_workshop_job: {
+        Args: { p_job_id: string };
+        Returns: Record<string, unknown>;
+      };
+      complete_workshop_job: {
+        Args: { p_job_id: string };
+        Returns: Record<string, unknown>;
+      };
+      set_workshop_job_waiting_parts: {
+        Args: { p_job_id: string };
+        Returns: Record<string, unknown>;
+      };
+      set_workshop_job_waiting_vendor: {
+        Args: { p_job_id: string };
+        Returns: Record<string, unknown>;
+      };
+      resume_workshop_job: {
+        Args: { p_job_id: string };
+        Returns: Record<string, unknown>;
+      };
+      cancel_workshop_job: {
+        Args: { p_job_id: string; p_reason?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      bump_workshop_estimate: {
+        Args: {
+          p_order_id: string;
+          p_new_estimate: number;
+          p_override?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      create_workshop_from_inspection: {
+        Args: {
+          p_inspection_id: string;
+          p_finding_ids: string[];
+          p_branch_id?: string | null;
+          p_priority?: string;
+          p_workshop_type?: string;
+          p_description?: string | null;
+          p_allow_duplicates?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      write_audit_log: {
+        Args: {
+          p_action: string;
+          p_entity_type: string;
+          p_entity_id: string;
+          p_old_values?: Json | null;
+          p_new_values?: Json | null;
+          p_metadata?: Json | null;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       user_status: "active" | "invited" | "suspended" | "disabled";
+      vehicle_status:
+        | "acquired"
+        | "under_inspection"
+        | "inspection_failed"
+        | "under_repair"
+        | "ready_for_sale"
+        | "reserved"
+        | "sold"
+        | "delivered"
+        | "returned"
+        | "archived";
+      acquisition_status:
+        | "draft"
+        | "sourcing"
+        | "negotiating"
+        | "pending_approval"
+        | "approved"
+        | "purchased"
+        | "documents_pending"
+        | "received"
+        | "cancelled"
+        | "rejected";
+      acquisition_source_type:
+        | "individual_owner"
+        | "dealer"
+        | "auction"
+        | "trade_in"
+        | "fleet"
+        | "importer"
+        | "company"
+        | "broker"
+        | "other";
+      inspection_status:
+        | "draft"
+        | "assigned"
+        | "in_progress"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "cancelled";
+      inspection_type:
+        | "full_inspection"
+        | "basic_inspection"
+        | "pre_purchase_inspection"
+        | "return_inspection"
+        | "re_inspection";
+      inspection_result:
+        | "pass"
+        | "pass_with_advisories"
+        | "repair_required"
+        | "fail";
     };
     CompositeTypes: Record<string, never>;
   };

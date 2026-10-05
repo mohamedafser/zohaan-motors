@@ -12,6 +12,7 @@
     "acquisitions": "Acquisitions",
     "inspections": "Inspections",
     "workshop": "Workshop",
+    "pricing": "Pricing",
     "workshopOrders": "Work orders",
     "customers": "Customers",
     "leads": "Leads",
@@ -39,7 +40,9 @@
     "expand": "Expand sidebar",
     "more": "More",
     "home": "Home",
-    "cars": "Cars"
+    "cars": "Cars",
+    "workshopJobs": "Jobs",
+    "myWorkshopJobs": "My jobs"
   },
   "common": {
     "search": "Search",
@@ -61,11 +64,18 @@
     "comingSoon": "This module is ready for a later phase.",
     "required": "Required",
     "optional": "Optional",
+    "clear": "Clear",
+    "noResults": "No results",
     "delete": "Delete",
     "moveEarlier": "Move earlier",
     "moveLater": "Move later",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "phoneCountry": "Country code",
+    "searchCountry": "Search country…",
+    "noCountry": "No country found",
+    "yes": "Yes",
+    "no": "No"
   },
   "quick": {
     "title": "Create",
@@ -74,7 +84,8 @@
     "inspection": "New inspection",
     "customer": "New customer",
     "reservation": "New reservation",
-    "sale": "New sale"
+    "sale": "New sale",
+    "workshop": "New workshop order"
   },
   "auth": {
     "login": {
@@ -157,6 +168,7 @@
     "passwordNumber": "Include a number.",
     "passwordMatch": "Passwords do not match.",
     "phone": "Enter a valid UAE phone number.",
+    "phoneInternational": "Enter a valid international phone number.",
     "number": "Enter a valid number.",
     "currency": "Enter an amount of zero or more.",
     "date": "Choose a valid date.",
@@ -164,7 +176,7 @@
   },
   "empty": {
     "vehicles": "No vehicles found",
-    "vehiclesHint": "Stock will appear here once inventory is connected.",
+    "vehiclesHint": "Add a vehicle or adjust your filters to see stock here.",
     "leads": "No leads found",
     "leadsHint": "Showroom enquiries will appear here once leads are connected.",
     "customers": "No customers found",
@@ -199,7 +211,10 @@
       "reservations": "Reservations",
       "sales": "Sales",
       "payments": "Payments",
-      "documents": "Documents"
+      "documents": "Documents",
+      "acquisitions": "Acquisitions",
+      "inspections": "Inspections",
+      "workshop": "Workshop"
     }
   },
   "notifications": {
@@ -273,7 +288,7 @@
     "actions": {
       "inspection": "Inspection waiting",
       "reservation": "Reservation to confirm",
-      "workshop": "Workshop order open"
+      "pricing": "Pricing to set"
     }
   },
   "modules": {
@@ -283,7 +298,7 @@
     },
     "inventoryNew": {
       "title": "New vehicle",
-      "description": "Photo capture is ready. Vehicle details and storage come in a later phase."
+      "description": "Add a vehicle in a few guided steps — details, acquisition, photos, then save."
     },
     "acquisitions": {
       "title": "Acquisitions",
@@ -291,7 +306,7 @@
     },
     "acquisitionsNew": {
       "title": "New acquisition",
-      "description": "The purchase form will be added with the acquisitions module."
+      "description": "Enter vehicle identity, source details, and purchase terms."
     },
     "inspections": {
       "title": "Inspections",
@@ -299,11 +314,15 @@
     },
     "inspectionsNew": {
       "title": "New inspection",
-      "description": "The inspection form will be added with the inspections module."
+      "description": "Select a vehicle, inspection type, and template, then start the checklist."
     },
     "workshop": {
       "title": "Workshop",
-      "description": "Reconditioning work for stock vehicles."
+      "description": "Repair and refurbishment work to prepare vehicles for sale."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "description": "Vehicle cost, selling prices, and gross profitability."
     },
     "workshopOrders": {
       "title": "Work orders",
@@ -397,5 +416,1868 @@
     "empty": "Add photos from the camera or from files.",
     "remove": "Remove photo",
     "count": "{count} photos"
+  },
+  "inventory": {
+    "summary": {
+      "total": "Total vehicles",
+      "readyForSale": "Ready for sale",
+      "underInspection": "Under inspection",
+      "underRepair": "Under repair",
+      "reserved": "Reserved",
+      "sold": "Sold",
+      "available": "Ready for sale"
+    },
+    "status": {
+      "acquired": "Acquired",
+      "under_inspection": "Under inspection",
+      "inspection_failed": "Inspection failed",
+      "under_repair": "Under repair",
+      "ready_for_sale": "Ready for sale",
+      "reserved": "Reserved",
+      "sold": "Sold",
+      "delivered": "Delivered",
+      "returned": "Returned",
+      "archived": "Archived"
+    },
+    "fields": {
+      "stockId": "Stock ID",
+      "stockIdHint": "Auto-generated when the vehicle is saved.",
+      "vin": "VIN",
+      "vinHint": "17 characters. Leave blank if unknown.",
+      "chassis": "Chassis number",
+      "make": "Make",
+      "model": "Model",
+      "variant": "Variant",
+      "year": "Year",
+      "mileage": "Mileage",
+      "mileageUnit": "Unit",
+      "bodyType": "Body type",
+      "transmission": "Transmission",
+      "fuelType": "Fuel type",
+      "engineSize": "Engine size",
+      "engineCylinders": "Cylinders",
+      "driveType": "Drive type",
+      "seats": "Seats",
+      "doors": "Doors",
+      "exteriorColor": "Exterior colour",
+      "interiorColor": "Interior colour",
+      "customColor": "Custom colour name",
+      "origin": "Origin",
+      "countryOfOrigin": "Country of origin",
+      "branch": "Branch",
+      "location": "Location",
+      "purchaseDate": "Purchase date",
+      "registrationDate": "Registration date",
+      "registrationExpiry": "Registration expiry",
+      "notes": "Notes",
+      "notesHint": "Internal notes about this vehicle.",
+      "status": "Status",
+      "source": "Source",
+      "condition": "Condition",
+      "sellingPrice": "Selling price",
+      "minimumPrice": "Minimum price",
+      "acquisitionCost": "Total acquisition cost",
+      "createdAt": "Created",
+      "updatedAt": "Last updated",
+      "createdBy": "Created by",
+      "updatedBy": "Updated by",
+      "notSet": "Not set",
+      "selectPlaceholder": "Select",
+      "noneOption": "None",
+      "stockNumber": "Stock ID",
+      "chassisNumber": "Chassis number",
+      "originType": "Origin",
+      "reason": "Reason",
+      "acquisitionNumber": "Acquisition number",
+      "acquisitionStatus": "Acquisition status",
+      "acquisitionType": "Acquisition type",
+      "purchasePrice": "Purchase price"
+    },
+    "enums": {
+      "transmission": {
+        "automatic": "Automatic",
+        "manual": "Manual",
+        "cvt": "CVT",
+        "other": "Other"
+      },
+      "fuel": {
+        "petrol": "Petrol",
+        "diesel": "Diesel",
+        "hybrid": "Hybrid",
+        "electric": "Electric",
+        "other": "Other"
+      },
+      "drive": {
+        "fwd": "Front-wheel drive",
+        "rwd": "Rear-wheel drive",
+        "awd": "All-wheel drive",
+        "four_wd": "4WD",
+        "other": "Other"
+      },
+      "origin": {
+        "gcc": "GCC",
+        "imported": "Imported",
+        "unknown": "Unknown"
+      },
+      "countryRegion": {
+        "gcc": "GCC",
+        "asia": "Asia",
+        "europe": "Europe",
+        "americas": "Americas",
+        "africa": "Africa",
+        "oceania": "Oceania",
+        "other": "Other"
+      },
+      "mileageUnit": {
+        "km": "km",
+        "mi": "mi"
+      },
+      "bodyType": {
+        "sedan": "Sedan",
+        "suv": "SUV",
+        "crossover": "Crossover",
+        "hatchback": "Hatchback",
+        "coupe": "Coupe",
+        "convertible": "Convertible",
+        "pickup": "Pickup",
+        "van": "Van",
+        "wagon": "Wagon",
+        "sports_car": "Sports car",
+        "other": "Other"
+      }
+    },
+    "sections": {
+      "basic": "Basic information",
+      "specs": "Specifications",
+      "appearance": "Appearance",
+      "origin": "Origin",
+      "location": "Location",
+      "notes": "Notes",
+      "identification": "Identification",
+      "vehicle": "Vehicle",
+      "metadata": "Metadata",
+      "acquisition": "Acquisition"
+    },
+    "filters": {
+      "searchPlaceholder": "Search stock ID, VIN, make or model",
+      "searchLabel": "Search vehicles",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "branch": "Branch",
+      "allBranches": "All branches",
+      "location": "Location",
+      "allLocations": "All locations",
+      "make": "Make",
+      "model": "Model",
+      "yearFrom": "Year from",
+      "yearTo": "Year to",
+      "origin": "Origin",
+      "allOrigins": "All origins",
+      "fuelType": "Fuel type",
+      "allFuelTypes": "All fuel types",
+      "transmission": "Transmission",
+      "allTransmissions": "All transmissions",
+      "bodyType": "Body type",
+      "allBodyTypes": "All body types",
+      "includeArchived": "Include archived",
+      "sort": "Sort by",
+      "order": "Order",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "more": "More filters",
+      "less": "Hide filters",
+      "clear": "Clear all",
+      "active": "{count} filters active",
+      "title": "Filters",
+      "search": "Search",
+      "any": "Any",
+      "anyMake": "Any make",
+      "anyModel": "Any model",
+      "year": "Year",
+      "groupVehicle": "Vehicle",
+      "groupSpecs": "Specifications",
+      "select": "Select",
+      "fuel": "Fuel type",
+      "mileageMin": "Mileage min",
+      "mileageMax": "Mileage max",
+      "acquisitionFrom": "Acquired from",
+      "acquisitionTo": "Acquired to"
+    },
+    "sort": {
+      "created_at": "Date added",
+      "updated_at": "Last updated",
+      "stock_number": "Stock ID",
+      "year": "Year",
+      "mileage": "Mileage",
+      "status": "Status",
+      "purchase_date": "Purchase date",
+      "make": "Make",
+      "model": "Model"
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "stockId": "Stock ID",
+      "vin": "VIN",
+      "year": "Year",
+      "mileage": "Mileage",
+      "status": "Status",
+      "branch": "Branch",
+      "location": "Location",
+      "price": "Price",
+      "actions": "Actions",
+      "view": "View"
+    },
+    "pagination": {
+      "summary": "Showing {from}–{to} of {total}",
+      "pageOf": "Page {page} of {pages}",
+      "pageSize": "Rows per page",
+      "previous": "Previous",
+      "next": "Next",
+      "showing": "Showing {from}–{to} of {total}"
+    },
+    "actions": {
+      "add": "Add vehicle",
+      "edit": "Edit",
+      "changeStatus": "Change status",
+      "transfer": "Move branch",
+      "archive": "Archive",
+      "back": "Back to inventory",
+      "createSubmit": "Create vehicle",
+      "updateSubmit": "Update vehicle",
+      "updating": "Updating…",
+      "noChangesHint": "Change something to enable Update",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "viewExisting": "View existing vehicle",
+      "create": "Create vehicle",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "retry": "Try again",
+      "loading": "Updating",
+      "backToList": "Back to inventory",
+      "viewAcquisition": "View acquisition",
+      "createAcquisition": "Create acquisition",
+      "markReadyForSale": "Mark Ready for Sale",
+      "addAcquisition": "Add acquisition details"
+    },
+    "readyForSale": {
+      "panelTitle": "Vehicle status",
+      "alreadyReady": "This vehicle is already available for sale.",
+      "loadFailed": "Could not load Ready for Sale eligibility.",
+      "eligibleTitle": "Ready to mark for sale",
+      "blockedTitle": "Not ready for sale",
+      "outstanding": "Outstanding requirements:",
+      "overrideOpen": "Override and mark Ready for Sale",
+      "overrideTitle": "Override eligibility checks",
+      "overrideHint": "Only use when you are authorized to bypass outstanding requirements. An override reason is required and will be audited.",
+      "overrideToggle": "Override eligibility checks",
+      "overrideReason": "Override reason",
+      "overrideReasonPlaceholder": "Why are you overriding the Ready for Sale checks?",
+      "reasonOptional": "Note (optional)",
+      "reasonPlaceholder": "Optional note for the status history",
+      "confirm": {
+        "vehicle": "Vehicle",
+        "inspection": "Inspection",
+        "workshop": "Workshop",
+        "hint": "This vehicle will become available for sale."
+      },
+      "actions": {
+        "view_inspection": "View Inspection",
+        "create_inspection": "Create Inspection",
+        "view_workshop": "View Workshop",
+        "create_workshop": "Create Workshop Order",
+        "complete_quality_check": "Complete Quality Check",
+        "view_documents": "View Documents"
+      },
+      "checks": {
+        "inspection_completed": "Inspection completed",
+        "inspection_result": "Inspection result acceptable",
+        "critical_findings": "No unresolved critical findings",
+        "repairs": "No pending repairs",
+        "workshop": "Workshop requirements satisfied",
+        "quality_check": "Quality check requirements satisfied",
+        "documents": "Documents complete",
+        "status": "Current status allows Ready for Sale"
+      },
+      "summary": {
+        "inspection": {
+          "missing": "Missing",
+          "expired": "Expired",
+          "passed": "Passed",
+          "passed_with_advisories": "Passed with advisories",
+          "pass_with_repairs": "Pass with repairs",
+          "failed": "Failed"
+        },
+        "workshop": {
+          "not_required": "Not Required",
+          "required": "Required",
+          "pending": "Pending",
+          "completed": "Completed",
+          "quality_check_pending": "Quality check pending"
+        }
+      }
+    },
+    "dialogs": {
+      "status": {
+        "title": "Change status",
+        "description": "Current status: {status}. Choose the next stage and record why.",
+        "newStatus": "New status",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is the status changing?",
+        "noTransitions": "No further status changes are available for this vehicle.",
+        "submit": "Update status"
+      },
+      "transfer": {
+        "title": "Transfer to another branch",
+        "description": "Move {stock} to a different branch or location.",
+        "branch": "Destination branch",
+        "location": "Destination location",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is the vehicle moving?",
+        "submit": "Transfer vehicle",
+        "sameBranch": "Choose a different branch or location."
+      },
+      "archive": {
+        "title": "Archive vehicle",
+        "description": "{stock} will be removed from active stock. Its history is kept.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is this vehicle being archived?",
+        "submit": "Archive vehicle"
+      },
+      "readyForSale": {
+        "title": "Mark Vehicle Ready for Sale?",
+        "description": "Confirm Ready for Sale for {stock}."
+      }
+    },
+    "toasts": {
+      "created": "Vehicle created successfully.",
+      "updated": "Vehicle updated successfully.",
+      "statusChanged": "Vehicle status changed.",
+      "transferred": "Vehicle moved successfully.",
+      "archived": "Vehicle archived.",
+      "readyForSale": "Vehicle marked Ready for Sale.",
+      "error": "Something went wrong. Try again.",
+      "duplicateVin": "A vehicle with this VIN already exists.",
+      "duplicateChassis": "A vehicle with this chassis number already exists."
+    },
+    "empty": {
+      "title": "Your inventory is empty",
+      "description": "Add your first vehicle to start tracking stock.",
+      "noResults": "No vehicles match your filters",
+      "noResultsHint": "Try a different search or clear the filters.",
+      "loadFailed": "Vehicles could not be loaded",
+      "notFound": "Vehicle not found",
+      "notFoundHint": "It may have been removed, or you may not have access to it.",
+      "hint": "Add your first vehicle to start managing stock.",
+      "filteredTitle": "No vehicles found",
+      "filteredHint": "Try changing your filters or search terms."
+    },
+    "tabs": {
+      "overview": "Overview",
+      "acquisition": "Acquisition",
+      "photos": "Photos",
+      "inspection": "Inspection",
+      "costs": "Costs",
+      "pricing": "Pricing",
+      "documents": "Documents",
+      "workshop": "Workshop",
+      "history": "History",
+      "sales": "Sales"
+    },
+    "acquisition": {
+      "emptyTitle": "No acquisition linked",
+      "emptyHint": "Add acquisition details while editing this vehicle in Inventory.",
+      "previousTitle": "Previous acquisition",
+      "formHint": "Enter how this vehicle was acquired. Leave blank to add acquisition details later.",
+      "seller": "Seller",
+      "totalLabel": "Total Acquisition Cost",
+      "totalHint": "Purchase price plus auction, transport, customs, registration, inspection, and other expenses.",
+      "costsHidden": "Acquisition cost fields are hidden for your role.",
+      "purchasePriceRequired": "Enter a purchase price to save acquisition details.",
+      "noCreatePermission": "You do not have permission to create acquisition records.",
+      "uploadingMedia": "Uploading photos and documents…",
+      "partialUpload": "Vehicle saved, but some files could not be uploaded.",
+      "retrySuccess": "Remaining files uploaded successfully",
+      "savingAcquisition": "Saving acquisition…",
+      "expenses": {
+        "auction": "Auction Fee",
+        "transportation": "Transportation Cost",
+        "customs": "Customs / Import Cost",
+        "registration": "Registration Cost",
+        "inspection": "Acquisition Inspection Cost",
+        "other": "Other Acquisition Expenses"
+      }
+    },
+    "stepper": {
+      "navLabel": "New vehicle steps",
+      "progress": "Step {current} of {total}",
+      "optional": "Optional",
+      "continue": "Continue",
+      "back": "Back",
+      "skip": "Skip for now",
+      "editStep": "Edit",
+      "fixVehicle": "Complete the required vehicle details before continuing.",
+      "steps": {
+        "vehicle": "Vehicle",
+        "acquisition": "Acquisition",
+        "photos": "Photos",
+        "review": "Review"
+      },
+      "hints": {
+        "vehicle": "Identity, specs, appearance, and location.",
+        "acquisition": "Purchase source, price, and documents. You can skip this.",
+        "photos": "Add photos now or later from the vehicle page.",
+        "review": "Confirm everything looks right, then create the vehicle."
+      },
+      "review": {
+        "vehicleTitle": "Vehicle details",
+        "acquisitionTitle": "Acquisition",
+        "photosTitle": "Photos",
+        "documentsTitle": "Documents",
+        "documentsNone": "No documents added yet.",
+        "missingVehicle": "Vehicle details are incomplete.",
+        "acquisitionIncluded": "Acquisition details will be saved ({documents} document(s)).",
+        "acquisitionSkipped": "No acquisition details on this create — you can add them later.",
+        "photosCount": "{count} photo(s) ready to upload",
+        "photosNone": "No photos added yet."
+      }
+    },
+    "tabEmpty": {
+      "photos": {
+        "title": "No photos yet",
+        "description": "Add photos when creating or editing this vehicle."
+      },
+      "inspection": {
+        "title": "No inspections yet",
+        "description": "Inspection reports will appear here once inspections are connected."
+      },
+      "costs": {
+        "title": "No costs recorded",
+        "description": "Acquisition and workshop costs will appear here when available."
+      },
+      "pricing": {
+        "title": "Pricing not set up",
+        "description": "Open the Pricing tab to set selling prices for this vehicle."
+      },
+      "documents": {
+        "title": "No documents yet",
+        "description": "Documents from acquisition, inspection, and workshop will appear here."
+      },
+      "workshop": {
+        "title": "No workshop jobs",
+        "description": "Workshop jobs for this vehicle will appear in the Workshop tab."
+      },
+      "sales": {
+        "title": "No sales activity",
+        "description": "Reservations and sales for this vehicle will appear here in a later phase."
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "view": "View",
+      "download": "Download",
+      "image": "Image",
+      "unavailable": "Preview unavailable",
+      "uploadedBy": "Uploaded by {name}",
+      "loadFailed": "Unable to load documents",
+      "costLoadFailed": "Unable to load costs",
+      "costRestricted": "You do not have permission to view vehicle costs.",
+      "emptyTitle": "No documents available for this vehicle.",
+      "emptySource": "No {source} documents have been uploaded yet.",
+      "emptyHint": "Documents uploaded in Acquisition, Inspection, Workshop, or vehicle files appear here.",
+      "sourceLoadFailed": "{source} documents could not be loaded.",
+      "costSummaryTitle": "Supporting cost summary",
+      "costSummaryHint": "Costs are calculated from Acquisition and Workshop. Pricing calculates profit separately.",
+      "purchaseCost": "Purchase cost",
+      "acquisitionExpenses": "Acquisition expenses",
+      "workshopCost": "Reconditioning / workshop",
+      "otherCosts": "Other costs",
+      "totalCost": "Total vehicle cost",
+      "filters": {
+        "all": "All",
+        "general": "General",
+        "acquisition": "Acquisition",
+        "inspection": "Inspection",
+        "reconditioning": "Reconditioning",
+        "pricing": "Pricing"
+      },
+      "sources": {
+        "general": "General",
+        "acquisition": "Acquisition",
+        "inspection": "Inspection",
+        "reconditioning": "Reconditioning",
+        "pricing": "Pricing"
+      }
+    },
+    "detail": {
+      "summary": "Summary",
+      "identity": "Identification",
+      "specs": "Specifications",
+      "appearance": "Appearance",
+      "originLocation": "Origin and location",
+      "audit": "Record",
+      "restricted": "Restricted",
+      "mileageValue": "{value} {unit}"
+    },
+    "history": {
+      "statusHistory": "Status history",
+      "activity": "Activity",
+      "initial": "Created",
+      "changedBy": "by {name}",
+      "system": "System",
+      "reason": "Reason",
+      "noStatus": "No status changes yet",
+      "noStatusHint": "Status changes will be recorded here.",
+      "noActivity": "No activity yet",
+      "noActivityHint": "Edits, transfers and archive actions will be recorded here.",
+      "loadFailed": "History could not be loaded.",
+      "statusTitle": "Status history",
+      "activityTitle": "Activity",
+      "emptyStatus": "No status changes yet.",
+      "emptyActivity": "No activity recorded yet."
+    },
+    "form": {
+      "createTitle": "New vehicle",
+      "editTitle": "Edit vehicle",
+      "createDescription": "Enter the vehicle details. Status starts as Acquired and changes through the lifecycle.",
+      "editDescription": "Update vehicle details. Use Change status to move it through the lifecycle.",
+      "metaFailed": "Branches and locations could not be loaded.",
+      "noLocation": "No specific location",
+      "selectBranch": "Select a branch",
+      "yearPlaceholder": "e.g. 2022",
+      "dateHint": "Optional"
+    },
+    "title": "Inventory",
+    "description": "Vehicles on the floor, in transit, and ready for sale.",
+    "newTitle": "Add vehicle",
+    "newDescription": "Enter vehicle details. Stock ID is assigned automatically. Status starts as Acquired.",
+    "editTitle": "Edit vehicle",
+    "editDescription": "Update vehicle details. Use Change status to move through the lifecycle.",
+    "detailTitle": "Vehicle",
+    "hints": {
+      "stockAuto": "Auto-generated on save"
+    },
+    "columns": {
+      "stock": "Stock",
+      "vehicle": "Vehicle",
+      "year": "Year",
+      "mileage": "Mileage",
+      "status": "Status",
+      "branch": "Branch",
+      "created": "Created"
+    },
+    "transmission": {
+      "automatic": "Automatic",
+      "manual": "Manual",
+      "cvt": "CVT",
+      "other": "Other"
+    },
+    "fuel": {
+      "petrol": "Petrol",
+      "diesel": "Diesel",
+      "hybrid": "Hybrid",
+      "electric": "Electric",
+      "other": "Other"
+    },
+    "drive": {
+      "fwd": "FWD",
+      "rwd": "RWD",
+      "awd": "AWD",
+      "four_wd": "4WD",
+      "other": "Other"
+    },
+    "origin": {
+      "gcc": "GCC",
+      "imported": "Non-GCC",
+      "unknown": "Unknown"
+    },
+    "statusDialog": {
+      "current": "Current",
+      "next": "New status"
+    },
+    "transferDialog": {
+      "current": "Current branch"
+    },
+    "archiveDialog": {
+      "confirm": "Are you sure? This vehicle will be removed from active inventory. History is kept."
+    },
+    "errors": {
+      "generic": "Unable to complete the request. Please try again.",
+      "reasonRequired": "A reason is required.",
+      "transferRequired": "Choose a branch and enter a reason.",
+      "loadTitle": "Unable to load inventory",
+      "notFoundTitle": "Vehicle not found",
+      "notFoundHint": "It may have been removed, or you may not have access."
+    },
+    "placeholders": {
+      "photosTitle": "No photos yet",
+      "photosHint": "Add photos from the Photos tab or when editing this vehicle.",
+      "inspectionTitle": "Inspection has not been started",
+      "inspectionHint": "Start an inspection from the Inspection tab.",
+      "costsTitle": "Costs unavailable",
+      "restricted": "You do not have permission to view this information.",
+      "pricingHint": "Open the Pricing tab to manage selling prices.",
+      "documentsTitle": "No documents yet",
+      "documentsHint": "Acquisition, inspection, and workshop documents appear in the Documents tab.",
+      "workshopTitle": "No workshop jobs",
+      "workshopHint": "Workshop jobs appear in the Workshop tab.",
+      "salesTitle": "No sales activity",
+      "salesHint": "Reservations and sales come in a later phase."
+    },
+    "photos": {
+      "title": "Vehicle Photos",
+      "hint": "Photos are optional. Add from gallery or camera. One photo can be marked primary.",
+      "add": "Add photo",
+      "camera": "Camera",
+      "remove": "Remove photo",
+      "primary": "Primary",
+      "setPrimary": "Set as primary",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "emptyTitle": "No photos yet",
+      "emptyHint": "Add front, interior, damage, and other photos for this vehicle.",
+      "emptyCategory": "No photos in this category.",
+      "retryUpload": "Retry upload",
+      "uploadToCategory": "Uploading to: {category}",
+      "filters": {
+        "all": "All",
+        "exterior": "Exterior",
+        "interior": "Interior",
+        "engine": "Engine",
+        "damage": "Damage",
+        "other": "Other"
+      },
+      "categories": {
+        "front": "Front",
+        "rear": "Rear",
+        "left": "Left Side",
+        "right": "Right Side",
+        "interior": "Interior",
+        "dashboard": "Dashboard",
+        "odometer": "Odometer",
+        "engine": "Engine",
+        "tyres": "Tires",
+        "vin": "VIN / Chassis",
+        "damage": "Damage",
+        "other": "Other"
+      },
+      "errors": {
+        "invalidType": "Image must be JPG, PNG, or WebP.",
+        "tooLarge": "Image size must be less than 10 MB.",
+        "uploadFailed": "Photo upload failed.",
+        "deleteFailed": "Could not delete photo. Please retry.",
+        "loadFailed": "Unable to load photos",
+        "generic": "Something went wrong with photos. Please try again."
+      },
+      "progress": {
+        "title": "Uploading photos",
+        "uploading": "Uploading {percent}%",
+        "saving": "Saving photo…"
+      },
+      "toasts": {
+        "uploaded": "Photo uploaded",
+        "uploadedMany": "{count} photos uploaded",
+        "removed": "Photo removed",
+        "primarySet": "Primary photo updated",
+        "partialUpload": "Vehicle created, but some photos could not be uploaded.",
+        "retrySuccess": "Photos uploaded successfully"
+      }
+    }
+  },
+  "acquisitions": {
+    "title": "Acquisitions",
+    "description": "Manage vehicle purchase and intake into inventory.",
+    "actions": {
+      "add": "New acquisition",
+      "retry": "Retry",
+      "loading": "Updating…",
+      "previous": "Previous",
+      "next": "Next",
+      "addExpense": "Add expense",
+      "approve": "Approve",
+      "back": "Back to list",
+      "cancel": "Cancel",
+      "cancelAcquisition": "Cancel acquisition",
+      "changeStatus": "Change status",
+      "createSubmit": "Create acquisition",
+      "delete": "Remove",
+      "edit": "Edit",
+      "receive": "Mark received",
+      "reject": "Reject",
+      "updateSubmit": "Update acquisition",
+      "updating": "Updating…",
+      "noChangesHint": "Change something to enable Update",
+      "viewExisting": "View acquisition",
+      "viewExistingVehicle": "View existing vehicle",
+      "viewVehicle": "View vehicle",
+      "addViaInventory": "Add vehicle"
+    },
+    "vehiclePicker": {
+      "modeLabel": "Vehicle source",
+      "useExisting": "Use existing vehicle",
+      "createNew": "Create new vehicle",
+      "selectExisting": "Select existing vehicle",
+      "placeholder": "Search vehicle…",
+      "searchPlaceholder": "Stock ID, VIN, chassis, make, or model",
+      "empty": "No acquired vehicles found",
+      "emptyHint": "No acquired vehicles in inventory yet. Add a vehicle first, or create a new one here.",
+      "loadFailed": "Unable to load vehicles. Try again.",
+      "clear": "Clear",
+      "hint": "Search inventory for vehicles with status Acquired.",
+      "createNewHint": "Enter vehicle details below. A new inventory record will be created with this acquisition.",
+      "required": "Select a vehicle from inventory.",
+      "noVehicleView": "You need vehicle.view permission to select an inventory vehicle.",
+      "stock": "Stock ID: {stock}",
+      "vin": "VIN: {vin}",
+      "branch": "Branch: {branch}"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "pageSize": "Rows per page",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "No acquisitions yet",
+      "hint": "Add a vehicle in Inventory and enter acquisition details there.",
+      "filteredTitle": "No acquisitions found",
+      "filteredHint": "Try changing your filters.",
+      "expensesTitle": "No acquisition expenses have been recorded",
+      "expensesHint": "Add transport, auction, or other intake costs.",
+      "notFound": "Acquisition not found",
+      "notFoundHint": "It may have been removed, or you may not have access."
+    },
+    "errors": {
+      "loadTitle": "Unable to load acquisitions",
+      "generic": "Unable to complete the request. Please try again.",
+      "duplicateActive": "This vehicle already has an active acquisition.",
+      "duplicateActiveHint": "Would you like to open the existing acquisition?"
+    },
+    "summary": {
+      "total": "Total",
+      "draft": "Draft",
+      "pendingApproval": "Pending approval",
+      "approved": "Approved",
+      "purchased": "Purchased",
+      "documentsPending": "Documents pending",
+      "received": "Received",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "draft": "Draft",
+      "sourcing": "Sourcing",
+      "negotiating": "Negotiating",
+      "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "purchased": "Purchased",
+      "documents_pending": "Documents pending",
+      "received": "Received",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected"
+    },
+    "sourceTypes": {
+      "individual_owner": "Individual owner",
+      "dealer": "Dealer",
+      "auction": "Auction",
+      "trade_in": "Trade-in",
+      "fleet": "Fleet",
+      "importer": "Importer",
+      "company": "Company",
+      "broker": "Broker",
+      "other": "Other"
+    },
+    "expenseTypes": {
+      "purchase": "Purchase price",
+      "transportation": "Transport",
+      "auction": "Auction fee",
+      "broker_fee": "Broker fee",
+      "registration": "Registration",
+      "insurance": "Insurance",
+      "import_duty": "Import duty",
+      "clearance": "Clearance",
+      "inspection": "Inspection",
+      "customs": "Customs",
+      "other": "Other"
+    },
+    "enums": {
+      "paymentStatus": {
+        "not_paid": "Not paid",
+        "partially_paid": "Partially paid",
+        "paid": "Paid"
+      },
+      "documentStatus": {
+        "pending": "Pending",
+        "partial": "Partial",
+        "complete": "Complete"
+      },
+      "registrationStatus": {
+        "not_started": "Not started",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "not_required": "Not required"
+      }
+    },
+    "sort": {
+      "created_at": "Created date",
+      "updated_at": "Updated date",
+      "acquisition_number": "Acquisition number",
+      "purchase_date": "Purchase date",
+      "status": "Status",
+      "source_type": "Source type"
+    },
+    "table": {
+      "number": "Acquisition #",
+      "vehicle": "Vehicle",
+      "source": "Source",
+      "branch": "Branch",
+      "purchasePrice": "Purchase price",
+      "status": "Status",
+      "purchaseDate": "Purchase date",
+      "createdBy": "Created by",
+      "actions": "Actions",
+      "view": "View",
+      "expenseType": "Type",
+      "description": "Description",
+      "amount": "Amount",
+      "vendor": "Vendor",
+      "expenseDate": "Date"
+    },
+    "filters": {
+      "searchLabel": "Search",
+      "searchPlaceholder": "Number, stock ID, VIN, source, make, model…",
+      "status": "Status",
+      "branch": "Branch",
+      "sourceType": "Source type",
+      "make": "Make",
+      "model": "Model",
+      "purchaseDateFrom": "Purchase from",
+      "purchaseDateTo": "Purchase to",
+      "createdFrom": "Created from",
+      "createdTo": "Created to",
+      "paymentStatus": "Payment status",
+      "documentStatus": "Document status",
+      "registrationStatus": "Registration status",
+      "priceMin": "Min price",
+      "priceMax": "Max price",
+      "sort": "Sort by",
+      "order": "Order",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "clear": "Clear all",
+      "more": "More filters",
+      "less": "Hide filters",
+      "allStatuses": "All statuses",
+      "allBranches": "All branches",
+      "allSourceTypes": "All source types",
+      "allPaymentStatuses": "All payment statuses",
+      "allDocumentStatuses": "All document statuses",
+      "allRegistrationStatuses": "All registration statuses",
+      "anyMake": "Any make",
+      "anyModel": "Any model",
+      "groupSource": "Source & vehicle",
+      "groupStatus": "Statuses",
+      "groupDates": "Dates",
+      "groupPrice": "Price",
+      "active": "{count} active"
+    },
+    "fields": {
+      "number": "Acquisition number",
+      "status": "Status",
+      "branch": "Branch",
+      "sourceType": "Source type",
+      "sourceName": "Source name",
+      "sourceCompany": "Company",
+      "sourcePhone": "Phone",
+      "sourceEmail": "Email",
+      "sourceReference": "Reference",
+      "lotNumber": "Lot number",
+      "askingPrice": "Asking price",
+      "purchasePrice": "Agreed purchase price",
+      "expenseTotal": "Additional expenses",
+      "totalAcquisitionCost": "Total acquisition cost",
+      "currency": "Currency",
+      "purchaseDate": "Purchase date",
+      "expectedArrivalDate": "Expected arrival",
+      "receivedDate": "Received date",
+      "paymentStatus": "Payment status",
+      "documentStatus": "Document status",
+      "registrationStatus": "Registration status",
+      "notes": "Notes",
+      "notSet": "Not set",
+      "selectPlaceholder": "Select…",
+      "vin": "VIN",
+      "vinHint": "17 characters. Leave blank if unknown.",
+      "chassis": "Chassis number",
+      "make": "Make",
+      "model": "Model",
+      "variant": "Variant",
+      "year": "Year",
+      "mileage": "Mileage",
+      "origin": "GCC status",
+      "countryOfOrigin": "Country of origin",
+      "stockNumber": "Stock ID",
+      "vehicle": "Vehicle",
+      "expenseType": "Expense type",
+      "amount": "Amount",
+      "expenseDate": "Expense date",
+      "vendor": "Vendor",
+      "reference": "Reference",
+      "description": "Description",
+      "approvedBy": "Approved by",
+      "approvedAt": "Approved at",
+      "approvalNote": "Approval note",
+      "rejectedBy": "Rejected by",
+      "rejectedAt": "Rejected at",
+      "rejectionReason": "Rejection reason",
+      "cancelReason": "Cancel reason",
+      "createdAt": "Created",
+      "createdBy": "Created by",
+      "updatedAt": "Updated",
+      "updatedBy": "Updated by"
+    },
+    "sections": {
+      "vehicle": "Vehicle",
+      "source": "Source",
+      "purchase": "Purchase",
+      "expenses": "Expenses",
+      "notes": "Notes",
+      "linkedVehicle": "Linked vehicle",
+      "documents": "Acquisition Documents"
+    },
+    "detail": {
+      "overview": "Overview",
+      "purchase": "Purchase & logistics",
+      "financial": "Financial",
+      "approval": "Approval",
+      "audit": "Record info"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "vehicle": "Vehicle",
+      "expenses": "Expenses",
+      "timeline": "History",
+      "documents": "Documents"
+    },
+    "form": {
+      "editTitle": "Edit acquisition",
+      "editDescription": "Update source, purchase terms, or vehicle identity.",
+      "metaFailed": "Unable to load form options. You can still enter values manually."
+    },
+    "dialogs": {
+      "status": {
+        "title": "Change status",
+        "newStatus": "New status",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is this status changing?",
+        "submit": "Update status",
+        "noTransitions": "No further status changes are available.",
+        "description": "Current status: {status}"
+      },
+      "approval": {
+        "approveTitle": "Approve acquisition",
+        "approveDescription": "Confirm the purchase terms and authorise this acquisition.",
+        "approveSubmit": "Approve",
+        "rejectTitle": "Reject acquisition",
+        "rejectDescription": "Provide a reason for rejecting this acquisition.",
+        "rejectSubmit": "Reject",
+        "note": "Approval note",
+        "notePlaceholder": "Optional note for the record",
+        "reason": "Rejection reason",
+        "reasonPlaceholder": "Required reason"
+      },
+      "cancel": {
+        "reasonPrompt": "Reason for cancelling this acquisition:"
+      },
+      "expense": {
+        "addTitle": "Add expense",
+        "editTitle": "Edit expense",
+        "description": "Line-item costs linked to this acquisition.",
+        "addSubmit": "Add expense",
+        "updateSubmit": "Save expense"
+      }
+    },
+    "history": {
+      "statusHistory": "Status history",
+      "activity": "Activity",
+      "initial": "Created",
+      "changedBy": "by {name}",
+      "system": "System",
+      "noStatus": "No status changes yet",
+      "noStatusHint": "Status updates will appear here.",
+      "noActivity": "No activity yet",
+      "noActivityHint": "Approvals, expenses, and updates will appear here."
+    },
+    "toasts": {
+      "created": "Acquisition {number} created",
+      "updated": "Acquisition updated",
+      "approved": "Acquisition approved",
+      "rejected": "Acquisition rejected",
+      "cancelled": "Acquisition cancelled",
+      "received": "Acquisition marked as received",
+      "statusChanged": "Status updated",
+      "expenseAdded": "Expense added",
+      "expenseUpdated": "Expense updated",
+      "expenseRemoved": "Expense removed",
+      "error": "Something went wrong. Please try again."
+    },
+    "documents": {
+      "title": "Acquisition Documents",
+      "description": "Upload documents related to this purchase.",
+      "addTitle": "Add Document",
+      "addDescription": "Choose a category and file for this acquisition.",
+      "addDocument": "Add Document",
+      "category": "Document Type",
+      "file": "File",
+      "fileHint": "PDF, JPG, PNG, or WEBP up to 20 MB.",
+      "chooseFile": "Click to upload a file",
+      "dropHint": "or drag and drop it here",
+      "changeFile": "Change",
+      "removeFile": "Remove file",
+      "documentName": "Document Name",
+      "referenceNumber": "Reference Number",
+      "referencePlaceholder": "INV-2026-1024",
+      "notes": "Notes",
+      "view": "View",
+      "download": "Download",
+      "remove": "Remove",
+      "replace": "Replace",
+      "image": "Image",
+      "uploading": "Uploading…",
+      "saving": "Saving…",
+      "waiting": "Waiting",
+      "failed": "Failed",
+      "retryUpload": "Retry Upload",
+      "confirmDelete": "Delete this document? This cannot be undone.",
+      "emptyTitle": "No documents yet",
+      "emptyHint": "Add purchase invoices, auction papers, or transport documents.",
+      "loadFailed": "Unable to load documents",
+      "errors": {
+        "invalidType": "Only PDF, JPG, PNG, and WEBP files are allowed.",
+        "tooLarge": "File size must be less than 20 MB.",
+        "fileRequired": "Choose a file to upload."
+      },
+      "toasts": {
+        "uploaded": "Document uploaded",
+        "uploadFailed": "Document upload failed",
+        "deleted": "Document deleted",
+        "deleteFailed": "Unable to delete document",
+        "replaced": "Document replaced",
+        "replaceFailed": "Unable to replace document",
+        "partialUpload": "Acquisition created, but some documents could not be uploaded.",
+        "retrySuccess": "Documents uploaded successfully"
+      },
+      "categories": {
+        "purchase_invoice": "Purchase Invoice",
+        "auction_invoice": "Auction Invoice",
+        "seller_invoice": "Seller Invoice",
+        "purchase_agreement": "Purchase Agreement",
+        "payment_receipt": "Payment Receipt",
+        "transport_document": "Transport Document",
+        "customs_document": "Customs Document",
+        "import_document": "Import Document",
+        "registration_document": "Registration Document",
+        "inspection_document": "Inspection Document",
+        "ownership_document": "Ownership Document",
+        "other": "Other"
+      },
+      "uploadingBatch": "Uploading Documents",
+      "uploadingBatchHint": "Please wait while files are uploaded. Do not close this page."
+    }
+  },
+  "inspections": {
+    "title": "Inspections",
+    "description": "Vehicle condition checks before sale, return, or reconditioning.",
+    "actions": {
+      "add": "New inspection",
+      "retry": "Retry",
+      "loading": "Updating…",
+      "previous": "Previous",
+      "next": "Next",
+      "back": "Back to list",
+      "cancel": "Cancel",
+      "cancelInspection": "Cancel inspection",
+      "createSubmit": "Create & start checklist",
+      "assign": "Assign",
+      "perform": "Perform",
+      "submit": "Submit",
+      "saveDraft": "Save draft",
+      "approve": "Approve",
+      "reject": "Reject",
+      "review": "Review",
+      "reinspect": "Request re-inspection",
+      "addFinding": "Add finding",
+      "editFinding": "Edit finding",
+      "removeFinding": "Remove finding",
+      "noChangesHint": "Change something to enable Update",
+      "view": "View"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "pageSize": "Rows per page",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "No inspections yet",
+      "hint": "Create an inspection to start a vehicle condition checklist.",
+      "filteredTitle": "No inspections found",
+      "filteredHint": "Try changing your filters.",
+      "notFound": "Inspection not found",
+      "notFoundHint": "It may have been removed, or you may not have access.",
+      "findingsTitle": "No findings recorded",
+      "findingsHint": "Failed or advisory items can be logged as findings.",
+      "photosTitle": "No photos yet",
+      "photosHint": "Capture damage, VIN, odometer, and condition photos during the inspection.",
+      "recommendationsTitle": "No recommendations",
+      "recommendationsHint": "Repair or follow-up recommendations will appear here."
+    },
+    "errors": {
+      "loadTitle": "Unable to load inspections",
+      "generic": "Unable to complete the request. Please try again."
+    },
+    "summary": {
+      "pending": "Pending",
+      "myInspections": "Mine",
+      "inProgress": "In progress",
+      "awaitingReview": "Awaiting review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "criticalFindings": "Critical"
+    },
+    "status": {
+      "draft": "Draft",
+      "assigned": "Assigned",
+      "in_progress": "In progress",
+      "submitted": "Submitted",
+      "under_review": "Under review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "types": {
+      "full_inspection": "Full inspection",
+      "basic_inspection": "Basic inspection",
+      "pre_purchase_inspection": "Pre-purchase",
+      "return_inspection": "Return inspection",
+      "re_inspection": "Re-inspection"
+    },
+    "results": {
+      "pass": "Pass",
+      "pass_with_advisories": "Pass with advisories",
+      "repair_required": "Repair required",
+      "fail": "Fail"
+    },
+    "itemResults": {
+      "pass": "Pass",
+      "fail": "Fail",
+      "advisory": "Advisory",
+      "not_applicable": "N/A",
+      "not_tested": "Not tested"
+    },
+    "severities": {
+      "info": "Info",
+      "minor": "Minor",
+      "moderate": "Moderate",
+      "major": "Major",
+      "critical": "Critical"
+    },
+    "recommendations": {
+      "no_action": "No action",
+      "monitor": "Monitor",
+      "repair_before_sale": "Repair before sale",
+      "repair_urgently": "Repair urgently",
+      "replace": "Replace",
+      "reinspect": "Re-inspect"
+    },
+    "photoCategories": {
+      "front": "Front",
+      "rear": "Rear",
+      "left_side": "Left side",
+      "right_side": "Right side",
+      "interior": "Interior",
+      "dashboard": "Dashboard",
+      "odometer": "Odometer",
+      "vin": "VIN",
+      "engine": "Engine",
+      "tyre": "Tyre",
+      "damage": "Damage",
+      "undercarriage": "Undercarriage",
+      "other": "Other"
+    },
+    "damageTypes": {
+      "scratch": "Scratch",
+      "dent": "Dent",
+      "paint_damage": "Paint damage",
+      "crack": "Crack",
+      "rust": "Rust",
+      "panel_damage": "Panel damage",
+      "glass_damage": "Glass damage",
+      "mechanical_damage": "Mechanical damage",
+      "electrical_damage": "Electrical damage",
+      "accident_damage": "Accident damage",
+      "wear_and_tear": "Wear and tear",
+      "other": "Other"
+    },
+    "damageLocations": {
+      "front": "Front",
+      "rear": "Rear",
+      "left_side": "Left side",
+      "right_side": "Right side",
+      "roof": "Roof",
+      "interior": "Interior",
+      "engine_bay": "Engine bay",
+      "undercarriage": "Undercarriage",
+      "other": "Other"
+    },
+    "sort": {
+      "created_at": "Created date",
+      "updated_at": "Updated date",
+      "inspection_number": "Inspection number",
+      "status": "Status",
+      "result": "Result",
+      "overall_score": "Score",
+      "submitted_at": "Submitted date"
+    },
+    "table": {
+      "number": "Inspection #",
+      "vehicle": "Vehicle",
+      "type": "Type",
+      "branch": "Branch",
+      "assignee": "Assignee",
+      "status": "Status",
+      "result": "Result",
+      "score": "Score",
+      "updated": "Updated",
+      "actions": "Actions",
+      "view": "View"
+    },
+    "filters": {
+      "searchLabel": "Search",
+      "searchPlaceholder": "Number, stock ID, VIN, make, model…",
+      "status": "Status",
+      "branch": "Branch",
+      "type": "Type",
+      "result": "Result",
+      "assignedTo": "Assigned to",
+      "mine": "Assigned to me",
+      "mineYes": "My inspections",
+      "hasCritical": "Has critical findings",
+      "repairRequired": "Repair required",
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "sort": "Sort by",
+      "order": "Order",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "clear": "Clear all",
+      "more": "More filters",
+      "less": "Hide filters",
+      "allStatuses": "All statuses",
+      "allBranches": "All branches",
+      "allTypes": "All types",
+      "allResults": "All results",
+      "anyAssignee": "Any assignee",
+      "any": "Any",
+      "yes": "Yes",
+      "groupType": "Type & assignment",
+      "groupFlags": "Flags",
+      "groupDates": "Dates",
+      "active": "{count} active"
+    },
+    "fields": {
+      "number": "Inspection number",
+      "status": "Status",
+      "result": "Result",
+      "score": "Overall score",
+      "branch": "Branch",
+      "vehicle": "Vehicle",
+      "inspectionType": "Inspection type",
+      "template": "Template",
+      "defaultTemplate": "Use default template",
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "inspectedBy": "Inspected by",
+      "assignedAt": "Assigned at",
+      "submittedAt": "Submitted at",
+      "startedAt": "Started",
+      "odometer": "Odometer reading",
+      "odometerUnit": "Odometer unit",
+      "mileage": "Vehicle mileage",
+      "vin": "VIN",
+      "verifiedVin": "Verified VIN",
+      "vinVerified": "VIN verified",
+      "notes": "Notes",
+      "summary": "Summary",
+      "recommendation": "Recommendation",
+      "recommendedAction": "Recommended action",
+      "findingTitle": "Finding title",
+      "itemResult": "Item result",
+      "severity": "Severity",
+      "description": "Description",
+      "damageType": "Damage type",
+      "damageLocation": "Damage location",
+      "estimatedCost": "Estimated cost",
+      "photoCategory": "Photo category",
+      "photos": "Photos",
+      "criticalFindings": "Critical findings",
+      "failedItems": "Failed items",
+      "reviewedBy": "Reviewed by",
+      "reviewedAt": "Reviewed at",
+      "reviewNote": "Review note",
+      "rejectionReason": "Rejection reason",
+      "cancelReason": "Cancel reason",
+      "approvedAt": "Approved at",
+      "createdAt": "Created",
+      "createdBy": "Created by",
+      "updatedAt": "Updated",
+      "updatedBy": "Updated by",
+      "notSet": "Not set",
+      "selectPlaceholder": "Select…"
+    },
+    "sections": {
+      "vehicle": "Vehicle",
+      "setup": "Inspection setup",
+      "notes": "Notes",
+      "vehicle_identity": "Vehicle identity",
+      "exterior": "Exterior",
+      "interior": "Interior",
+      "engine": "Engine",
+      "transmission": "Transmission",
+      "electrical": "Electrical",
+      "air_conditioning": "Air conditioning",
+      "brakes": "Brakes",
+      "suspension": "Suspension",
+      "steering": "Steering",
+      "tyres_wheels": "Tyres & wheels",
+      "fluids": "Fluids",
+      "lights": "Lights",
+      "safety": "Safety",
+      "undercarriage": "Undercarriage",
+      "accident_damage": "Accident damage",
+      "road_test": "Road test",
+      "documents": "Documents",
+      "final_assessment": "Final assessment"
+    },
+    "detail": {
+      "overview": "Overview",
+      "progress": "Progress",
+      "assignment": "Assignment",
+      "review": "Review",
+      "audit": "Record info",
+      "critical": "CRITICAL",
+      "photoUnavailable": "Preview unavailable",
+      "latest": "Latest inspection",
+      "historyList": "Inspection history"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "checklist": "Checklist",
+      "findings": "Findings",
+      "photos": "Photos",
+      "recommendations": "Recommendations",
+      "review": "Review",
+      "history": "History"
+    },
+    "form": {
+      "metaFailed": "Unable to load form options. You can still enter values manually."
+    },
+    "dialogs": {
+      "approval": {
+        "approveTitle": "Approve inspection",
+        "approveDescription": "Confirm the checklist result and approve this inspection.",
+        "approveSubmit": "Approve",
+        "rejectTitle": "Reject inspection",
+        "rejectDescription": "Provide a reason for rejecting this inspection.",
+        "rejectSubmit": "Reject",
+        "note": "Review note",
+        "notePlaceholder": "Optional note for the record",
+        "reason": "Rejection reason",
+        "reasonPlaceholder": "Required reason",
+        "overrideCritical": "Override critical findings and approve anyway"
+      },
+      "assign": {
+        "title": "Assign inspection",
+        "description": "Choose an inspector responsible for this checklist.",
+        "reason": "Note",
+        "reasonPlaceholder": "Optional assignment note",
+        "submit": "Assign"
+      },
+      "submit": {
+        "title": "Submit inspection",
+        "description": "Review progress and confirm before sending for approval.",
+        "progressSummary": "{completed} of {total} items completed",
+        "failedCount": "{count} failed items",
+        "criticalCount": "{count} critical findings",
+        "overrideIncomplete": "Submit even if required items are incomplete",
+        "submit": "Submit for review"
+      },
+      "reinspect": {
+        "title": "Request re-inspection",
+        "description": "Create a follow-up inspection linked to this record.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is a re-inspection needed?",
+        "submit": "Create re-inspection"
+      },
+      "finding": {
+        "title": "Add finding",
+        "editTitle": "Edit finding",
+        "description": "Record damage, defects, or advisories found during inspection.",
+        "editDescription": "Update this finding's details.",
+        "submit": "Save finding",
+        "updateSubmit": "Update finding"
+      },
+      "deleteFinding": {
+        "title": "Remove finding?",
+        "description": "“{title}” will be permanently removed from this inspection.",
+        "submit": "Remove finding"
+      },
+      "cancel": {
+        "title": "Cancel inspection",
+        "description": "This inspection will be closed and no longer editable.",
+        "reason": "Cancel reason",
+        "reasonPlaceholder": "Required reason",
+        "submit": "Cancel inspection"
+      }
+    },
+    "history": {
+      "statusHistory": "Status history",
+      "activity": "Activity",
+      "initial": "Created",
+      "changedBy": "by {name}",
+      "system": "System",
+      "noStatus": "No status changes yet",
+      "noStatusHint": "Status updates will appear here.",
+      "noActivity": "No activity yet",
+      "noActivityHint": "Assignments, findings, and reviews will appear here."
+    },
+    "toasts": {
+      "created": "Inspection {number} created",
+      "updated": "Inspection updated",
+      "assigned": "Inspection assigned",
+      "submitted": "Inspection submitted",
+      "approved": "Inspection approved",
+      "rejected": "Inspection rejected",
+      "cancelled": "Inspection cancelled",
+      "reinspect": "Re-inspection {number} created",
+      "findingAdded": "Finding added",
+      "findingUpdated": "Finding updated",
+      "findingRemoved": "Finding removed",
+      "photoAdded": "Photo uploaded",
+      "photosAdded": "{count} photos uploaded",
+      "photoRemoved": "Photo removed",
+      "error": "Something went wrong. Please try again."
+    },
+    "progress": {
+      "items": "{completed} of {total} items",
+      "sections": "{completed} of {total} sections",
+      "critical": "{count} critical"
+    },
+    "perform": {
+      "title": "Perform inspection",
+      "sectionNav": "Inspection sections",
+      "identity": "Vehicle identity",
+      "photos": "Photos",
+      "capture": "Camera",
+      "gallery": "Gallery",
+      "photoCount": "{count} photos attached",
+      "findingCount": "{count} findings recorded",
+      "itemFindings": "{count} findings on this item",
+      "sectionFindings": "Section findings",
+      "sectionFindingsHint": "Findings not tied to a specific checklist item",
+      "noSectionFindings": "No section-level findings yet.",
+      "noItemFindings": "No findings on this item yet.",
+      "required": "Required",
+      "itemResult": "Item result",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "saveError": "Save failed",
+      "uploading": "Uploading photos…",
+      "uploadingPercent": "Uploading {percent}%",
+      "savingPhoto": "Saving photo…",
+      "uploadFailed": "Upload failed",
+      "removePhoto": "Remove photo",
+      "dismissFailedUpload": "Dismiss failed upload"
+    },
+    "offline": {
+      "online": "Online",
+      "offline": "Offline draft"
+    },
+    "warnings": {
+      "odometerTitle": "Odometer differs from vehicle mileage",
+      "odometerBody": "Vehicle record shows {vehicle} km; entered reading is {reading} km.",
+      "vinTitle": "VIN mismatch",
+      "vinBody": "Vehicle VIN is {vehicle}; verified VIN is {verified}."
+    },
+    "review": {
+      "title": "Review inspection",
+      "summary": "Review summary",
+      "criticalTitle": "Critical findings present",
+      "criticalBody": "{count} critical findings require attention before approval.",
+      "notReviewableTitle": "Not ready for review",
+      "notReviewableBody": "Current status is {status}."
+    }
+  },
+  "workshop": {
+    "title": "Workshop",
+    "description": "Repair and refurbishment work to prepare vehicles for sale.",
+    "actions": {
+      "add": "New workshop order",
+      "edit": "Edit order",
+      "save": "Save changes",
+      "create": "Create order",
+      "back": "Back to workshop",
+      "retry": "Retry",
+      "loading": "Updating…",
+      "myJobs": "My jobs",
+      "submitApproval": "Submit for approval",
+      "approve": "Approve",
+      "reject": "Reject / return",
+      "schedule": "Schedule",
+      "start": "Start work",
+      "submitQuality": "Submit for quality check",
+      "qualityCheck": "Quality check",
+      "cancel": "Cancel order",
+      "startJob": "Start",
+      "completeJob": "Complete",
+      "waitingParts": "Waiting for parts",
+      "waitingVendor": "Waiting for vendor",
+      "resumeJob": "Resume",
+      "viewOrder": "View order",
+      "viewVehicle": "View vehicle",
+      "qualityCheckAction": "Quality check"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "No workshop orders found.",
+      "hint": "Create a workshop order from a vehicle or approved inspection findings.",
+      "filteredTitle": "No workshop orders match your filters.",
+      "filteredHint": "Try changing search or filters.",
+      "notFound": "Workshop order not found",
+      "notFoundHint": "It may have been removed, or you may not have access.",
+      "jobsTitle": "No jobs yet",
+      "jobsHint": "Add jobs manually or convert inspection findings.",
+      "photosTitle": "No photos uploaded.",
+      "myJobsTitle": "No jobs assigned.",
+      "myJobsHint": "Assigned workshop jobs will appear here.",
+      "jobNotFound": "Job not found"
+    },
+    "errors": {
+      "loadTitle": "Unable to load workshop data",
+      "generic": "Unable to complete the request. Please try again.",
+      "required": "This field is required",
+      "budgetExceeded": "Budget exceeded"
+    },
+    "summary": {
+      "openOrders": "Open orders",
+      "scheduled": "Scheduled",
+      "inProgress": "In progress",
+      "waitingForParts": "Waiting for parts",
+      "waitingForVendor": "Waiting for vendor",
+      "qualityCheck": "Quality check",
+      "completed": "Completed",
+      "overdue": "Overdue",
+      "estimatedCost": "Estimated cost",
+      "actualCost": "Actual cost",
+      "costVariance": "Cost variance",
+      "costs": "Cost summary"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Order #, stock ID, VIN, make, model…",
+      "status": "Status",
+      "priority": "Priority",
+      "workshopType": "Workshop type",
+      "overdue": "Overdue only",
+      "allStatuses": "All statuses",
+      "allPriorities": "All priorities",
+      "allTypes": "All types",
+      "clear": "Clear filters"
+    },
+    "columns": {
+      "order": "Order #",
+      "vehicle": "Vehicle",
+      "stockId": "Stock ID",
+      "priority": "Priority",
+      "status": "Status",
+      "jobs": "Jobs",
+      "estimated": "Estimated",
+      "actual": "Actual",
+      "updated": "Updated"
+    },
+    "fields": {
+      "vehicle": "Vehicle",
+      "vehicleId": "Vehicle ID",
+      "branch": "Branch",
+      "branchDefault": "Use vehicle branch",
+      "workshopType": "Workshop type",
+      "priority": "Priority",
+      "description": "Description",
+      "notes": "Notes",
+      "estimated": "Estimated cost",
+      "actual": "Actual cost",
+      "variance": "Variance",
+      "jobs": "Jobs",
+      "scheduledStart": "Scheduled start",
+      "scheduledEnd": "Scheduled end",
+      "inspectionFinding": "Inspection finding"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "scheduled": "Scheduled",
+      "in_progress": "In progress",
+      "waiting_for_parts": "Waiting for parts",
+      "waiting_for_vendor": "Waiting for vendor",
+      "quality_check": "Quality check",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "on_hold": "On hold",
+      "pending": "Pending",
+      "assigned": "Assigned"
+    },
+    "jobStatus": {
+      "pending": "Pending",
+      "assigned": "Assigned",
+      "in_progress": "In progress",
+      "waiting_for_parts": "Waiting for parts",
+      "waiting_for_vendor": "Waiting for vendor",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent",
+      "critical": "Critical"
+    },
+    "workshopType": {
+      "internal": "Internal",
+      "external_vendor": "External vendor"
+    },
+    "jobType": {
+      "mechanical": "Mechanical",
+      "electrical": "Electrical",
+      "body_repair": "Body repair",
+      "paint": "Paint",
+      "tyres": "Tyres",
+      "brakes": "Brakes",
+      "suspension": "Suspension",
+      "ac": "AC",
+      "detailing": "Detailing",
+      "cleaning": "Cleaning",
+      "glass": "Glass",
+      "diagnostics": "Diagnostics",
+      "general": "General",
+      "other": "Other"
+    },
+    "photoCategory": {
+      "before": "Before",
+      "during": "During",
+      "after": "After",
+      "part": "Part",
+      "damage": "Damage",
+      "repair": "Repair",
+      "other": "Other"
+    },
+    "badges": {
+      "overdue": "Overdue",
+      "budgetExceeded": "Budget exceeded"
+    },
+    "costs": {
+      "restricted": "Cost details are hidden for your role.",
+      "breakdown": "Cost breakdown",
+      "parts": "Parts",
+      "labour": "Labour",
+      "expenses": "Other expenses"
+    },
+    "sections": {
+      "jobs": "Jobs",
+      "photos": "Photos",
+      "history": "History"
+    },
+    "quality": {
+      "title": "Quality check",
+      "pass": "Pass",
+      "fail": "Fail",
+      "rework": "Requires rework",
+      "notesPlaceholder": "Quality notes…",
+      "checklist": {
+        "jobsCompleted": "All required jobs completed",
+        "partsRecorded": "Required parts recorded",
+        "photosPresent": "Required photos present",
+        "criticalResolved": "Critical repair findings resolved",
+        "conditionAcceptable": "Vehicle condition acceptable"
+      }
+    },
+    "myJobs": {
+      "title": "My workshop jobs",
+      "description": "Jobs assigned to you.",
+      "groups": {
+        "inProgress": "In progress",
+        "waiting": "Waiting",
+        "assigned": "Assigned",
+        "completed": "Completed"
+      }
+    },
+    "vehiclePanel": {
+      "title": "Workshop orders",
+      "empty": "No workshop orders for this vehicle yet."
+    },
+    "vehiclePicker": {
+      "placeholder": "Search inventory vehicle…",
+      "searchPlaceholder": "Stock ID, VIN, chassis, make, or model",
+      "empty": "No eligible vehicles found",
+      "emptyHint": "Select a vehicle from inventory that needs workshop work.",
+      "loadFailed": "Unable to load vehicles. Try again.",
+      "clear": "Clear",
+      "hint": "Link this workshop order to an existing inventory vehicle.",
+      "noVehicleView": "You need vehicle.view permission to select an inventory vehicle.",
+      "stock": "Stock ID: {stock}",
+      "vin": "VIN: {vin}",
+      "branch": "Branch: {branch}"
+    },
+    "fromInspection": {
+      "title": "Create workshop order",
+      "hint": "Select inspection findings that require workshop action.",
+      "create": "Create workshop order"
+    },
+    "prompts": {
+      "rejectReason": "Reason for rejection / return",
+      "cancelReason": "Cancellation reason"
+    },
+    "toasts": {
+      "created": "Workshop order created",
+      "updated": "Workshop order updated",
+      "createdFromInspection": "Workshop order created from inspection",
+      "submitted": "Submitted for approval",
+      "approved": "Workshop order approved",
+      "rejected": "Returned for changes",
+      "scheduled": "Workshop order scheduled",
+      "started": "Workshop work started",
+      "qualitySubmitted": "Submitted for quality check",
+      "qualityPassed": "Quality check passed",
+      "qualityFailed": "Quality check failed / rework required",
+      "cancelled": "Workshop order cancelled",
+      "jobStarted": "Job started",
+      "jobCompleted": "Job completed",
+      "waitingParts": "Marked waiting for parts",
+      "waitingVendor": "Marked waiting for vendor",
+      "jobResumed": "Job resumed"
+    }
+  },
+  "pricing": {
+    "list": {
+      "title": "Pricing",
+      "description": "Set selling prices and review gross profitability by vehicle."
+    },
+    "panel": {
+      "title": "Pricing & profitability"
+    },
+    "sections": {
+      "costBreakdown": "Vehicle cost summary",
+      "profitability": "Profitability",
+      "edit": "Edit pricing",
+      "history": "Price history",
+      "approval": "Approval required"
+    },
+    "fields": {
+      "minimum": "Minimum selling price",
+      "target": "Target selling price",
+      "advertised": "Advertised price",
+      "current": "Current selling price",
+      "maxDiscountAmount": "Maximum discount amount",
+      "maxDiscountPercent": "Maximum discount %",
+      "notes": "Pricing notes",
+      "changeReason": "Change reason",
+      "overrideMinimum": "Override minimum selling price",
+      "overrideReason": "Override reason"
+    },
+    "cost": {
+      "purchase": "Purchase price",
+      "acquisitionExpenses": "Acquisition expenses",
+      "workshop": "Workshop / repairs",
+      "other": "Other costs"
+    },
+    "summary": {
+      "totalCost": "Total vehicle cost",
+      "expectedProfit": "Expected gross profit",
+      "margin": "Expected margin",
+      "discount": "Discount"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "active": "Active",
+      "discount_approval_required": "Discount approval required",
+      "below_minimum": "Below minimum",
+      "sold": "Sold",
+      "cancelled": "Cancelled"
+    },
+    "reasons": {
+      "market_adjustment": "Market adjustment",
+      "competitor_pricing": "Competitor pricing",
+      "customer_negotiation": "Customer negotiation",
+      "clearance": "Clearance",
+      "vehicle_condition": "Vehicle condition",
+      "management_decision": "Management decision",
+      "promotion": "Promotion",
+      "initial_pricing": "Initial pricing",
+      "cost_refresh": "Cost refresh",
+      "approval": "Approval",
+      "override": "Override",
+      "other": "Other"
+    },
+    "warnings": {
+      "belowMinimumTitle": "Below minimum price",
+      "belowMinimumBody": "Current selling price is below the minimum approved selling price.",
+      "lossTitle": "Expected loss",
+      "lossBody": "Expected gross profit is negative at the current selling price."
+    },
+    "actions": {
+      "save": "Save pricing",
+      "approve": "Approve",
+      "reject": "Reject",
+      "openFull": "Open pricing page",
+      "viewVehicle": "View vehicle",
+      "back": "Back to pricing"
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "stock": "Stock ID",
+      "status": "Pricing status"
+    },
+    "history": {
+      "unknownUser": "Unknown user"
+    },
+    "restricted": {
+      "title": "Pricing restricted",
+      "description": "You do not have permission to view pricing for this vehicle."
+    },
+    "empty": {
+      "title": "No vehicles found",
+      "description": "Adjust filters or add vehicles to inventory first.",
+      "loadFailed": "Pricing could not be loaded",
+      "loadFailedHint": "Try again in a moment.",
+      "notFound": "Pricing not found",
+      "notFoundHint": "This vehicle may be missing or you may not have access."
+    },
+    "toasts": {
+      "saved": "Pricing saved.",
+      "approved": "Pricing approved.",
+      "rejected": "Pricing returned to draft.",
+      "error": "Something went wrong. Try again."
+    },
+    "validation": {
+      "minExceedsTarget": "Minimum price cannot exceed target price.",
+      "currentExceedsAdvertised": "Current price cannot exceed advertised price."
+    }
   }
 }

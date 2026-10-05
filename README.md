@@ -7,6 +7,18 @@ Foundation for the Zohaan Motors used-car dealership workspace.
 - **Phase 2** — application shell, auth foundation, i18n, themes, PWA, route shells
 - **Phase 3** — Supabase PostgreSQL schema, migrations, seed, storage buckets, typed database models
 - **Phase 4** — authentication (no public signup, no MFA), RBAC, RLS, storage security
+- **Phase 5** — inventory & vehicle management (list/search/filter, CRUD, status, transfer, archive)
+- **Phase 6** — vehicle acquisition (workflow, expenses, approve/purchase/receive)
+- **Phase 7** — vehicle inspection (checklist, findings, photos, submit/review/approve, reinspection)
+- **Phase 8** — workshop & refurbishment (orders, jobs, parts/labour/expenses, QC, vehicle lifecycle)
+
+Inventory docs: [`docs/inventory.md`](docs/inventory.md) · [`docs/vehicle-lifecycle.md`](docs/vehicle-lifecycle.md) · [`docs/vehicle-status-transitions.md`](docs/vehicle-status-transitions.md) · [`docs/inventory-permissions.md`](docs/inventory-permissions.md)
+
+Acquisition docs: [`docs/acquisition.md`](docs/acquisition.md) · [`docs/acquisition-workflow.md`](docs/acquisition-workflow.md) · [`docs/acquisition-permissions.md`](docs/acquisition-permissions.md) · [`docs/acquisition-financials.md`](docs/acquisition-financials.md)
+
+Inspection docs: [`docs/inspection.md`](docs/inspection.md) · [`docs/inspection-workflow.md`](docs/inspection-workflow.md) · [`docs/inspection-checklist.md`](docs/inspection-checklist.md) · [`docs/inspection-permissions.md`](docs/inspection-permissions.md)
+
+Workshop docs: [`docs/workshop.md`](docs/workshop.md) · [`docs/workshop-workflow.md`](docs/workshop-workflow.md) · [`docs/workshop-costs.md`](docs/workshop-costs.md) · [`docs/workshop-permissions.md`](docs/workshop-permissions.md) · [`docs/workshop-quality-check.md`](docs/workshop-quality-check.md)
 
 Security docs: [`docs/security.md`](docs/security.md) · [`docs/rbac-matrix.md`](docs/rbac-matrix.md) · [`docs/rls.md`](docs/rls.md)
 

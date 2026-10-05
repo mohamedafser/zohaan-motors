@@ -97,6 +97,87 @@ export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type BootstrapAdminValues = z.infer<typeof bootstrapAdminSchema>;
 
+export {
+  vehicleFormSchema,
+  createVehicleSchema,
+  updateVehicleSchema,
+  changeVehicleStatusSchema,
+  transferVehicleSchema,
+  archiveVehicleSchema,
+  vehicleListQuerySchema,
+  optionalVinSchema,
+} from "@/lib/validation/vehicle";
+
+export type {
+  VehicleFormValues,
+  CreateVehicleValues,
+  UpdateVehicleValues,
+  ChangeVehicleStatusValues,
+  TransferVehicleValues,
+  ArchiveVehicleValues,
+  VehicleListQuery,
+} from "@/lib/validation/vehicle";
+
+export {
+  acquisitionFormSchema,
+  createAcquisitionSchema,
+  updateAcquisitionSchema,
+  changeAcquisitionStatusSchema,
+  approveAcquisitionSchema,
+  rejectAcquisitionSchema,
+  cancelAcquisitionSchema,
+  receiveAcquisitionSchema,
+  acquisitionExpenseSchema,
+  acquisitionListQuerySchema,
+} from "@/lib/validation/acquisition";
+
+export type {
+  AcquisitionFormValues,
+  CreateAcquisitionValues,
+  UpdateAcquisitionValues,
+  ChangeAcquisitionStatusValues,
+  ApproveAcquisitionValues,
+  RejectAcquisitionValues,
+  CancelAcquisitionValues,
+  ReceiveAcquisitionValues,
+  AcquisitionExpenseValues,
+  AcquisitionListQuery,
+} from "@/lib/validation/acquisition";
+
+export {
+  createInspectionSchema,
+  updateInspectionSchema,
+  saveInspectionDraftSchema,
+  assignInspectionSchema,
+  changeInspectionStatusSchema,
+  submitInspectionSchema,
+  approveInspectionSchema,
+  rejectInspectionSchema,
+  cancelInspectionSchema,
+  reinspectSchema,
+  inspectionFindingSchema,
+  updateInspectionFindingSchema,
+  inspectionPhotoSchema,
+  inspectionListQuerySchema,
+} from "@/lib/validation/inspection";
+
+export type {
+  CreateInspectionValues,
+  UpdateInspectionValues,
+  SaveInspectionDraftValues,
+  AssignInspectionValues,
+  ChangeInspectionStatusValues,
+  SubmitInspectionValues,
+  ApproveInspectionValues,
+  RejectInspectionValues,
+  CancelInspectionValues,
+  ReinspectValues,
+  InspectionFindingValues,
+  UpdateInspectionFindingValues,
+  InspectionPhotoValues,
+  InspectionListQuery,
+} from "@/lib/validation/inspection";
+
 export function firstFieldErrors(error: z.ZodError) {
   const fieldErrors: Record<string, string> = {};
   for (const issue of error.issues) {
