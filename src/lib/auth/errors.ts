@@ -3,6 +3,7 @@ const authErrorKeys = {
   emailNotConfirmed: "auth.errors.emailNotConfirmed",
   rateLimit: "auth.errors.rateLimit",
   weakPassword: "auth.errors.weakPassword",
+  samePassword: "auth.errors.samePassword",
   notConfigured: "auth.errors.notConfigured",
   generic: "auth.errors.generic",
   session: "auth.errors.session",
@@ -23,6 +24,9 @@ export function mapAuthError(error: { message?: string; code?: string | null }) 
   }
   if (code === "over_request_rate_limit" || message.includes("rate limit")) {
     return authErrorKeys.rateLimit;
+  }
+  if (code === "same_password") {
+    return authErrorKeys.samePassword;
   }
   if (code === "weak_password" || message.includes("password should")) {
     return authErrorKeys.weakPassword;

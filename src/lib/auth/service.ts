@@ -78,6 +78,20 @@ async function rejectInactiveSession(
   return null;
 }
 
+// The DB's activate_invited_profile RPC is blocked by profiles_guard_self_update
+// (users may not change their own status), so flip invited -> active with the
+// service role after the caller has proven they own this session.
+async function activateInvitedProfile(userId: string) {
+  const admin = createServiceRoleClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ status: "active" })
+    .eq("id", userId)
+    .eq("status", "invited")
+    .is("deleted_at", null);
+  return !error;
+}
+
 export async function signIn(input: LoginValues): Promise<AuthActionState> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
@@ -105,7 +119,7 @@ export async function signIn(input: LoginValues): Promise<AuthActionState> {
 
   const profile = await loadProfileStatus(supabase, userId);
   if (profile?.status === "invited") {
-    await supabase.rpc("activate_invited_profile");
+    await activateInvitedProfile(userId);
   }
 
   return authSuccessState("/dashboard");
@@ -196,15 +210,18 @@ export async function acceptInvitation(input: ResetPasswordValues): Promise<Auth
     await supabase.auth.signOut();
     return authErrorState(authErrorKeys.accountDisabled);
   }
+  // Only a pending invite may set its password here; otherwise an already
+  // signed-in account in the same browser would have its password overwritten.
+  if (profile.status !== "invited") {
+    return authErrorState(authErrorKeys.session);
+  }
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) return authErrorState(mapAuthError(error));
+  // same_password means an earlier attempt already saved it; finish activating.
+  if (error && error.code !== "same_password") return authErrorState(mapAuthError(error));
 
-  if (profile.status === "invited") {
-    const { error: activateError } = await supabase.rpc("activate_invited_profile");
-    if (activateError) {
-      return authErrorState(authErrorKeys.generic);
-    }
+  if (!(await activateInvitedProfile(userId))) {
+    return authErrorState(authErrorKeys.generic);
   }
 
   return authSuccessState("/dashboard");
