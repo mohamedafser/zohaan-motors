@@ -6,7 +6,9 @@ import {
   listCatalogModels,
   listCatalogVariants,
   listCatalogYears,
+  deleteCatalogItem,
   setCatalogActive,
+  updateCatalogItem,
   upsertCatalogMake,
   upsertCatalogModel,
   upsertCatalogVariant,
@@ -75,7 +77,31 @@ const activeSchema = z.object({
   isActive: z.boolean(),
 });
 
+const catalogTable = z.enum([
+  "vehicle_makes",
+  "vehicle_models",
+  "vehicle_model_years",
+  "vehicle_variants",
+]);
+
+const updateSchema = z.object({
+  action: z.literal("update"),
+  table: catalogTable,
+  id: z.string().uuid(),
+  name: z.string().trim().min(1).optional(),
+  nameAr: z.string().trim().optional().nullable(),
+  year: z.number().int().min(1980).max(2100).optional(),
+});
+
+const deleteSchema = z.object({
+  action: z.literal("delete"),
+  table: catalogTable,
+  id: z.string().uuid(),
+});
+
 const bodySchema = z.discriminatedUnion("action", [
+  updateSchema,
+  deleteSchema,
   makeSchema,
   modelSchema,
   yearSchema,
@@ -135,6 +161,19 @@ export async function POST(request: Request) {
   }
 
   const body = parsed.data;
+
+  if (body.action === "update" || body.action === "delete") {
+    if (!auth.context.roles.includes("super_admin")) {
+      return jsonError("forbidden", "Only Super Admins can edit or delete catalog items.", 403);
+    }
+    const result =
+      body.action === "update"
+        ? await updateCatalogItem(body.table, body.id, body)
+        : await deleteCatalogItem(body.table, body.id);
+    if (result.error) return jsonError(result.error.code, result.error.message, 400);
+    return jsonOk({ ok: true });
+  }
+
   if (body.action === "upsertMake") {
     const result = await upsertCatalogMake(body);
     if (result.error) return jsonError(result.error.code, result.error.message, 400);

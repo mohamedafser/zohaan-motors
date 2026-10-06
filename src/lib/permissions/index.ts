@@ -136,6 +136,7 @@ export const routePermissions: { prefix: string; permission: Permission }[] = [
   { prefix: "/reports", permission: "report.view" },
   { prefix: "/branches", permission: "branch.view" },
   { prefix: "/users", permission: "user.manage" },
+  { prefix: "/vehicle-catalog", permission: "settings.manage" },
   { prefix: "/roles", permission: "role.manage" },
   { prefix: "/audit-logs", permission: "audit.view" },
   { prefix: "/notifications", permission: "notification.view" },

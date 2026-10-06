@@ -42,7 +42,8 @@
     "home": "Home",
     "cars": "Cars",
     "workshopJobs": "Jobs",
-    "myWorkshopJobs": "My jobs"
+    "myWorkshopJobs": "My jobs",
+    "vehicleCatalog": "Vehicle catalog"
   },
   "common": {
     "search": "Search",
@@ -504,7 +505,11 @@
       "selectModel": "Select a model",
       "selectYear": "Select a year",
       "empty": "Nothing here yet.",
-      "manageHint": "Requires settings manage permission."
+      "manageHint": "Requires settings manage permission.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteConfirm": "Delete “{name}”?"
     }
   },
   "media": {

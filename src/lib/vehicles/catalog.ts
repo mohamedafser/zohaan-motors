@@ -450,3 +450,88 @@ export async function setCatalogActive(
   if (error) return { data: null, error: mapDbError(error) };
   return { data: true, error: null };
 }
+
+export type CatalogTable =
+  | "vehicle_makes"
+  | "vehicle_models"
+  | "vehicle_model_years"
+  | "vehicle_variants";
+
+// Only renames (or changes the year); leaves active state, ordering and specs untouched.
+export async function updateCatalogItem(
+  table: CatalogTable,
+  id: string,
+  values: { name?: string; nameAr?: string | null; year?: number },
+): Promise<ServiceResult<true>> {
+  const supabase = await createClient();
+  let patch: Record<string, unknown>;
+  if (table === "vehicle_model_years") {
+    if (!values.year) return { data: null, error: { code: "validation", message: "Year is required." } };
+    patch = { year: values.year };
+  } else {
+    const name = values.name?.trim();
+    if (!name) return { data: null, error: { code: "validation", message: "Name is required." } };
+    patch = { name, slug: slugifyCatalogName(name) };
+    if (table === "vehicle_makes" && values.nameAr !== undefined) {
+      patch.name_ar = values.nameAr?.trim() || null;
+    }
+  }
+
+  const { error } = await supabase.from(table).update(patch).eq("id", id);
+  if (error) return { data: null, error: mapDbError(error) };
+  return { data: true, error: null };
+}
+
+const childOf: Partial<Record<CatalogTable, { table: CatalogTable; column: string; label: string }>> = {
+  vehicle_makes: { table: "vehicle_models", column: "make_id", label: "model" },
+  vehicle_models: { table: "vehicle_model_years", column: "model_id", label: "year" },
+  vehicle_model_years: { table: "vehicle_variants", column: "model_year_id", label: "variant" },
+};
+
+export async function deleteCatalogItem(
+  table: CatalogTable,
+  id: string,
+): Promise<ServiceResult<true>> {
+  const supabase = await createClient();
+
+  // Brands cascade-delete their models in the DB, so refuse while children exist.
+  const child = childOf[table];
+  if (child) {
+    const { count, error } = await supabase
+      .from(child.table)
+      .select("id", { count: "exact", head: true })
+      .eq(child.column, id);
+    if (error) return { data: null, error: mapDbError(error) };
+    if ((count ?? 0) > 0) {
+      return {
+        data: null,
+        error: {
+          code: "has_children",
+          message: `This still has ${count} ${child.label}${count === 1 ? "" : "s"}. Delete ${count === 1 ? "it" : "those"} first, or deactivate this instead.`,
+        },
+      };
+    }
+  }
+
+  const { error } = await supabase.from(table).delete().eq("id", id);
+  if (error) {
+    if (error.message?.includes("referenced by inventory") || error.code === "23503") {
+      return {
+        data: null,
+        error: { code: "in_use", message: "This is used by vehicles in inventory. Deactivate it instead." },
+      };
+    }
+    return { data: null, error: mapDbError(error) };
+  }
+  return { data: true, error: null };
+}
+
+function slugifyCatalogName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/\+/g, "-plus")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
