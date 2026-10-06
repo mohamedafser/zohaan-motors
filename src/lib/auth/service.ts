@@ -107,7 +107,16 @@ export async function signIn(input: LoginValues): Promise<AuthActionState> {
     password: parsed.data.password,
   });
 
-  if (error) return authErrorState(mapAuthError(error));
+  if (error) {
+    const key = mapAuthError(error);
+    // Supabase only reports this after the password matched, so it is safe to
+    // send the person to their pending verification instead of a dead end.
+    if (key === authErrorKeys.emailNotConfirmed) {
+      const query = new URLSearchParams({ email: parsed.data.email, reason: "unverified" });
+      return authSuccessState(`/verify-email?${query.toString()}`);
+    }
+    return authErrorState(key);
+  }
 
   const userId = data.user?.id;
   if (!userId) {

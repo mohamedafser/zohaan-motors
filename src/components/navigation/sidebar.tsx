@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/shared/brand-mark";
 import { NavLink } from "@/components/navigation/nav-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { filterNavigation, navigation } from "@/config/navigation";
 import { usePermission, useUserContext } from "@/hooks/use-permission";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,15 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const items = useMemo(() => filterNavigation(navigation, can), [can]);
   const name = user.displayName || user.email || t("common.account");
   const ToggleIcon = collapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon;
+  const toggleLabel = collapsed ? t("nav.expand") : t("nav.collapse");
+  const avatar = (
+    <Avatar className="ring-sidebar-border size-9 ring-1">
+      {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
+      <AvatarFallback className="bg-sidebar-accent text-sidebar-primary text-sm font-semibold">
+        {name.slice(0, 1).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
 
   return (
     <aside
@@ -57,12 +67,18 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           collapsed && "flex-col px-2",
         )}
       >
-        <Avatar className="ring-sidebar-border size-9 ring-1">
-          {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
-          <AvatarFallback className="bg-sidebar-accent text-sidebar-primary text-sm font-semibold">
-            {name.slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={<span className="rounded-full outline-none" tabIndex={0} aria-label={name} />}
+            >
+              {avatar}
+            </TooltipTrigger>
+            <TooltipContent side="inline-end">{name}</TooltipContent>
+          </Tooltip>
+        ) : (
+          avatar
+        )}
         {!collapsed ? (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{name}</p>
@@ -71,18 +87,24 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
             ) : null}
           </div>
         ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent"
-          onClick={onToggle}
-          aria-pressed={collapsed}
-          aria-label={collapsed ? t("nav.expand") : t("nav.collapse")}
-          title={collapsed ? t("nav.expand") : t("nav.collapse")}
-        >
-          <ToggleIcon className="rtl:-scale-x-100" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent"
+                onClick={onToggle}
+                aria-pressed={collapsed}
+                aria-label={toggleLabel}
+              />
+            }
+          >
+            <ToggleIcon className="rtl:-scale-x-100" />
+          </TooltipTrigger>
+          <TooltipContent side={collapsed ? "inline-end" : "top"}>{toggleLabel}</TooltipContent>
+        </Tooltip>
       </div>
     </aside>
   );

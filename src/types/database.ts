@@ -92,6 +92,7 @@ export type Database = {
       vehicle_pricing: GenericTable;
       vehicle_pricing_history: GenericTable;
       vehicle_makes: GenericTable;
+      email_verification_otps: GenericTable;
       vehicle_models: GenericTable;
       vehicle_model_years: GenericTable;
       vehicle_variants: GenericTable;
@@ -512,6 +513,38 @@ export type Database = {
           p_allow_duplicates?: boolean;
         };
         Returns: Record<string, unknown>;
+      };
+      issue_email_verification_otp: {
+        Args: {
+          p_user_id: string;
+          p_email: string;
+          p_otp_hash: string;
+          p_cooldown_seconds?: number;
+          p_ttl_seconds?: number;
+        };
+        Returns: {
+          otp_id: string;
+          last_sent_at: string;
+          expires_at: string;
+          send_count: number;
+          issued: boolean;
+        }[];
+      };
+      record_email_verification_attempt: {
+        Args: { p_otp_id: string; p_compared_hash: string; p_matches: boolean };
+        Returns: { outcome: string; user_id: string | null; attempts_remaining: number }[];
+      };
+      reopen_email_verification_otp: {
+        Args: { p_otp_id: string };
+        Returns: undefined;
+      };
+      auth_user_for_email: {
+        Args: { p_email: string };
+        Returns: { user_id: string; email: string; email_confirmed_at: string | null }[];
+      };
+      cleanup_email_verification_otps: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       write_audit_log: {
         Args: {

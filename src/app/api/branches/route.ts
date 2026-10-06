@@ -10,7 +10,7 @@ import { authErrorState, authFieldErrorState, authSuccessState } from "@/types/a
 
 export async function GET() {
   const context = await getUserContext();
-  if (!context) {
+  if (!context || context.status !== "ACTIVE") {
     return jsonAuthResponse(authErrorState("auth.errors.unauthorized"), { status: 401 });
   }
   return NextResponse.json(await listBranchesForUser());

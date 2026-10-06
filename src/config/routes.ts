@@ -28,6 +28,7 @@ const publicAuthPaths = new Set([
   "/forgot-password",
   "/reset-password",
   "/accept-invitation",
+  "/verify-email",
 ]);
 
 export function isProtectedPath(pathname: string) {

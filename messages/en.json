@@ -129,7 +129,7 @@
       "password": "Password",
       "confirm": "Confirm password",
       "submit": "Activate account",
-      "waiting": "Open the invitation link from your email to continue."
+      "waiting": "Enter the verification code from your invitation email first."
     },
     "unauthorized": {
       "title": "You don't have permission",
@@ -166,6 +166,43 @@
       "accountDisabled": "This account is disabled. Contact an administrator.",
       "unauthorized": "You do not have permission to perform this action.",
       "samePassword": "Choose a password different from your current one."
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "description": "We sent a 6-digit verification code to your email address.",
+      "instruction": "Enter the 6-digit verification code sent to your email.",
+      "sentTo": "We sent a 6-digit code to:",
+      "codeLabel": "Verification code",
+      "digitLabel": "Digit {index} of {total}",
+      "expiresIn": "Your code expires in",
+      "expired": "Your verification code has expired.",
+      "verify": "Verify Email",
+      "verifying": "Verifying...",
+      "noCode": "Didn't receive the code?",
+      "resend": "Resend Code",
+      "resendIn": "Resend Code in {time}",
+      "waitSeconds": "Please wait {seconds} seconds before requesting another code.",
+      "success": "Email verified successfully.",
+      "continue": "Continue",
+      "loading": "Loading…",
+      "backToLogin": "Back to sign in",
+      "notices": {
+        "codeSent": "A new code has been sent to your email.",
+        "unverified": "Please verify your email address before continuing.",
+        "noCode": "Request a verification code to continue."
+      },
+      "errors": {
+        "invalidCode": "Invalid verification code. Please try again.",
+        "expired": "Your verification code has expired. Please request a new code.",
+        "tooManyAttempts": "Too many incorrect attempts. Please request a new verification code.",
+        "resendCooldown": "Please wait before requesting another code.",
+        "emailFailed": "We couldn't send the verification email. Please try again.",
+        "network": "Something went wrong. Please check your connection and try again.",
+        "alreadyVerified": "Your email is already verified.",
+        "notFound": "This verification link is invalid. Open the link from your invitation email.",
+        "generic": "Something went wrong. Please try again."
+      },
+      "attemptsLeft": "{count, plural, one {# attempt} other {# attempts}} remaining."
     }
   },
   "validation": {
@@ -445,8 +482,10 @@
         "alreadyExists": "A user with that email already exists.",
         "notFound": "User not found.",
         "unauthorized": "Only Super Admins can manage users.",
+        "emailFailed": "The invitation email could not be sent. Check the SMTP settings and try again.",
+        "inviteCooldown": "A code was sent to this person recently. Wait a minute before resending.",
         "emailNotConfigured": "Email sending isn't set up. Add the SMTP settings to .env.local.",
-        "emailFailed": "The invitation email could not be sent. Check the SMTP settings and try again."
+        "verificationSetup": "Email verification isn't set up yet. Apply Supabase migration 00046 and set EMAIL_VERIFICATION_SECRET, then invite again."
       },
       "roleNames": {
         "super_admin": "Super Admin",
