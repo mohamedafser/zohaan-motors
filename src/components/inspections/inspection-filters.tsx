@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronDownIcon, ListFilterIcon, SearchIcon, XIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import {
   countActiveFilters,
@@ -18,14 +18,8 @@ import {
   USER_ICON,
 } from "@/components/inspections/inspection-select-icons";
 import { FormField } from "@/components/forms/form-field";
-import {
-  DebouncedFilterInput,
-  FilterChip,
-  FilterGroup,
-  FilterToolbar,
-} from "@/components/shared/filter-controls";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { DebouncedFilterInput, FilterGroup } from "@/components/shared/filter-controls";
+import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useInspectionMeta } from "@/hooks/use-inspections";
 import {
@@ -45,23 +39,31 @@ const ADVANCED_KEYS = [
   "repairRequired",
   "dateFrom",
   "dateTo",
+  "sort",
+  "order",
 ] as const;
 
-export function InspectionFilters() {
+export function InspectionFilters({ actions }: { actions?: React.ReactNode }) {
   const t = useTranslations();
   const { searchParams, update, clear } = useInspectionUrlState();
   const meta = useInspectionMeta();
-  const [expanded, setExpanded] = useState(false);
 
   const activeCount = countActiveFilters(searchParams);
   const hasQuery = activeCount > 0 || Boolean(searchParams.get("q"));
   const branchId = searchParams.get("branchId") ?? "";
-  const advancedCount = ADVANCED_KEYS.filter((key) => Boolean(searchParams.get(key))).length;
-  const showAdvanced = expanded || advancedCount > 0;
+  const advancedCount = ADVANCED_KEYS.filter((key) => {
+    if (key === "sort") return (searchParams.get("sort") ?? "updated_at") !== "updated_at";
+    if (key === "order") return (searchParams.get("order") ?? "desc") !== "desc";
+    return Boolean(searchParams.get(key));
+  }).length;
 
   const chips = useMemo(() => {
-    const items: { key: string; label: string; value: string; clear: Record<string, null> }[] =
-      [];
+    const items: {
+      key: string;
+      label: string;
+      value: string;
+      onRemove: () => void;
+    }[] = [];
 
     const q = searchParams.get("q")?.trim();
     if (q) {
@@ -69,7 +71,7 @@ export function InspectionFilters() {
         key: "q",
         label: t("inspections.filters.searchLabel"),
         value: q,
-        clear: { q: null },
+        onRemove: () => update({ q: null }),
       });
     }
 
@@ -79,7 +81,7 @@ export function InspectionFilters() {
         key: "status",
         label: t("inspections.filters.status"),
         value: t(`inspections.status.${status}`),
-        clear: { status: null },
+        onRemove: () => update({ status: null }),
       });
     }
 
@@ -89,7 +91,7 @@ export function InspectionFilters() {
         key: "branchId",
         label: t("inspections.filters.branch"),
         value: branch?.name ?? branchId,
-        clear: { branchId: null },
+        onRemove: () => update({ branchId: null }),
       });
     }
 
@@ -99,7 +101,7 @@ export function InspectionFilters() {
         key: "inspectionType",
         label: t("inspections.filters.type"),
         value: t(`inspections.types.${inspectionType}`),
-        clear: { inspectionType: null },
+        onRemove: () => update({ inspectionType: null }),
       });
     }
 
@@ -109,7 +111,18 @@ export function InspectionFilters() {
         key: "result",
         label: t("inspections.filters.result"),
         value: t(`inspections.results.${result}`),
-        clear: { result: null },
+        onRemove: () => update({ result: null }),
+      });
+    }
+
+    const assignedTo = searchParams.get("assignedTo");
+    if (assignedTo) {
+      const inspector = meta.data?.inspectors.find((item) => item.id === assignedTo);
+      items.push({
+        key: "assignedTo",
+        label: t("inspections.filters.assignedTo"),
+        value: inspector?.name ?? assignedTo,
+        onRemove: () => update({ assignedTo: null }),
       });
     }
 
@@ -118,7 +131,7 @@ export function InspectionFilters() {
         key: "mine",
         label: t("inspections.filters.mine"),
         value: t("inspections.filters.mineYes"),
-        clear: { mine: null },
+        onRemove: () => update({ mine: null }),
       });
     }
 
@@ -127,7 +140,7 @@ export function InspectionFilters() {
         key: "hasCritical",
         label: t("inspections.filters.hasCritical"),
         value: t("inspections.filters.yes"),
-        clear: { hasCritical: null },
+        onRemove: () => update({ hasCritical: null }),
       });
     }
 
@@ -136,7 +149,7 @@ export function InspectionFilters() {
         key: "repairRequired",
         label: t("inspections.filters.repairRequired"),
         value: t("inspections.filters.yes"),
-        clear: { repairRequired: null },
+        onRemove: () => update({ repairRequired: null }),
       });
     }
 
@@ -145,133 +158,81 @@ export function InspectionFilters() {
     if (dateFrom || dateTo) {
       items.push({
         key: "dates",
-        label: t("inspections.filters.dateFrom"),
+        label: t("inspections.filters.groupDates"),
         value: [dateFrom || "…", dateTo || "…"].join(" – "),
-        clear: { dateFrom: null, dateTo: null },
+        onRemove: () => update({ dateFrom: null, dateTo: null }),
       });
     }
 
     return items;
-  }, [branchId, meta.data?.branches, searchParams, t]);
+  }, [branchId, meta.data?.branches, meta.data?.inspectors, searchParams, t, update]);
 
   return (
-    <section
-      className="bg-card flex flex-col gap-3 rounded-xl border p-3 md:p-4"
-      aria-label={t("inspections.filters.searchLabel")}
-    >
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-        <div className="relative">
-          <SearchIcon
-            className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
-            aria-hidden
-          />
-          <DebouncedFilterInput
-            type="search"
-            inputMode="search"
-            aria-label={t("inspections.filters.searchLabel")}
-            placeholder={t("inspections.filters.searchPlaceholder")}
-            className="h-11 ps-9 md:h-10"
-            value={searchParams.get("q") ?? ""}
-            onCommit={(value) => update({ q: value })}
-          />
-        </div>
-        <SearchableSelect
-          aria-label={t("inspections.filters.status")}
-          value={searchParams.get("status") ?? ""}
-          onValueChange={(value) => update({ status: value })}
-          optional
-          placeholder={t("inspections.filters.allStatuses")}
-          options={INSPECTION_STATUSES.map((status) => ({
-            value: status,
-            label: t(`inspections.status.${status}`),
-            icon: INSPECTION_STATUS_ICONS[status],
-          }))}
-        />
-        <SearchableSelect
-          aria-label={t("inspections.filters.branch")}
-          value={branchId}
-          onValueChange={(value) => update({ branchId: value })}
-          optional
-          placeholder={t("inspections.filters.allBranches")}
-          options={(meta.data?.branches ?? []).map((branch) => ({
-            value: branch.id,
-            label: branch.name,
-            icon: BRANCH_ICON,
-          }))}
-        />
-        <SearchableSelect
-          aria-label={t("inspections.filters.sort")}
-          value={searchParams.get("sort") ?? "updated_at"}
-          onValueChange={(value) => update({ sort: value })}
-          searchable={false}
-          options={INSPECTION_SORT_FIELDS.map((field) => ({
-            value: field,
-            label: t(`inspections.sort.${field}`),
-            icon: INSPECTION_SORT_ICONS[field],
-          }))}
-        />
-      </div>
-
-      {chips.length > 0 ? (
-        <FilterToolbar>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            {chips.map((chip) => (
-              <FilterChip
-                key={chip.key}
-                label={chip.label}
-                value={chip.value}
-                onRemove={() => update(chip.clear)}
-              />
-            ))}
+    <ListFilterBar
+      ariaLabel={t("inspections.filters.searchLabel")}
+      actions={actions}
+      advancedCount={advancedCount}
+      hasActiveFilters={hasQuery}
+      onClear={clear}
+      chips={chips}
+      drawerTitle={t("inspections.filters.drawerTitle")}
+      drawerDescription={t("inspections.filters.drawerHint")}
+      basicFilters={
+        <>
+          <div className="relative sm:col-span-2 xl:col-span-1">
+            <SearchIcon
+              className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
+              aria-hidden
+            />
+            <DebouncedFilterInput
+              type="search"
+              inputMode="search"
+              aria-label={t("inspections.filters.searchLabel")}
+              placeholder={t("inspections.filters.searchPlaceholder")}
+              className="h-11 ps-9 md:h-10"
+              value={searchParams.get("q") ?? ""}
+              onCommit={(value) => update({ q: value })}
+            />
           </div>
-          {hasQuery ? (
-            <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0" onClick={clear}>
-              <XIcon aria-hidden />
-              {t("inspections.filters.clear")}
-            </Button>
-          ) : null}
-        </FilterToolbar>
-      ) : null}
-
-      <FilterToolbar>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9"
-          aria-expanded={showAdvanced}
-          onClick={() => setExpanded((current) => !current)}
-        >
-          <ListFilterIcon aria-hidden />
-          {showAdvanced ? t("inspections.filters.less") : t("inspections.filters.more")}
-          {advancedCount > 0 ? (
-            <Badge variant="secondary" className="ms-0.5">
-              {advancedCount}
-            </Badge>
-          ) : null}
-          <ChevronDownIcon
-            className={`size-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </Button>
-        <div className="ms-auto flex min-w-40 items-center gap-2">
           <SearchableSelect
-            aria-label={t("inspections.filters.order")}
-            value={searchParams.get("order") ?? "desc"}
-            onValueChange={(value) => update({ order: value })}
-            searchable={false}
-            className="w-40"
-            options={[
-              { value: "desc", label: t("inspections.filters.desc"), icon: ORDER_ICONS.desc },
-              { value: "asc", label: t("inspections.filters.asc"), icon: ORDER_ICONS.asc },
-            ]}
+            aria-label={t("inspections.filters.status")}
+            value={searchParams.get("status") ?? ""}
+            onValueChange={(value) => update({ status: value })}
+            optional
+            placeholder={t("inspections.filters.allStatuses")}
+            options={INSPECTION_STATUSES.map((status) => ({
+              value: status,
+              label: t(`inspections.status.${status}`),
+              icon: INSPECTION_STATUS_ICONS[status],
+            }))}
           />
-        </div>
-      </FilterToolbar>
-
-      {showAdvanced ? (
-        <div className="grid gap-5 border-t pt-4">
-          <FilterGroup title={t("inspections.filters.groupType")}>
+          <SearchableSelect
+            aria-label={t("inspections.filters.branch")}
+            value={branchId}
+            onValueChange={(value) => update({ branchId: value })}
+            optional
+            placeholder={t("inspections.filters.allBranches")}
+            options={(meta.data?.branches ?? []).map((branch) => ({
+              value: branch.id,
+              label: branch.name,
+              icon: BRANCH_ICON,
+            }))}
+          />
+        </>
+      }
+      drawerContent={
+        <div className="grid gap-2.5">
+          <FilterGroup
+            title={t("inspections.filters.groupType")}
+            dense
+            collapsible
+            defaultOpen
+            activeCount={
+              ["inspectionType", "result", "assignedTo"].filter((key) =>
+                Boolean(searchParams.get(key)),
+              ).length
+            }
+          >
             <FormField label={t("inspections.filters.type")} htmlFor="filter-type">
               <SearchableSelect
                 id="filter-type"
@@ -318,7 +279,16 @@ export function InspectionFilters() {
             </FormField>
           </FilterGroup>
 
-          <FilterGroup title={t("inspections.filters.groupFlags")}>
+          <FilterGroup
+            title={t("inspections.filters.groupFlags")}
+            dense
+            collapsible
+            activeCount={
+              ["mine", "hasCritical", "repairRequired"].filter((key) =>
+                Boolean(searchParams.get(key)),
+              ).length
+            }
+          >
             <FormField label={t("inspections.filters.mine")} htmlFor="filter-mine">
               <SearchableSelect
                 id="filter-mine"
@@ -341,10 +311,7 @@ export function InspectionFilters() {
                 options={[{ value: "true", label: t("inspections.filters.yes") }]}
               />
             </FormField>
-            <FormField
-              label={t("inspections.filters.repairRequired")}
-              htmlFor="filter-repair"
-            >
+            <FormField label={t("inspections.filters.repairRequired")} htmlFor="filter-repair">
               <SearchableSelect
                 id="filter-repair"
                 value={searchParams.get("repairRequired") === "true" ? "true" : ""}
@@ -357,7 +324,16 @@ export function InspectionFilters() {
             </FormField>
           </FilterGroup>
 
-          <FilterGroup title={t("inspections.filters.groupDates")}>
+          <FilterGroup
+            title={t("inspections.filters.groupDates")}
+            dense
+            collapsible
+            activeCount={
+              ["dateFrom", "dateTo"].filter((key) => Boolean(searchParams.get(key))).length +
+              ((searchParams.get("sort") ?? "updated_at") !== "updated_at" ? 1 : 0) +
+              ((searchParams.get("order") ?? "desc") !== "desc" ? 1 : 0)
+            }
+          >
             <FormField label={t("inspections.filters.dateFrom")} htmlFor="filter-date-from">
               <DebouncedFilterInput
                 id="filter-date-from"
@@ -376,9 +352,34 @@ export function InspectionFilters() {
                 onCommit={(value) => update({ dateTo: value })}
               />
             </FormField>
+            <FormField label={t("inspections.filters.sort")} htmlFor="filter-sort">
+              <SearchableSelect
+                id="filter-sort"
+                value={searchParams.get("sort") ?? "updated_at"}
+                onValueChange={(value) => update({ sort: value })}
+                searchable={false}
+                options={INSPECTION_SORT_FIELDS.map((field) => ({
+                  value: field,
+                  label: t(`inspections.sort.${field}`),
+                  icon: INSPECTION_SORT_ICONS[field],
+                }))}
+              />
+            </FormField>
+            <FormField label={t("inspections.filters.order")} htmlFor="filter-order">
+              <SearchableSelect
+                id="filter-order"
+                value={searchParams.get("order") ?? "desc"}
+                onValueChange={(value) => update({ order: value })}
+                searchable={false}
+                options={[
+                  { value: "desc", label: t("inspections.filters.desc"), icon: ORDER_ICONS.desc },
+                  { value: "asc", label: t("inspections.filters.asc"), icon: ORDER_ICONS.asc },
+                ]}
+              />
+            </FormField>
           </FilterGroup>
         </div>
-      ) : null}
-    </section>
+      }
+    />
   );
 }

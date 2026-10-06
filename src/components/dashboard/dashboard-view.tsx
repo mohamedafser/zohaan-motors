@@ -12,10 +12,10 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { ChartPlaceholder } from "@/components/cards/chart-placeholder";
 import { KpiCard } from "@/components/cards/kpi-card";
+import { DashboardRecentVehicles } from "@/components/dashboard/dashboard-recent-vehicles";
 import { SampleNotice } from "@/components/feedback/sample-notice";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { ResponsiveTable } from "@/components/tables/responsive-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { appConfig, isAppLocale, type AppLocale } from "@/config/app";
@@ -200,53 +200,7 @@ export async function DashboardView() {
           </CardAction>
         </CardHeader>
         <CardContent className="max-md:px-(--card-spacing) md:px-0">
-          <ResponsiveTable
-            bare
-            rows={dashboardSample.vehicles}
-            columns={[
-              {
-                key: "stock",
-                header: t("dashboard.columns.stock"),
-                cell: (row) => <span className="font-medium tabular-nums">{row.stockNumber}</span>,
-                className: "ps-5",
-              },
-              { key: "vehicle", header: t("dashboard.columns.vehicle"), cell: (row) => row.title },
-              {
-                key: "price",
-                header: t("dashboard.columns.price"),
-                cell: (row) => formatCurrency(row.priceAed, locale),
-                className: "text-end tabular-nums",
-              },
-              {
-                key: "status",
-                header: t("dashboard.columns.status"),
-                cell: (row) => (
-                  <StatusBadge status={row.status} label={t(`dashboard.status.${row.status}`)} />
-                ),
-              },
-              {
-                key: "branch",
-                header: t("dashboard.columns.branch"),
-                cell: (row) => <span className="text-muted-foreground">{row.branch}</span>,
-                className: "pe-5",
-              },
-            ]}
-            renderCard={(row) => (
-              <article key={row.id} className="rounded-xl border p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{row.title}</p>
-                    <p className="text-muted-foreground text-xs">{row.stockNumber}</p>
-                  </div>
-                  <StatusBadge status={row.status} label={t(`dashboard.status.${row.status}`)} />
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="font-medium tabular-nums">{formatCurrency(row.priceAed, locale)}</span>
-                  <span className="text-muted-foreground text-xs">{row.branch}</span>
-                </div>
-              </article>
-            )}
-          />
+          <DashboardRecentVehicles vehicles={dashboardSample.vehicles} />
         </CardContent>
       </Card>
 

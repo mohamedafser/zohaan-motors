@@ -6,6 +6,8 @@ import {
   MILEAGE_UNITS,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
+  VEHICLE_INSPECTION_FILTERS,
+  VEHICLE_MARKET_TYPES,
   VEHICLE_SORT_FIELDS,
   VEHICLE_STATUSES,
 } from "@/types/vehicle";
@@ -69,6 +71,7 @@ export const vehicleFormSchema = z.object({
     .int()
     .min(0, { error: messages.number }),
   mileageUnit: z.enum(MILEAGE_UNITS),
+  marketType: z.enum(VEHICLE_MARKET_TYPES),
   bodyType: optionalText,
   transmission: z.preprocess(
     (value) => (value === "" || value == null ? null : value),
@@ -116,6 +119,13 @@ export const vehicleFormSchema = z.object({
   modelId: z
     .union([z.string().uuid(), z.literal(""), z.null(), z.undefined()])
     .transform((value) => (value && String(value).length > 0 ? String(value) : null)),
+  modelYearId: z
+    .union([z.string().uuid(), z.literal(""), z.null(), z.undefined()])
+    .transform((value) => (value && String(value).length > 0 ? String(value) : null)),
+  variantId: z
+    .union([z.string().uuid(), z.literal(""), z.null(), z.undefined()])
+    .transform((value) => (value && String(value).length > 0 ? String(value) : null)),
+  customVariant: optionalText,
 });
 
 export const createVehicleSchema = vehicleFormSchema;
@@ -185,6 +195,8 @@ function optionalNonNegInt() {
 export const vehicleListQuerySchema = z.object({
   q: z.preprocess(emptyToUndefined, z.string().trim().optional()).transform((value) => value ?? ""),
   status: optionalEnum(VEHICLE_STATUSES),
+  marketType: optionalEnum(VEHICLE_MARKET_TYPES),
+  inspection: optionalEnum(VEHICLE_INSPECTION_FILTERS),
   branchId: optionalUuid(),
   locationId: optionalUuid(),
   make: z.preprocess(emptyToUndefined, z.string().trim().optional()),

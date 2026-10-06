@@ -75,7 +75,14 @@
     "searchCountry": "Search country…",
     "noCountry": "No country found",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "viewMode": "View mode",
+    "listView": "List",
+    "gridView": "Grid",
+    "filters": "Filters",
+    "filtersHint": "Narrow results with more options.",
+    "clearAll": "Clear all",
+    "done": "Done"
   },
   "quick": {
     "title": "Create",
@@ -408,7 +415,33 @@
     "securityHint": "Passwords are managed through your invitation and reset links.",
     "passwordHint": "Use Forgot password on the sign-in screen if you need to change your password.",
     "preferences": "Dealership preferences",
-    "preferencesHint": "Branch, currency display, and document defaults will live here later. Currency is AED and the timezone is Asia/Dubai."
+    "preferencesHint": "Branch, currency display, and document defaults will live here later. Currency is AED and the timezone is Asia/Dubai.",
+    "catalog": {
+      "title": "Vehicle master catalog",
+      "description": "UAE brands, models, years, and verified trims used by Inventory. Deactivate instead of deleting records linked to vehicles.",
+      "brands": "Brands",
+      "models": "Models",
+      "years": "Years",
+      "variants": "Variants",
+      "addBrand": "Add brand",
+      "addModel": "Add model",
+      "addYear": "Add year",
+      "addVariant": "Add variant",
+      "name": "Name",
+      "nameAr": "Arabic name",
+      "slug": "Slug",
+      "year": "Year",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "save": "Save",
+      "selectBrand": "Select a brand",
+      "selectModel": "Select a model",
+      "selectYear": "Select a year",
+      "empty": "Nothing here yet.",
+      "manageHint": "Requires settings manage permission."
+    }
   },
   "media": {
     "title": "Photos",
@@ -447,12 +480,20 @@
       "vin": "VIN",
       "vinHint": "17 characters. Leave blank if unknown.",
       "chassis": "Chassis number",
-      "make": "Make",
+      "make": "Brand",
       "model": "Model",
       "variant": "Variant",
+      "customVariant": "Custom variant",
+      "customVariantOption": "Other / custom variant",
+      "customVariantPlaceholder": "e.g. factory trim name",
+      "searchBrand": "Search brand…",
+      "searchModel": "Search model…",
+      "searchYear": "Search year…",
+      "searchVariant": "Search variant…",
       "year": "Year",
       "mileage": "Mileage",
       "mileageUnit": "Unit",
+      "marketType": "Vehicle condition",
       "bodyType": "Body type",
       "transmission": "Transmission",
       "fuelType": "Fuel type",
@@ -493,7 +534,8 @@
       "acquisitionNumber": "Acquisition number",
       "acquisitionStatus": "Acquisition status",
       "acquisitionType": "Acquisition type",
-      "purchasePrice": "Purchase price"
+      "purchasePrice": "Purchase price",
+      "brand": "Brand"
     },
     "enums": {
       "transmission": {
@@ -546,6 +588,10 @@
         "wagon": "Wagon",
         "sports_car": "Sports car",
         "other": "Other"
+      },
+      "marketType": {
+        "new": "New",
+        "used": "Used"
       }
     },
     "sections": {
@@ -561,15 +607,19 @@
       "acquisition": "Acquisition"
     },
     "filters": {
-      "searchPlaceholder": "Search stock ID, VIN, make or model",
+      "searchPlaceholder": "Search stock ID, VIN, brand or model",
       "searchLabel": "Search vehicles",
       "status": "Status",
       "allStatuses": "All statuses",
+      "marketType": "Condition",
+      "allMarketTypes": "All conditions",
+      "inspection": "Inspection",
+      "allInspections": "All inspections",
       "branch": "Branch",
       "allBranches": "All branches",
       "location": "Location",
       "allLocations": "All locations",
-      "make": "Make",
+      "make": "Brand",
       "model": "Model",
       "yearFrom": "Year from",
       "yearTo": "Year to",
@@ -593,7 +643,7 @@
       "title": "Filters",
       "search": "Search",
       "any": "Any",
-      "anyMake": "Any make",
+      "anyMake": "Any brand",
       "anyModel": "Any model",
       "year": "Year",
       "groupVehicle": "Vehicle",
@@ -603,7 +653,9 @@
       "mileageMin": "Mileage min",
       "mileageMax": "Mileage max",
       "acquisitionFrom": "Acquired from",
-      "acquisitionTo": "Acquired to"
+      "acquisitionTo": "Acquired to",
+      "drawerTitle": "Filters",
+      "drawerHint": "Narrow results with more options."
     },
     "sort": {
       "created_at": "Date added",
@@ -613,7 +665,7 @@
       "mileage": "Mileage",
       "status": "Status",
       "purchase_date": "Purchase date",
-      "make": "Make",
+      "make": "Brand",
       "model": "Model"
     },
     "table": {
@@ -622,12 +674,16 @@
       "vin": "VIN",
       "year": "Year",
       "mileage": "Mileage",
+      "marketType": "Condition",
+      "inspection": "Inspection",
       "status": "Status",
       "branch": "Branch",
       "location": "Location",
       "price": "Price",
       "actions": "Actions",
-      "view": "View"
+      "view": "View",
+      "brand": "Brand",
+      "model": "Model"
     },
     "pagination": {
       "summary": "Showing {from}–{to} of {total}",
@@ -664,7 +720,7 @@
     },
     "readyForSale": {
       "panelTitle": "Vehicle status",
-      "alreadyReady": "This vehicle is already available for sale.",
+      "alreadyReady": "This vehicle is Ready for Sale. Inspection is optional and does not block selling.",
       "loadFailed": "Could not load Ready for Sale eligibility.",
       "eligibleTitle": "Ready to mark for sale",
       "blockedTitle": "Not ready for sale",
@@ -850,8 +906,8 @@
         "description": "Add photos when creating or editing this vehicle."
       },
       "inspection": {
-        "title": "No inspections yet",
-        "description": "Inspection reports will appear here once inspections are connected."
+        "title": "Not inspected",
+        "description": "Inspection is optional. Start an inspection when you need a condition report."
       },
       "costs": {
         "title": "No costs recorded",
@@ -1028,16 +1084,16 @@
     },
     "photos": {
       "title": "Vehicle Photos",
-      "hint": "Photos are optional. Add from gallery or camera. One photo can be marked primary.",
-      "add": "Add photo",
+      "hint": "Upload a flexible photo gallery. Drag to reorder, mark one as primary for inventory cards.",
+      "add": "Add Photos",
       "camera": "Camera",
-      "remove": "Remove photo",
+      "remove": "Delete Photo",
       "primary": "Primary",
-      "setPrimary": "Set as primary",
+      "setPrimary": "Set as Primary",
       "moveLeft": "Move left",
       "moveRight": "Move right",
       "emptyTitle": "No photos yet",
-      "emptyHint": "Add front, interior, damage, and other photos for this vehicle.",
+      "emptyHint": "Add multiple vehicle photos. No categories required.",
       "emptyCategory": "No photos in this category.",
       "retryUpload": "Retry upload",
       "uploadToCategory": "Uploading to: {category}",
@@ -1064,7 +1120,7 @@
         "other": "Other"
       },
       "errors": {
-        "invalidType": "Image must be JPG, PNG, or WebP.",
+        "invalidType": "Image must be JPG, PNG, WebP, or HEIC.",
         "tooLarge": "Image size must be less than 10 MB.",
         "uploadFailed": "Photo upload failed.",
         "deleteFailed": "Could not delete photo. Please retry.",
@@ -1083,7 +1139,34 @@
         "primarySet": "Primary photo updated",
         "partialUpload": "Vehicle created, but some photos could not be uploaded.",
         "retrySuccess": "Photos uploaded successfully"
+      },
+      "dropHint": "Or drag and drop images here",
+      "confirmDelete": "Delete this vehicle photo?",
+      "lightbox": {
+        "counter": "{current} / {total}",
+        "previous": "Previous photo",
+        "next": "Next photo",
+        "goTo": "Go to photo {current}",
+        "unavailable": "Preview unavailable"
       }
+    },
+    "inspectionFilter": {
+      "not_inspected": "Not Inspected",
+      "in_progress": "In Progress",
+      "pass": "Pass",
+      "pass_with_issues": "Pass with Issues",
+      "fail": "Fail",
+      "approved": "Approved"
+    },
+    "inspectionCard": {
+      "title": "Inspection",
+      "notInspected": "Not Inspected",
+      "notInspectedHint": "Inspection is optional. You can inspect this vehicle at any time.",
+      "inspectVehicle": "Inspect Vehicle",
+      "viewInspection": "View Inspection",
+      "failedWarning": "Inspection Failed",
+      "date": "Date",
+      "score": "Score"
     }
   },
   "acquisitions": {
@@ -1120,7 +1203,7 @@
       "createNew": "Create new vehicle",
       "selectExisting": "Select existing vehicle",
       "placeholder": "Search vehicle…",
-      "searchPlaceholder": "Stock ID, VIN, chassis, make, or model",
+      "searchPlaceholder": "Stock ID, VIN, chassis, brand, or model",
       "empty": "No acquired vehicles found",
       "emptyHint": "No acquired vehicles in inventory yet. Add a vehicle first, or create a new one here.",
       "loadFailed": "Unable to load vehicles. Try again.",
@@ -1242,15 +1325,16 @@
       "description": "Description",
       "amount": "Amount",
       "vendor": "Vendor",
-      "expenseDate": "Date"
+      "expenseDate": "Date",
+      "make": "Brand"
     },
     "filters": {
       "searchLabel": "Search",
-      "searchPlaceholder": "Number, stock ID, VIN, source, make, model…",
+      "searchPlaceholder": "Number, stock ID, VIN, source, brand, model…",
       "status": "Status",
       "branch": "Branch",
       "sourceType": "Source type",
-      "make": "Make",
+      "make": "Brand",
       "model": "Model",
       "purchaseDateFrom": "Purchase from",
       "purchaseDateTo": "Purchase to",
@@ -1274,13 +1358,15 @@
       "allPaymentStatuses": "All payment statuses",
       "allDocumentStatuses": "All document statuses",
       "allRegistrationStatuses": "All registration statuses",
-      "anyMake": "Any make",
+      "anyMake": "Any brand",
       "anyModel": "Any model",
       "groupSource": "Source & vehicle",
       "groupStatus": "Statuses",
       "groupDates": "Dates",
       "groupPrice": "Price",
-      "active": "{count} active"
+      "active": "{count} active",
+      "drawerTitle": "Filters",
+      "drawerHint": "Narrow results with more options."
     },
     "fields": {
       "number": "Acquisition number",
@@ -1310,7 +1396,7 @@
       "vin": "VIN",
       "vinHint": "17 characters. Leave blank if unknown.",
       "chassis": "Chassis number",
-      "make": "Make",
+      "make": "Brand",
       "model": "Model",
       "variant": "Variant",
       "year": "Year",
@@ -1335,7 +1421,8 @@
       "createdAt": "Created",
       "createdBy": "Created by",
       "updatedAt": "Updated",
-      "updatedBy": "Updated by"
+      "updatedBy": "Updated by",
+      "brand": "Brand"
     },
     "sections": {
       "vehicle": "Vehicle",
@@ -1507,6 +1594,7 @@
       "reject": "Reject",
       "review": "Review",
       "reinspect": "Request re-inspection",
+      "updateOutcome": "Update vehicle & inspection status",
       "addFinding": "Add finding",
       "editFinding": "Edit finding",
       "removeFinding": "Remove finding",
@@ -1539,12 +1627,11 @@
     },
     "summary": {
       "pending": "Pending",
-      "myInspections": "Mine",
+      "myInspections": "Assigned to me",
       "inProgress": "In progress",
       "awaitingReview": "Awaiting review",
       "approved": "Approved",
-      "rejected": "Rejected",
-      "criticalFindings": "Critical"
+      "rejected": "Rejected"
     },
     "status": {
       "draft": "Draft",
@@ -1655,7 +1742,7 @@
     },
     "filters": {
       "searchLabel": "Search",
-      "searchPlaceholder": "Number, stock ID, VIN, make, model…",
+      "searchPlaceholder": "Number, stock ID, VIN, brand, model…",
       "status": "Status",
       "branch": "Branch",
       "type": "Type",
@@ -1684,7 +1771,9 @@
       "groupType": "Type & assignment",
       "groupFlags": "Flags",
       "groupDates": "Dates",
-      "active": "{count} active"
+      "active": "{count} active",
+      "drawerTitle": "Filters",
+      "drawerHint": "Narrow results with more options."
     },
     "fields": {
       "number": "Inspection number",
@@ -1810,6 +1899,8 @@
         "progressSummary": "{completed} of {total} items completed",
         "failedCount": "{count} failed items",
         "criticalCount": "{count} critical findings",
+        "uncheckedTitle": "Sections not fully checked",
+        "uncheckedHint": "These tabs still have items left unchecked or marked Not tested:",
         "overrideIncomplete": "Submit even if required items are incomplete",
         "submit": "Submit for review"
       },
@@ -1819,6 +1910,20 @@
         "reason": "Reason",
         "reasonPlaceholder": "Why is a re-inspection needed?",
         "submit": "Create re-inspection"
+      },
+      "outcome": {
+        "title": "Update vehicle & inspection status",
+        "description": "Set the inspection result and vehicle status after approval. Choosing Pass suggests Ready for Sale.",
+        "currentTitle": "Current status",
+        "currentHint": "Inspection: {inspection}. Vehicle: {vehicle}.",
+        "noResult": "No result",
+        "unknownVehicle": "Unknown",
+        "inspectionStatus": "Inspection result",
+        "vehicleStatus": "Vehicle status",
+        "note": "Note",
+        "notePlaceholder": "Optional note for this status change",
+        "overrideCritical": "Override unresolved critical findings and mark as pass",
+        "submit": "Update statuses"
       },
       "finding": {
         "title": "Add finding",
@@ -1861,6 +1966,7 @@
       "rejected": "Inspection rejected",
       "cancelled": "Inspection cancelled",
       "reinspect": "Re-inspection {number} created",
+      "outcomeUpdated": "Vehicle and inspection status updated",
       "findingAdded": "Finding added",
       "findingUpdated": "Finding updated",
       "findingRemoved": "Finding removed",

@@ -21,6 +21,7 @@ import type {
   SaveInspectionDraftValues,
   SubmitInspectionValues,
   UpdateInspectionFindingValues,
+  UpdateInspectionOutcomeValues,
   UpdateInspectionValues,
 } from "@/lib/validation/inspection";
 
@@ -233,6 +234,19 @@ export async function reinspectRequest(
   body: ReinspectValues,
 ): Promise<ApiResult<InspectionDetail>> {
   const response = await fetch(`/api/inspections/${id}/reinspect`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseJson(response);
+}
+
+export async function updateInspectionOutcomeRequest(
+  id: string,
+  body: UpdateInspectionOutcomeValues,
+): Promise<ApiResult<InspectionDetail>> {
+  const response = await fetch(`/api/inspections/${id}/outcome`, {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", Accept: "application/json" },

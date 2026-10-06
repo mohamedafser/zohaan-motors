@@ -65,7 +65,6 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
   const breakdown = detail.breakdown;
   const purchaseCost = breakdown?.purchaseCost ?? p.purchaseCost;
   const acquisitionExpenses = breakdown?.acquisitionExpenses ?? p.acquisitionExpenses;
-  const workshopCost = breakdown?.workshopCost ?? p.workshopCost ?? 0;
   const otherCosts = breakdown?.otherCosts ?? p.otherVehicleCosts;
   const totalVehicleCost = breakdown?.totalVehicleCost ?? p.totalVehicleCost;
   const acquisitionLines = breakdown?.acquisitionLines ?? [];
@@ -138,10 +137,6 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
                     <dd><Money value={acquisitionExpenses} locale={locale} /></dd>
                   </div>
                 )}
-                <div className="flex justify-between gap-2">
-                  <dt className="text-muted-foreground">{t("pricing.cost.workshop")}</dt>
-                  <dd><Money value={workshopCost} locale={locale} /></dd>
-                </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted-foreground">{t("pricing.cost.other")}</dt>
                   <dd><Money value={otherCosts} locale={locale} /></dd>

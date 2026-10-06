@@ -9,7 +9,7 @@ export const VEHICLE_STATUS_TRANSITIONS: Record<VehicleStatus, readonly VehicleS
   // acquired → ready_for_sale is allowed in DB only via mark_vehicle_ready_for_sale.
   acquired: ["under_inspection", "ready_for_sale"],
   under_inspection: ["ready_for_sale", "under_repair", "inspection_failed"],
-  inspection_failed: ["under_repair", "under_inspection", "archived"],
+  inspection_failed: ["under_repair", "under_inspection", "ready_for_sale", "archived"],
   under_repair: ["under_inspection", "ready_for_sale"],
   ready_for_sale: ["reserved", "sold", "under_repair"],
   reserved: ["sold", "ready_for_sale"],

@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
-import { CreateMenu } from "@/components/navigation/create-menu";
-import { GlobalSearch } from "@/components/navigation/global-search";
 import { LanguageSwitcher } from "@/components/navigation/language-switcher";
 import { NotificationMenu } from "@/components/navigation/notification-menu";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
@@ -15,7 +12,6 @@ import type { UserContext } from "@/types/auth";
 
 export function HeaderBar({ user }: { user: UserContext }) {
   const t = useTranslations();
-  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <header className="bg-background/85 supports-backdrop-filter:bg-background/70 z-30 flex h-16 shrink-0 items-center gap-3 border-b px-4 backdrop-blur-md md:px-6 lg:px-8">
@@ -27,9 +23,6 @@ export function HeaderBar({ user }: { user: UserContext }) {
         <AppBreadcrumbs />
       </div>
       <div className="ms-auto flex items-center gap-1.5">
-        <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
-        <CreateMenu />
-        <div className="bg-border mx-1 hidden h-6 w-px md:block" aria-hidden />
         <div className="hidden items-center gap-0.5 md:flex">
           <LanguageSwitcher compact />
           <ThemeToggle />

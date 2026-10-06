@@ -530,7 +530,7 @@ async function resolveVehicleForCreate(
       data: null,
       error: {
         code: "validation",
-        message: "Make, model, and year are required when creating a new vehicle.",
+        message: "Brand, model, and year are required when creating a new vehicle.",
       },
     };
   }
@@ -551,7 +551,7 @@ async function resolveVehicleForCreate(
       branch_id: values.branchId,
       make_id: values.vehicle.makeId,
       model_id: values.vehicle.modelId,
-      status: "acquired",
+      status: "ready_for_sale",
       source: "other",
       purchase_date: values.purchaseDate,
       created_by: context.userId,

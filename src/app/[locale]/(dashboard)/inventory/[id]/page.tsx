@@ -15,7 +15,6 @@ const VEHICLE_TABS = new Set([
   "inspection",
   "pricing",
   "photos",
-  "costs",
   "documents",
   "history",
   "sales",

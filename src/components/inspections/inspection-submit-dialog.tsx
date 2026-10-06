@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { FormField } from "@/components/forms/form-field";
 import { LoadingButton } from "@/components/shared/loading-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -32,17 +33,19 @@ export function InspectionSubmitDialog({
   open,
   onOpenChange,
   progress,
+  uncheckedSections = [],
   onSubmitted,
 }: {
   inspectionId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   progress: InspectionProgress;
+  uncheckedSections?: string[];
   onSubmitted?: () => void;
 }) {
   const t = useTranslations();
   const { submit } = useInspectionMutations(inspectionId);
-  const incomplete = progress.itemsRemaining > 0;
+  const incomplete = progress.itemsRemaining > 0 || uncheckedSections.length > 0;
   const form = useForm<SubmitInspectionValues>({
     resolver: zodResolver(submitInspectionSchema) as never,
     defaultValues: {
@@ -95,6 +98,20 @@ export function InspectionSubmitDialog({
             })}
           </p>
         </div>
+
+        {uncheckedSections.length > 0 ? (
+          <Alert variant="destructive">
+            <AlertTitle>{t("inspections.dialogs.submit.uncheckedTitle")}</AlertTitle>
+            <AlertDescription>
+              <p>{t("inspections.dialogs.submit.uncheckedHint")}</p>
+              <ul className="mt-2 list-disc ps-5">
+                {uncheckedSections.map((section) => (
+                  <li key={section}>{section}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <form className="grid gap-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FormField label={t("inspections.fields.result")} htmlFor="submit-result">

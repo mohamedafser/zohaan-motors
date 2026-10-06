@@ -54,6 +54,7 @@ import type {
   SaveInspectionDraftValues,
   SubmitInspectionValues,
   UpdateInspectionFindingValues,
+  UpdateInspectionOutcomeValues,
   UpdateInspectionValues,
 } from "@/lib/validation/inspection";
 
@@ -245,7 +246,7 @@ function mapDbError(error: { code?: string; message?: string }): InspectionServi
     return { code: "invalid_transition", message: "That status change is not allowed." };
   }
   if (message.includes("self approval")) {
-    return { code: "forbidden", message: "You cannot approve your own inspection." };
+    return { code: "forbidden", message: "Inspection approval was denied." };
   }
   if (message.includes("not authorized") || message.includes("permission")) {
     return { code: "forbidden", message: "You do not have permission to perform this action." };
@@ -589,23 +590,101 @@ async function writeAudit(
   }
 }
 
-export async function getInspectionSummary(
+type InspectionListFilterQuery = Partial<
+  Pick<
+    InspectionListQuery,
+    | "status"
+    | "inspectionType"
+    | "result"
+    | "branchId"
+    | "assignedTo"
+    | "inspectedBy"
+    | "vehicleId"
+    | "mine"
+    | "repairRequired"
+    | "dateFrom"
+    | "dateTo"
+    | "q"
+    | "hasCritical"
+  >
+>;
+
+async function resolveInspectionSearchVehicleIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  q: string | undefined,
+): Promise<{ pattern: string; vehicleIds: string[] } | null> {
+  if (!q) return null;
+  const cleaned = q.replace(/[%_,()"]/g, "").trim();
+  if (!cleaned) return null;
+
+  // PostgREST requires quoted patterns when the value has hyphens / spaces.
+  const pattern = `"%${cleaned}%"`;
+  const { data: matchedVehicles } = await supabase
+    .from("vehicles")
+    .select("id")
+    .or(
+      `stock_number.ilike.${pattern},vin.ilike.${pattern},make.ilike.${pattern},model.ilike.${pattern}`,
+    )
+    .limit(200);
+
+  return {
+    pattern,
+    vehicleIds: (matchedVehicles ?? []).map((row) => row.id as string),
+  };
+}
+
+function applyInspectionListFilters<
+  T extends {
+    eq: Function;
+    gte: Function;
+    lte: Function;
+    or: Function;
+  },
+>(
+  builder: T,
+  query: InspectionListFilterQuery,
   context: UserContext,
-): Promise<ServiceResult<InspectionSummary>> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("inspections")
-    .select("id, status, assigned_to, inspected_by");
+  search: { pattern: string; vehicleIds: string[] } | null,
+): T {
+  let next = builder;
 
-  if (error) return { data: null, error: mapDbError(error) };
+  if (query.status) next = next.eq("status", query.status) as T;
+  if (query.inspectionType) next = next.eq("inspection_type", query.inspectionType) as T;
+  if (query.result) next = next.eq("result", query.result) as T;
+  if (query.branchId) next = next.eq("branch_id", query.branchId) as T;
+  if (query.assignedTo) next = next.eq("assigned_to", query.assignedTo) as T;
+  if (query.inspectedBy) next = next.eq("inspected_by", query.inspectedBy) as T;
+  if (query.vehicleId) next = next.eq("vehicle_id", query.vehicleId) as T;
+  if (query.mine) {
+    next = next.or(
+      `assigned_to.eq.${context.userId},inspected_by.eq.${context.userId}`,
+    ) as T;
+  }
+  if (query.repairRequired) next = next.eq("result", "repair_required") as T;
+  if (query.dateFrom) next = next.gte("created_at", query.dateFrom) as T;
+  if (query.dateTo) next = next.lte("created_at", `${query.dateTo}T23:59:59.999Z`) as T;
 
-  const rows = (data ?? []) as {
+  if (search) {
+    const filters = [`inspection_number.ilike.${search.pattern}`];
+    if (search.vehicleIds.length > 0) {
+      filters.push(`vehicle_id.in.(${search.vehicleIds.join(",")})`);
+    }
+    next = next.or(filters.join(",")) as T;
+  }
+
+  return next;
+}
+
+function buildInspectionSummary(
+  rows: {
     id: string;
     status: InspectionStatus;
     assigned_to: string | null;
     inspected_by: string | null;
-  }[];
-
+  }[],
+  context: UserContext,
+  criticalFindings: number,
+): InspectionSummary {
   const summary: InspectionSummary = {
     pending: 0,
     myInspections: 0,
@@ -613,37 +692,81 @@ export async function getInspectionSummary(
     awaitingReview: 0,
     approved: 0,
     rejected: 0,
-    criticalFindings: 0,
+    criticalFindings,
     total: rows.length,
   };
 
-  const ids: string[] = [];
   for (const row of rows) {
-    ids.push(row.id);
     if (row.status === "draft" || row.status === "assigned") summary.pending += 1;
     if (row.status === "in_progress") summary.inProgress += 1;
     if (row.status === "submitted" || row.status === "under_review") summary.awaitingReview += 1;
     if (row.status === "approved") summary.approved += 1;
     if (row.status === "rejected") summary.rejected += 1;
-    if (
-      row.assigned_to === context.userId ||
-      row.inspected_by === context.userId
-    ) {
+    if (row.assigned_to === context.userId || row.inspected_by === context.userId) {
       summary.myInspections += 1;
     }
   }
 
+  return summary;
+}
+
+export async function getInspectionSummary(
+  context: UserContext,
+  query: InspectionListFilterQuery = {},
+): Promise<ServiceResult<InspectionSummary>> {
+  const supabase = await createClient();
+  const search = await resolveInspectionSearchVehicleIds(supabase, query.q);
+  let builder = supabase
+    .from("inspections")
+    .select("id, status, assigned_to, inspected_by");
+
+  builder = applyInspectionListFilters(builder, query, context, search);
+
+  const { data, error } = await builder;
+  if (error) return { data: null, error: mapDbError(error) };
+
+  let rows = (data ?? []) as {
+    id: string;
+    status: InspectionStatus;
+    assigned_to: string | null;
+    inspected_by: string | null;
+  }[];
+
+  const ids = rows.map((row) => row.id);
+  let criticalByInspection = new Map<string, number>();
+
   if (ids.length > 0) {
     const { data: critical } = await supabase
       .from("inspection_findings")
-      .select("id")
+      .select("inspection_id")
       .in("inspection_id", ids)
       .eq("severity", "critical")
       .eq("is_resolved", false);
-    summary.criticalFindings = (critical ?? []).length;
+
+    for (const row of critical ?? []) {
+      const inspectionId = (row as { inspection_id: string }).inspection_id;
+      criticalByInspection.set(
+        inspectionId,
+        (criticalByInspection.get(inspectionId) ?? 0) + 1,
+      );
+    }
   }
 
-  return { data: summary, error: null };
+  if (query.hasCritical === true) {
+    rows = rows.filter((row) => (criticalByInspection.get(row.id) ?? 0) > 0);
+  } else if (query.hasCritical === false) {
+    rows = rows.filter((row) => (criticalByInspection.get(row.id) ?? 0) === 0);
+  }
+
+  const criticalFindings = rows.reduce(
+    (sum, row) => sum + (criticalByInspection.get(row.id) ?? 0),
+    0,
+  );
+
+  return {
+    data: buildInspectionSummary(rows, context, criticalFindings),
+    error: null,
+  };
 }
 
 export async function listInspections(
@@ -653,31 +776,10 @@ export async function listInspections(
   const supabase = await createClient();
 
   const sort = SORT_FIELD_SET.has(query.sort) ? query.sort : "updated_at";
+  const search = await resolveInspectionSearchVehicleIds(supabase, query.q);
 
   let builder = supabase.from("inspections").select(LIST_SELECT, { count: "exact" });
-
-  if (query.status) builder = builder.eq("status", query.status);
-  if (query.inspectionType) builder = builder.eq("inspection_type", query.inspectionType);
-  if (query.result) builder = builder.eq("result", query.result);
-  if (query.branchId) builder = builder.eq("branch_id", query.branchId);
-  if (query.assignedTo) builder = builder.eq("assigned_to", query.assignedTo);
-  if (query.inspectedBy) builder = builder.eq("inspected_by", query.inspectedBy);
-  if (query.vehicleId) builder = builder.eq("vehicle_id", query.vehicleId);
-  if (query.mine) {
-    builder = builder.or(
-      `assigned_to.eq.${context.userId},inspected_by.eq.${context.userId}`,
-    );
-  }
-  if (query.repairRequired) builder = builder.eq("result", "repair_required");
-  if (query.dateFrom) builder = builder.gte("created_at", query.dateFrom);
-  if (query.dateTo) builder = builder.lte("created_at", `${query.dateTo}T23:59:59.999Z`);
-
-  if (query.q) {
-    const q = query.q.replace(/[%_,]/g, "");
-    builder = builder.or(
-      `inspection_number.ilike.%${q}%,vehicles.stock_number.ilike.%${q}%,vehicles.vin.ilike.%${q}%,vehicles.make.ilike.%${q}%,vehicles.model.ilike.%${q}%`,
-    );
-  }
+  builder = applyInspectionListFilters(builder, query, context, search);
 
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
@@ -694,10 +796,6 @@ export async function listInspections(
     rows.map((r) => r.id),
   );
 
-  if (query.hasCritical === true) {
-    // Filter after counts; page total may be approximate when this filter is applied.
-  }
-
   const names = await loadProfileNames(
     supabase,
     rows.flatMap((r) => [r.assigned_to, r.inspected_by]),
@@ -711,7 +809,7 @@ export async function listInspections(
     items = items.filter((item) => item.criticalFindingsCount === 0);
   }
 
-  const summary = await getInspectionSummary(context);
+  const summary = await getInspectionSummary(context, query);
 
   return {
     data: {
@@ -1301,6 +1399,48 @@ export async function approveInspection(
     p_inspection_id: id,
     p_note: values.note ?? null,
     p_override_critical: values.overrideCritical ?? false,
+  });
+  if (error) return { data: null, error: mapDbError(error) };
+  return getInspection(id, context);
+}
+
+export async function updateApprovedInspectionOutcome(
+  id: string,
+  values: UpdateInspectionOutcomeValues,
+  context: UserContext,
+): Promise<ServiceResult<InspectionDetail>> {
+  if (!hasPermission(context.permissions, "inspection.approve", context.roles)) {
+    return { data: null, error: { code: "forbidden", message: "Not authorized." } };
+  }
+
+  const existing = await getInspection(id, context);
+  if (existing.error || !existing.data) return existing;
+  if (existing.data.status !== "approved") {
+    return {
+      data: null,
+      error: { code: "conflict", message: "Inspection is not approved." },
+    };
+  }
+
+  if (values.overrideCritical) {
+    if (!hasPermission(context.permissions, "inspection.override", context.roles)) {
+      return {
+        data: null,
+        error: {
+          code: "forbidden",
+          message: "Override permission is required to pass with critical findings.",
+        },
+      };
+    }
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_approved_inspection_outcome", {
+    p_inspection_id: id,
+    p_result: values.result,
+    p_note: values.note ?? null,
+    p_override_critical: values.overrideCritical ?? false,
+    p_vehicle_status: values.vehicleStatus,
   });
   if (error) return { data: null, error: mapDbError(error) };
   return getInspection(id, context);

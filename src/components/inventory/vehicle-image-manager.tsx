@@ -10,11 +10,12 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/feedback/empty-state";
+import { VehiclePhotoLightbox } from "@/components/inventory/vehicle-photo-lightbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,35 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { buildVehiclePhotoPath, uploadVehiclePhotoFile } from "@/lib/vehicles/photo-upload";
 import { validateVehiclePhotoFile } from "@/lib/validation/vehicle-photo";
-import {
-  VEHICLE_PHOTO_CATEGORIES,
-  VEHICLE_PHOTO_FILTER_CATEGORIES,
-  VEHICLE_PHOTO_FILTERS,
-  type PendingVehiclePhoto,
-  type VehiclePhoto,
-  type VehiclePhotoCategory,
-  type VehiclePhotoFilter,
-} from "@/types/vehicle-photo";
-
-function categoryLabel(
-  t: ReturnType<typeof useTranslations>,
-  category: VehiclePhotoCategory,
-) {
-  return t(`inventory.photos.categories.${category}`);
-}
-
-function defaultCategoryForFilter(filter: VehiclePhotoFilter): VehiclePhotoCategory {
-  if (filter === "all") return "front";
-  return VEHICLE_PHOTO_FILTER_CATEGORIES[filter][0] ?? "other";
-}
-
-function categoryMatchesFilter(
-  category: VehiclePhotoCategory,
-  filter: VehiclePhotoFilter,
-): boolean {
-  if (filter === "all") return true;
-  return VEHICLE_PHOTO_FILTER_CATEGORIES[filter].includes(category);
-}
+import type { PendingVehiclePhoto, VehiclePhoto } from "@/types/vehicle-photo";
 
 function ProgressBar({
   value,
@@ -98,21 +71,6 @@ function ProgressBar({
   );
 }
 
-type DraftProps = {
-  mode: "draft";
-  photos: PendingVehiclePhoto[];
-  onChange: (photos: PendingVehiclePhoto[]) => void;
-  disabled?: boolean;
-};
-
-type ManageProps = {
-  mode: "manage" | "gallery";
-  vehicleId: string;
-  readOnly?: boolean;
-};
-
-export type VehicleImageManagerProps = DraftProps | ManageProps;
-
 type UploadOverlay = {
   progress: number;
   status: "uploading" | "saving" | "error";
@@ -123,6 +81,8 @@ function PhotoThumb({
   src,
   alt,
   isPrimary,
+  featured = false,
+  onOpen,
   onPrimary,
   onRemove,
   onMoveLeft,
@@ -130,10 +90,16 @@ function PhotoThumb({
   canEdit,
   busy,
   upload,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }: {
   src: string | null;
   alt: string;
   isPrimary: boolean;
+  featured?: boolean;
+  onOpen?: () => void;
   onPrimary?: () => void;
   onRemove?: () => void;
   onMoveLeft?: () => void;
@@ -141,33 +107,66 @@ function PhotoThumb({
   canEdit: boolean;
   busy?: boolean;
   upload?: UploadOverlay | null;
+  draggable?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (event: React.DragEvent) => void;
+  onDrop?: () => void;
 }) {
   const t = useTranslations();
   const uploading = upload?.status === "uploading" || upload?.status === "saving";
   const failed = upload?.status === "error";
 
   return (
-    <li className="bg-muted/40 relative overflow-hidden rounded-xl border">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed/blob URLs
-        <img
-          src={src}
-          alt={alt}
-          className={cn("aspect-square w-full object-cover", uploading && "opacity-80")}
-          loading="lazy"
-        />
-      ) : (
-        <div className="bg-muted flex aspect-square items-center justify-center">
-          <ImagePlusIcon className="text-muted-foreground size-8" aria-hidden />
-        </div>
+    <li
+      className={cn(
+        "bg-muted/20 group relative overflow-hidden rounded-2xl ring-1 ring-foreground/8 transition-all duration-200",
+        onOpen && "hover:ring-foreground/20 hover:shadow-md",
+        featured ? "h-full min-h-48 w-full" : "w-full",
+        draggable && "cursor-grab active:cursor-grabbing",
       )}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <button
+        type="button"
+        className={cn(
+          "focus-visible:ring-ring relative block w-full outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          featured ? "h-full min-h-48" : "aspect-square",
+        )}
+        onClick={onOpen}
+        disabled={!onOpen || uploading}
+        aria-label={alt}
+      >
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- signed/blob URLs
+          <img
+            src={src}
+            alt={alt}
+            className={cn(
+              "absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]",
+              uploading && "opacity-80",
+            )}
+            loading="lazy"
+          />
+        ) : (
+          <div className="bg-muted absolute inset-0 flex items-center justify-center">
+            <ImagePlusIcon className="text-muted-foreground size-8" aria-hidden />
+          </div>
+        )}
+        <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
+      </button>
+
       {isPrimary && !upload ? (
-        <span className="bg-primary text-primary-foreground absolute start-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-medium">
+        <span className="absolute inset-s-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+          <StarIcon className="size-3 fill-current" aria-hidden />
           {t("inventory.photos.primary")}
         </span>
       ) : null}
+
       {upload ? (
-        <div className="absolute inset-0 flex flex-col justify-end bg-black/55 p-2.5">
+        <div className="absolute inset-0 flex flex-col justify-end bg-black/55 p-3">
           <div className="mb-auto flex items-center justify-center pt-8">
             {upload.status !== "error" ? (
               <Loader2Icon className="size-7 animate-spin text-white" aria-hidden />
@@ -189,18 +188,25 @@ function PhotoThumb({
           />
         </div>
       ) : null}
+
       {busy && !upload ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
           <Loader2Icon className="size-6 animate-spin text-white" aria-hidden />
         </div>
       ) : null}
+
       {canEdit && !uploading ? (
-        <div className="absolute inset-x-0 bottom-0 flex flex-wrap gap-1 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
+        <div
+          className="absolute inset-e-2 bottom-2 flex items-center gap-1 rounded-full bg-black/50 p-1 opacity-100 backdrop-blur-md transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+          data-row-stop
+          onClick={(event) => event.stopPropagation()}
+        >
           {onMoveLeft ? (
             <Button
               type="button"
               size="icon-sm"
-              variant="secondary"
+              variant="ghost"
+              className="size-8 text-white hover:bg-white/15 hover:text-white"
               aria-label={t("inventory.photos.moveLeft")}
               onClick={onMoveLeft}
             >
@@ -211,7 +217,8 @@ function PhotoThumb({
             <Button
               type="button"
               size="icon-sm"
-              variant="secondary"
+              variant="ghost"
+              className="size-8 text-white hover:bg-white/15 hover:text-white"
               aria-label={t("inventory.photos.moveRight")}
               onClick={onMoveRight}
             >
@@ -222,7 +229,8 @@ function PhotoThumb({
             <Button
               type="button"
               size="icon-sm"
-              variant="secondary"
+              variant="ghost"
+              className="size-8 text-white hover:bg-white/15 hover:text-white"
               aria-label={t("inventory.photos.setPrimary")}
               onClick={onPrimary}
             >
@@ -233,7 +241,8 @@ function PhotoThumb({
             <Button
               type="button"
               size="icon-sm"
-              variant="destructive"
+              variant="ghost"
+              className="size-8 text-white hover:bg-rose-500/80 hover:text-white"
               aria-label={t("inventory.photos.remove")}
               onClick={onRemove}
             >
@@ -246,41 +255,135 @@ function PhotoThumb({
   );
 }
 
-function CategorySection({
-  category,
-  children,
+function GalleryToolbar({
+  canEdit,
+  uploading,
   onAdd,
   onCamera,
-  canEdit,
+  dropActive,
+  empty,
 }: {
-  category: VehiclePhotoCategory;
-  children: React.ReactNode;
-  onAdd?: () => void;
-  onCamera?: () => void;
   canEdit: boolean;
+  uploading?: boolean;
+  onAdd: () => void;
+  onCamera: () => void;
+  dropActive?: boolean;
+  empty?: boolean;
 }) {
   const t = useTranslations();
+  if (!canEdit) return null;
   return (
-    <div className="grid gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{categoryLabel(t, category)}</h3>
-        {canEdit ? (
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="outline" className="h-10 sm:h-8" onClick={onAdd}>
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-dashed transition-colors",
+        dropActive
+          ? "border-primary bg-primary/8"
+          : "border-border/80 bg-muted/20 hover:border-foreground/20 hover:bg-muted/30",
+        empty ? "px-4 py-10 sm:py-14" : "px-4 py-4",
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:text-start",
+          !empty && "sm:justify-between",
+        )}
+      >
+        <div className="grid gap-1">
+          <p className="text-sm font-medium tracking-tight">
+            {empty ? t("inventory.photos.emptyTitle") : t("inventory.photos.add")}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {empty ? t("inventory.photos.emptyHint") : t("inventory.photos.dropHint")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button
+            type="button"
+            className="h-10 rounded-full px-4"
+            disabled={uploading}
+            onClick={onAdd}
+          >
+            {uploading ? (
+              <Loader2Icon className="size-4 animate-spin" aria-hidden />
+            ) : (
               <ImagePlusIcon className="size-4" aria-hidden />
-              {t("inventory.photos.add")}
-            </Button>
-            <Button type="button" size="sm" variant="outline" className="h-10 sm:h-8" onClick={onCamera}>
-              <CameraIcon className="size-4" aria-hidden />
-              {t("inventory.photos.camera")}
-            </Button>
-          </div>
-        ) : null}
+            )}
+            {t("inventory.photos.add")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 rounded-full px-4"
+            disabled={uploading}
+            onClick={onCamera}
+          >
+            <CameraIcon className="size-4" aria-hidden />
+            {t("inventory.photos.camera")}
+          </Button>
+        </div>
       </div>
-      {children}
     </div>
   );
 }
+
+const GALLERY_GRID = "grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3";
+const SIDE_GRID = "grid grid-cols-2 gap-2 sm:gap-3";
+
+function PhotoGalleryList<T extends { isPrimary: boolean }>({
+  photos,
+  renderThumb,
+}: {
+  photos: T[];
+  renderThumb: (photo: T, index: number, featured: boolean) => ReactNode;
+}) {
+  if (photos.length === 0) return null;
+
+  const featuredIndex = Math.max(
+    0,
+    photos.findIndex((photo) => photo.isPrimary),
+  );
+  const featuredPhoto = photos[featuredIndex]!;
+  const others = photos
+    .map((photo, index) => ({ photo, index }))
+    .filter(({ index }) => index !== featuredIndex);
+  const side = others.slice(0, 4);
+  const below = others.slice(4);
+
+  if (others.length === 0) {
+    return <ul className="grid">{renderThumb(featuredPhoto, featuredIndex, true)}</ul>;
+  }
+
+  return (
+    <div className="grid gap-2 sm:gap-3">
+      <div className="grid gap-2 sm:grid-cols-2 sm:items-stretch sm:gap-3">
+        <ul className="grid min-h-48">{renderThumb(featuredPhoto, featuredIndex, true)}</ul>
+        <ul className={SIDE_GRID}>
+          {side.map(({ photo, index }) => renderThumb(photo, index, false))}
+        </ul>
+      </div>
+      {below.length > 0 ? (
+        <ul className={GALLERY_GRID}>
+          {below.map(({ photo, index }) => renderThumb(photo, index, false))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+type DraftProps = {
+  mode: "draft";
+  photos: PendingVehiclePhoto[];
+  onChange: (photos: PendingVehiclePhoto[]) => void;
+  disabled?: boolean;
+};
+
+type ManageProps = {
+  mode: "manage" | "gallery";
+  vehicleId: string;
+  readOnly?: boolean;
+};
+
+export type VehicleImageManagerProps = DraftProps | ManageProps;
 
 function DraftManager({
   photos,
@@ -294,16 +397,18 @@ function DraftManager({
   const t = useTranslations();
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const pendingCategoryRef = useRef<VehiclePhotoCategory>("front");
+  const [dropActive, setDropActive] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const dragId = useRef<string | null>(null);
 
-  function openPicker(category: VehiclePhotoCategory, mode: "file" | "camera") {
-    pendingCategoryRef.current = category;
-    if (mode === "file") fileRef.current?.click();
-    else cameraRef.current?.click();
+  function ensurePrimary(list: PendingVehiclePhoto[]) {
+    if (list.length === 0) return list;
+    if (list.some((photo) => photo.isPrimary)) return list;
+    return list.map((photo, index) => ({ ...photo, isPrimary: index === 0 }));
   }
 
-  function addFiles(files: FileList | null, category: VehiclePhotoCategory) {
-    if (!files || files.length === 0) return;
+  function addFiles(files: FileList | File[] | null) {
+    if (!files || (files as FileList).length === 0) return;
     const next = [...photos];
     for (const file of Array.from(files)) {
       const errorKey = validateVehiclePhotoFile(file);
@@ -315,17 +420,12 @@ function DraftManager({
         localId: crypto.randomUUID(),
         file,
         previewUrl: URL.createObjectURL(file),
-        category,
+        category: "other",
         isPrimary: next.length === 0,
         status: "ready",
       });
     }
-    // Ensure one primary: prefer first front, else first photo.
-    const withPrimary = next.map((photo) => ({ ...photo, isPrimary: false }));
-    const front = withPrimary.find((photo) => photo.category === "front");
-    const primary = front ?? withPrimary[0];
-    if (primary) primary.isPrimary = true;
-    onChange(withPrimary);
+    onChange(ensurePrimary(next));
   }
 
   function remove(localId: string) {
@@ -334,11 +434,7 @@ function DraftManager({
       if (photo.previewUrl.startsWith("blob:")) URL.revokeObjectURL(photo.previewUrl);
       return false;
     });
-    if (next.length > 0 && !next.some((photo) => photo.isPrimary)) {
-      const front = next.find((photo) => photo.category === "front");
-      (front ?? next[0]!).isPrimary = true;
-    }
-    onChange(next);
+    onChange(ensurePrimary(next));
   }
 
   function setPrimary(localId: string) {
@@ -356,21 +452,62 @@ function DraftManager({
     onChange(next);
   }
 
+  function dropOn(targetId: string) {
+    const fromId = dragId.current;
+    if (!fromId || fromId === targetId) return;
+    const next = [...photos];
+    const from = next.findIndex((photo) => photo.localId === fromId);
+    const to = next.findIndex((photo) => photo.localId === targetId);
+    if (from < 0 || to < 0) return;
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item!);
+    onChange(next);
+    dragId.current = null;
+  }
+
+  const lightboxPhotos = photos.map((photo) => ({
+    id: photo.localId,
+    src: photo.previewUrl,
+    alt: photo.file.name,
+    caption: photo.file.name,
+  }));
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("inventory.photos.title")}</CardTitle>
-        <p className="text-muted-foreground text-sm">{t("inventory.photos.hint")}</p>
+    <Card
+      className="border-border/70 shadow-none"
+      onDragOver={(event) => {
+        if (disabled) return;
+        event.preventDefault();
+        setDropActive(true);
+      }}
+      onDragLeave={() => setDropActive(false)}
+      onDrop={(event) => {
+        if (disabled) return;
+        event.preventDefault();
+        setDropActive(false);
+        addFiles(event.dataTransfer.files);
+      }}
+    >
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0 pb-3">
+        <div className="grid gap-1">
+          <CardTitle className="text-base tracking-tight">{t("inventory.photos.title")}</CardTitle>
+          <p className="text-muted-foreground text-sm">{t("inventory.photos.hint")}</p>
+        </div>
+        {photos.length > 0 ? (
+          <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-xs tabular-nums">
+            {photos.length}
+          </span>
+        ) : null}
       </CardHeader>
-      <CardContent className="grid gap-6">
+      <CardContent className="grid gap-4">
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/*"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
           multiple
           className="sr-only"
           onChange={(event) => {
-            addFiles(event.target.files, pendingCategoryRef.current);
+            addFiles(event.target.files);
             event.target.value = "";
           }}
         />
@@ -381,61 +518,55 @@ function DraftManager({
           capture="environment"
           className="sr-only"
           onChange={(event) => {
-            addFiles(event.target.files, pendingCategoryRef.current);
+            addFiles(event.target.files);
             event.target.value = "";
           }}
         />
 
-        {VEHICLE_PHOTO_CATEGORIES.map((category) => {
-          const items = photos.filter((photo) => photo.category === category);
-          return (
-            <CategorySection
-              key={category}
-              category={category}
+        <GalleryToolbar
+          canEdit={!disabled}
+          onAdd={() => fileRef.current?.click()}
+          onCamera={() => cameraRef.current?.click()}
+          dropActive={dropActive}
+          empty={photos.length === 0}
+        />
+
+        <PhotoGalleryList
+          photos={photos}
+          renderThumb={(photo, index, featured) => (
+            <PhotoThumb
+              key={photo.localId}
+              src={photo.previewUrl}
+              alt={photo.file.name}
+              isPrimary={photo.isPrimary}
+              featured={featured}
               canEdit={!disabled}
-              onAdd={() => openPicker(category, "file")}
-              onCamera={() => openPicker(category, "camera")}
-            >
-              {items.length === 0 ? (
-                <p className="text-muted-foreground text-xs">{t("inventory.photos.emptyCategory")}</p>
-              ) : (
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {items.map((photo) => {
-                    const globalIndex = photos.findIndex((p) => p.localId === photo.localId);
-                    const upload =
-                      photo.status === "uploading" ||
-                      photo.status === "saving" ||
-                      photo.status === "error"
-                        ? {
-                            progress: photo.progress ?? 0,
-                            status: photo.status,
-                            errorMessage: photo.errorMessage,
-                          }
-                        : null;
-                    return (
-                      <PhotoThumb
-                        key={photo.localId}
-                        src={photo.previewUrl}
-                        alt={photo.file.name}
-                        isPrimary={photo.isPrimary}
-                        canEdit={!disabled && photo.status !== "uploading" && photo.status !== "saving"}
-                        upload={upload}
-                        onPrimary={() => setPrimary(photo.localId)}
-                        onRemove={() => remove(photo.localId)}
-                        onMoveLeft={globalIndex > 0 ? () => move(photo.localId, -1) : undefined}
-                        onMoveRight={
-                          globalIndex < photos.length - 1
-                            ? () => move(photo.localId, 1)
-                            : undefined
-                        }
-                      />
-                    );
-                  })}
-                </ul>
-              )}
-            </CategorySection>
-          );
-        })}
+              onOpen={() => setLightboxIndex(index)}
+              onPrimary={() => setPrimary(photo.localId)}
+              onRemove={() => remove(photo.localId)}
+              onMoveLeft={index > 0 ? () => move(photo.localId, -1) : undefined}
+              onMoveRight={
+                index < photos.length - 1 ? () => move(photo.localId, 1) : undefined
+              }
+              draggable={!disabled}
+              onDragStart={() => {
+                dragId.current = photo.localId;
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => dropOn(photo.localId)}
+            />
+          )}
+        />
+
+        <VehiclePhotoLightbox
+          photos={lightboxPhotos}
+          index={lightboxIndex ?? 0}
+          open={lightboxIndex != null}
+          onOpenChange={(open) => {
+            if (!open) setLightboxIndex(null);
+          }}
+          onIndexChange={setLightboxIndex}
+        />
       </CardContent>
     </Card>
   );
@@ -450,50 +581,30 @@ function ManageManager({
 }) {
   const t = useTranslations();
   const { can } = usePermission();
-  const canEdit =
-    !readOnly && (can("vehicle.edit") || can("vehicle.create"));
+  const canEdit = !readOnly && (can("vehicle.edit") || can("vehicle.create"));
   const query = useVehiclePhotos(vehicleId);
   const { add, update, remove, reorder } = useVehiclePhotoMutations(vehicleId);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const pendingCategoryRef = useRef<VehiclePhotoCategory>("front");
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<VehiclePhotoFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [dropActive, setDropActive] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const dragId = useRef<string | null>(null);
   const [pendingUploads, setPendingUploads] = useState<
     Array<{
       localId: string;
       previewUrl: string;
       fileName: string;
-      category: VehiclePhotoCategory;
       progress: number;
       status: "uploading" | "saving" | "error";
       errorMessage?: string;
     }>
   >([]);
 
-  useEffect(() => {
-    pendingCategoryRef.current = defaultCategoryForFilter(filter);
-  }, [filter]);
-
-  function setFilterAndCategory(next: VehiclePhotoFilter) {
-    setFilter(next);
-    pendingCategoryRef.current = defaultCategoryForFilter(next);
-  }
-
-  function openPicker(category: VehiclePhotoCategory, mode: "file" | "camera") {
-    pendingCategoryRef.current = category;
-    if (mode === "file") fileRef.current?.click();
-    else cameraRef.current?.click();
-  }
-
-  function openPickerForActiveFilter(mode: "file" | "camera") {
-    openPicker(defaultCategoryForFilter(filter), mode);
-  }
-
-  async function uploadFiles(files: FileList | null, category: VehiclePhotoCategory) {
-    if (!files || files.length === 0) return;
+  async function uploadFiles(files: FileList | File[] | null) {
+    if (!files || (files as FileList).length === 0) return;
     setUploading(true);
 
     const queue = Array.from(files).flatMap((file) => {
@@ -518,7 +629,6 @@ function ManageManager({
         localId,
         previewUrl,
         fileName: file.name,
-        category,
         progress: 0,
         status: "uploading" as const,
       })),
@@ -527,7 +637,7 @@ function ManageManager({
     let success = 0;
     try {
       for (const item of queue) {
-        const path = buildVehiclePhotoPath(vehicleId, category, item.file.name);
+        const path = buildVehiclePhotoPath(vehicleId, item.file.name);
         try {
           await uploadVehiclePhotoFile(item.file, path, (percent) => {
             setPendingUploads((current) =>
@@ -549,14 +659,13 @@ function ManageManager({
 
           const saved = await add.mutateAsync({
             storagePath: path,
-            category,
+            category: "other",
             fileName: item.file.name,
             mimeType: item.file.type || null,
             fileSize: item.file.size,
             isPrimary: false,
           });
 
-          // Show under the category immediately (before refetch settles).
           queryClient.setQueryData<VehiclePhoto[]>(
             vehiclePhotoKeys.all(vehicleId),
             (current) => {
@@ -629,6 +738,8 @@ function ManageManager({
   }
 
   async function handleRemove(photoId: string) {
+    const confirmed = window.confirm(t("inventory.photos.confirmDelete"));
+    if (!confirmed) return;
     setBusyId(photoId);
     try {
       await remove.mutateAsync(photoId);
@@ -660,6 +771,28 @@ function ManageManager({
     }
   }
 
+  async function dropOn(targetId: string) {
+    if (!query.data) return;
+    const fromId = dragId.current;
+    if (!fromId || fromId === targetId) return;
+    const ordered = [...query.data].sort((a, b) => a.sortOrder - b.sortOrder);
+    const from = ordered.findIndex((photo) => photo.id === fromId);
+    const to = ordered.findIndex((photo) => photo.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...ordered];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item!);
+    dragId.current = null;
+    setBusyId(fromId);
+    try {
+      await reorder.mutateAsync({ orderedIds: next.map((photo) => photo.id) });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("inventory.photos.errors.generic"));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (query.isPending) return <Skeleton className="h-72 w-full rounded-xl" />;
   if (query.isError) {
     return (
@@ -675,41 +808,53 @@ function ManageManager({
     );
   }
 
-  const photos = query.data ?? [];
-  const visible =
-    filter === "all"
-      ? photos
-      : photos.filter((photo) =>
-          VEHICLE_PHOTO_FILTER_CATEGORIES[filter].includes(photo.category),
-        );
+  const photos = [...(query.data ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  const lightboxPhotos = photos.map((photo) => ({
+    id: photo.id,
+    src: photo.url,
+    alt: photo.fileName,
+    caption: photo.fileName,
+  }));
+  const isEmpty = photos.length === 0 && pendingUploads.length === 0;
 
   return (
-    <Card>
-      <CardHeader className="gap-3">
-        <CardTitle>{t("inventory.photos.title")}</CardTitle>
-        <div className="flex flex-wrap gap-2">
-          {VEHICLE_PHOTO_FILTERS.map((item) => (
-            <Button
-              key={item}
-              type="button"
-              size="sm"
-              variant={filter === item ? "default" : "outline"}
-              onClick={() => setFilterAndCategory(item)}
-            >
-              {t(`inventory.photos.filters.${item}`)}
-            </Button>
-          ))}
+    <Card
+      className="border-border/70 shadow-none"
+      onDragOver={(event) => {
+        if (!canEdit) return;
+        if (![...event.dataTransfer.types].includes("Files")) return;
+        event.preventDefault();
+        setDropActive(true);
+      }}
+      onDragLeave={() => setDropActive(false)}
+      onDrop={(event) => {
+        if (!canEdit) return;
+        if (event.dataTransfer.files.length === 0) return;
+        event.preventDefault();
+        setDropActive(false);
+        void uploadFiles(event.dataTransfer.files);
+      }}
+    >
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0 pb-3">
+        <div className="grid gap-1">
+          <CardTitle className="text-base tracking-tight">{t("inventory.photos.title")}</CardTitle>
+          <p className="text-muted-foreground text-sm">{t("inventory.photos.hint")}</p>
         </div>
+        {photos.length > 0 ? (
+          <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-xs tabular-nums">
+            {photos.length}
+          </span>
+        ) : null}
       </CardHeader>
-      <CardContent className="grid gap-6">
+      <CardContent className="grid gap-4">
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/*"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
           multiple
           className="sr-only"
           onChange={(event) => {
-            void uploadFiles(event.target.files, pendingCategoryRef.current);
+            void uploadFiles(event.target.files);
           }}
         />
         <input
@@ -719,45 +864,33 @@ function ManageManager({
           capture="environment"
           className="sr-only"
           onChange={(event) => {
-            void uploadFiles(event.target.files, pendingCategoryRef.current);
+            void uploadFiles(event.target.files);
           }}
         />
 
-        {canEdit ? (
-          <div className="grid gap-2">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                className="h-11 sm:h-9"
-                disabled={uploading}
-                onClick={() => openPickerForActiveFilter("file")}
-              >
-                {uploading ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
-                {t("inventory.photos.add")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 sm:h-9"
-                disabled={uploading}
-                onClick={() => openPickerForActiveFilter("camera")}
-              >
-                <CameraIcon className="size-4" aria-hidden />
-                {t("inventory.photos.camera")}
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t("inventory.photos.uploadToCategory", {
-                category: categoryLabel(t, defaultCategoryForFilter(filter)),
-              })}
-            </p>
-          </div>
+        <GalleryToolbar
+          canEdit={canEdit}
+          uploading={uploading}
+          onAdd={() => fileRef.current?.click()}
+          onCamera={() => cameraRef.current?.click()}
+          dropActive={dropActive}
+          empty={isEmpty}
+        />
+
+        {!canEdit && isEmpty ? (
+          <EmptyState
+            icon={CameraIcon}
+            title={t("inventory.photos.emptyTitle")}
+            description={t("inventory.photos.emptyHint")}
+          />
         ) : null}
 
         {pendingUploads.length > 0 ? (
-          <div className="grid gap-3 rounded-xl border border-border/70 bg-muted/30 p-3">
-            <p className="text-sm font-medium">{t("inventory.photos.progress.title")}</p>
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/20 p-3">
+            <p className="text-sm font-medium tracking-tight">
+              {t("inventory.photos.progress.title")}
+            </p>
+            <ul className={GALLERY_GRID}>
               {pendingUploads.map((photo) => (
                 <PhotoThumb
                   key={photo.localId}
@@ -781,72 +914,43 @@ function ManageManager({
           </div>
         ) : null}
 
-        {photos.length === 0 && pendingUploads.length === 0 ? (
-          <EmptyState
-            icon={CameraIcon}
-            title={t("inventory.photos.emptyTitle")}
-            description={t("inventory.photos.emptyHint")}
-          />
-        ) : (
-          VEHICLE_PHOTO_CATEGORIES.filter((category) =>
-            categoryMatchesFilter(category, filter),
-          ).map((category) => {
-            const items = visible.filter((photo) => photo.category === category);
-            // Pending already shown in the top progress strip — avoid duplicates here.
-            if (filter !== "all" && items.length === 0) return null;
-            if (filter === "all" && items.length === 0) {
-              return (
-                <CategorySection
-                  key={category}
-                  category={category}
-                  canEdit={canEdit}
-                  onAdd={() => openPicker(category, "file")}
-                  onCamera={() => openPicker(category, "camera")}
-                >
-                  <p className="text-muted-foreground text-xs">
-                    {t("inventory.photos.emptyCategory")}
-                  </p>
-                </CategorySection>
-              );
-            }
-            if (items.length === 0) return null;
-            return (
-              <CategorySection
-                key={category}
-                category={category}
-                canEdit={canEdit}
-                onAdd={() => openPicker(category, "file")}
-                onCamera={() => openPicker(category, "camera")}
-              >
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {items.map((photo: VehiclePhoto) => {
-                    const globalIndex = photos.findIndex((p) => p.id === photo.id);
-                    return (
-                      <PhotoThumb
-                        key={photo.id}
-                        src={photo.url}
-                        alt={photo.fileName}
-                        isPrimary={photo.isPrimary}
-                        canEdit={canEdit}
-                        busy={busyId === photo.id}
-                        onPrimary={() => void setPrimary(photo.id)}
-                        onRemove={() => void handleRemove(photo.id)}
-                        onMoveLeft={
-                          globalIndex > 0 ? () => void move(photo.id, -1) : undefined
-                        }
-                        onMoveRight={
-                          globalIndex < photos.length - 1
-                            ? () => void move(photo.id, 1)
-                            : undefined
-                        }
-                      />
-                    );
-                  })}
-                </ul>
-              </CategorySection>
-            );
-          })
-        )}
+        <PhotoGalleryList
+          photos={photos}
+          renderThumb={(photo, index, featured) => (
+            <PhotoThumb
+              key={photo.id}
+              src={photo.url}
+              alt={photo.fileName}
+              isPrimary={photo.isPrimary}
+              featured={featured}
+              canEdit={canEdit}
+              busy={busyId === photo.id}
+              onOpen={() => setLightboxIndex(index)}
+              onPrimary={() => void setPrimary(photo.id)}
+              onRemove={() => void handleRemove(photo.id)}
+              onMoveLeft={index > 0 ? () => void move(photo.id, -1) : undefined}
+              onMoveRight={
+                index < photos.length - 1 ? () => void move(photo.id, 1) : undefined
+              }
+              draggable={canEdit}
+              onDragStart={() => {
+                dragId.current = photo.id;
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => void dropOn(photo.id)}
+            />
+          )}
+        />
+
+        <VehiclePhotoLightbox
+          photos={lightboxPhotos}
+          index={lightboxIndex ?? 0}
+          open={lightboxIndex != null}
+          onOpenChange={(open) => {
+            if (!open) setLightboxIndex(null);
+          }}
+          onIndexChange={setLightboxIndex}
+        />
       </CardContent>
     </Card>
   );
@@ -862,7 +966,12 @@ export function VehicleImageManager(props: VehicleImageManagerProps) {
       />
     );
   }
-  return <ManageManager vehicleId={props.vehicleId} readOnly={props.readOnly || props.mode === "gallery"} />;
+  return (
+    <ManageManager
+      vehicleId={props.vehicleId}
+      readOnly={props.readOnly || props.mode === "gallery"}
+    />
+  );
 }
 
 /** Upload draft photos after vehicle creation. Returns failed pending items. */
@@ -871,7 +980,7 @@ export async function uploadPendingVehiclePhotos(
   photos: PendingVehiclePhoto[],
   addPhoto: (body: {
     storagePath: string;
-    category: VehiclePhotoCategory;
+    category: PendingVehiclePhoto["category"];
     fileName: string;
     mimeType: string | null;
     fileSize: number;
@@ -885,14 +994,11 @@ export async function uploadPendingVehiclePhotos(
   ) => void,
 ): Promise<PendingVehiclePhoto[]> {
   const failed: PendingVehiclePhoto[] = [];
-  // Prefer explicit primary, else first front, else first.
   const primaryId =
-    photos.find((photo) => photo.isPrimary)?.localId ??
-    photos.find((photo) => photo.category === "front")?.localId ??
-    photos[0]?.localId;
+    photos.find((photo) => photo.isPrimary)?.localId ?? photos[0]?.localId;
 
   for (const photo of photos) {
-    const path = buildVehiclePhotoPath(vehicleId, photo.category, photo.file.name);
+    const path = buildVehiclePhotoPath(vehicleId, photo.file.name);
     try {
       onProgress?.(photo.localId, 0, "uploading");
       await uploadVehiclePhotoFile(photo.file, path, (percent) => {
@@ -901,7 +1007,7 @@ export async function uploadPendingVehiclePhotos(
       onProgress?.(photo.localId, 95, "saving");
       await addPhoto({
         storagePath: path,
-        category: photo.category,
+        category: photo.category || "other",
         fileName: photo.file.name,
         mimeType: photo.file.type || null,
         fileSize: photo.file.size,

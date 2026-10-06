@@ -124,11 +124,7 @@ function odometerMismatch(reading: number | null, vehicleMileage: number | null)
   return delta > 5000 || delta / vehicleMileage > 0.1;
 }
 
-function sectionLabel(
-  t: ReturnType<typeof useTranslations>,
-  sectionKey: string,
-  fallback: string,
-) {
+function sectionLabel(t: ReturnType<typeof useTranslations>, sectionKey: string, fallback: string) {
   if ((INSPECTION_SECTION_KEYS as readonly string[]).includes(sectionKey)) {
     return t(`inspections.sections.${sectionKey}`);
   }
@@ -298,12 +294,8 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
 
     startTransition(() => {
       setItems(draftItems);
-      setOdometerReading(
-        local?.odometerReading ?? inspection.odometerReading?.toString() ?? "",
-      );
-      setVerifiedVin(
-        local?.verifiedVin ?? inspection.verifiedVin ?? inspection.vehicleVin ?? "",
-      );
+      setOdometerReading(local?.odometerReading ?? inspection.odometerReading?.toString() ?? "");
+      setVerifiedVin(local?.verifiedVin ?? inspection.verifiedVin ?? inspection.vehicleVin ?? "");
       setVinVerified(local?.vinVerified ?? Boolean(inspection.vinVerified));
       setNotes(local?.notes ?? inspection.notes ?? "");
       setActiveSectionId(inspection.sections[0]?.id ?? null);
@@ -350,7 +342,15 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
         notes: item.notes,
       })),
     };
-  }, [items, notes, odometerReading, query.data?.odometerUnit, query.data?.vehicleVin, verifiedVin, vinVerified]);
+  }, [
+    items,
+    notes,
+    odometerReading,
+    query.data?.odometerUnit,
+    query.data?.vehicleVin,
+    verifiedVin,
+    vinVerified,
+  ]);
 
   const saveNow = useCallback(async () => {
     if (!query.data || !canEditInspectionChecklist(query.data.status)) return;
@@ -426,7 +426,13 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
   const goToSection = useCallback((sectionId: string | null) => {
     if (!sectionId) return;
     setActiveSectionId(sectionId);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // App shell scrolls inside #main, not the window.
+    const scroller = document.getElementById("main");
+    if (scroller) {
+      scroller.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, []);
 
   const sectionItems = useMemo(() => {
@@ -491,9 +497,13 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
     });
   }, [inspection]);
 
+  const isItemChecked = useCallback((result: InspectionItemResult | null | undefined) => {
+    return result != null && result !== "not_tested";
+  }, []);
+
   const progressCounts = useMemo(() => {
     const values = Object.values(items);
-    const completed = values.filter((item) => item.result != null).length;
+    const completed = values.filter((item) => isItemChecked(item.result)).length;
     const failed = values.filter((item) => item.result === "fail").length;
     const critical = values.filter(
       (item) => item.result === "fail" && item.severity === "critical",
@@ -509,15 +519,27 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
           .map((item) => item.id);
         return (
           sectionItemIds.length > 0 &&
-          sectionItemIds.every((id) => items[id]?.result != null)
+          sectionItemIds.every((id) => isItemChecked(items[id]?.result))
         );
       }).length,
       sectionsTotal: sections.length,
     };
-  }, [inspection?.items, items, sections]);
+  }, [inspection?.items, isItemChecked, items, sections]);
 
-  const readingNumber =
-    odometerReading.trim() === "" ? null : Number(odometerReading);
+  const uncheckedSections = useMemo(() => {
+    if (!inspection) return [] as string[];
+    return sections
+      .filter((section) => {
+        const sectionItemIds = inspection.items
+          .filter((item) => item.sectionId === section.id)
+          .map((item) => item.id);
+        if (sectionItemIds.length === 0) return false;
+        return sectionItemIds.some((id) => !isItemChecked(items[id]?.result));
+      })
+      .map((section) => sectionLabel(t, section.sectionKey, section.name));
+  }, [inspection, isItemChecked, items, sections, t]);
+
+  const readingNumber = odometerReading.trim() === "" ? null : Number(odometerReading);
   const showOdometerWarning = odometerMismatch(
     Number.isFinite(readingNumber as number) ? (readingNumber as number) : null,
     inspection?.vehicleMileage ?? null,
@@ -664,6 +686,11 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
 
   const editable = canEditInspectionChecklist(inspection.status);
   const canSubmit = canSubmitInspection(inspection.status);
+  const draftBusy =
+    dirty ||
+    saveStatus === "pending" ||
+    saveStatus === "saving" ||
+    saveDraft.isPending;
   const vehicleTitle =
     [inspection.vehicleYear, inspection.vehicleMake, inspection.vehicleModel]
       .filter(Boolean)
@@ -682,7 +709,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
 
   return (
     <div className="flex flex-col gap-3 pb-20 lg:pb-24">
-      <div className="bg-background/95 sticky top-0 z-20 -mx-4 border-b px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-xl md:border md:px-4">
+      <div className="bg-background/95 -mx-4 border-b px-4 py-2.5 backdrop-blur md:mx-0 md:rounded-xl md:border md:px-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
@@ -701,7 +728,11 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                   : "bg-amber-600/10 text-amber-950 dark:text-amber-100",
               )}
             >
-              {online ? <WifiIcon className="size-3.5" aria-hidden /> : <CloudOffIcon className="size-3.5" aria-hidden />}
+              {online ? (
+                <WifiIcon className="size-3.5" aria-hidden />
+              ) : (
+                <CloudOffIcon className="size-3.5" aria-hidden />
+              )}
               {online ? t("inspections.offline.online") : t("inspections.offline.offline")}
             </span>
             {saveLabel ? (
@@ -728,7 +759,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
               })}
             </span>
             {progressCounts.critical > 0 ? (
-              <span className="text-rose-700 dark:text-rose-300 font-medium">
+              <span className="font-medium text-rose-700 dark:text-rose-300">
                 {t("inspections.progress.critical", { count: progressCounts.critical })}
               </span>
             ) : null}
@@ -737,7 +768,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
       </div>
 
       <nav
-        className="bg-card sticky top-19 z-10 -mx-4 overflow-x-auto border-y px-4 py-1.5 md:top-21 md:mx-0 md:rounded-xl md:border"
+        className="bg-card -mx-4 overflow-x-auto border-y px-4 py-1.5 md:top-21 md:mx-0 md:rounded-xl md:border"
         aria-label={t("inspections.perform.sectionNav")}
       >
         <ul className="flex w-max min-w-full gap-2">
@@ -747,7 +778,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
               .map((item) => item.id);
             const done =
               sectionItemIdList.length > 0 &&
-              sectionItemIdList.every((id) => items[id]?.result != null);
+              sectionItemIdList.every((id) => isItemChecked(items[id]?.result));
             const findingCount = inspection.findings.filter(
               (finding) =>
                 finding.sectionId === section.id ||
@@ -763,7 +794,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                     activeSectionId === section.id
                       ? "border-primary bg-primary/10"
                       : "bg-background",
-                    done && "ring-emerald-600/30 ring-2",
+                    done && "ring-2 ring-emerald-600/30",
                   )}
                   aria-current={activeSectionId === section.id ? "true" : undefined}
                   onClick={() => goToSection(section.id)}
@@ -773,7 +804,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                       {index + 1}/{sections.length}
                     </span>
                     {findingCount > 0 ? (
-                      <span className="bg-amber-600/20 text-amber-950 dark:text-amber-100 rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+                      <span className="rounded-full bg-amber-600/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950 dark:text-amber-100">
                         {findingCount}
                       </span>
                     ) : null}
@@ -892,7 +923,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                   {sectionLabel(t, activeSection.sectionKey, activeSection.name)}
                 </span>
                 {activeSectionFindingCount > 0 ? (
-                  <span className="bg-amber-600/15 text-amber-950 dark:text-amber-100 rounded-full px-2 py-0.5 text-xs font-medium">
+                  <span className="rounded-full bg-amber-600/15 px-2 py-0.5 text-xs font-medium text-amber-950 dark:text-amber-100">
                     {t("inspections.perform.findingCount", {
                       count: activeSectionFindingCount,
                     })}
@@ -915,7 +946,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-sm font-medium sm:text-base">{item.name}</h3>
                           {itemFindings.length > 0 ? (
-                            <span className="bg-amber-600/15 text-amber-950 dark:text-amber-100 rounded-full px-2 py-0.5 text-[11px] font-medium">
+                            <span className="rounded-full bg-amber-600/15 px-2 py-0.5 text-[11px] font-medium text-amber-950 dark:text-amber-100">
                               {t("inspections.perform.itemFindings", {
                                 count: itemFindings.length,
                               })}
@@ -965,17 +996,16 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                             disabled={!editable}
                             data-active={active}
                             className={cn(
-                              "flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg border text-[11px] font-semibold uppercase tracking-wide transition-colors disabled:opacity-50 sm:h-14 sm:rounded-xl sm:text-xs",
+                              "flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg border text-[11px] font-semibold tracking-wide uppercase transition-colors disabled:opacity-50 sm:h-14 sm:rounded-xl sm:text-xs",
                               button.className,
                             )}
                             aria-pressed={active}
                             onClick={() =>
                               updateItem(item.id, {
                                 result: button.result,
-                                severity:
-                                  needsSeverity(button.result)
-                                    ? draft?.severity ?? "moderate"
-                                    : null,
+                                severity: needsSeverity(button.result)
+                                  ? (draft?.severity ?? "moderate")
+                                  : null,
                               })
                             }
                           >
@@ -1010,10 +1040,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
                       </FormField>
                     ) : null}
 
-                    <FormField
-                      label={t("inspections.fields.notes")}
-                      htmlFor={`notes-${item.id}`}
-                    >
+                    <FormField label={t("inspections.fields.notes")} htmlFor={`notes-${item.id}`}>
                       <Textarea
                         id={`notes-${item.id}`}
                         rows={2}
@@ -1060,7 +1087,9 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
           <h2 className="text-base font-semibold">{t("inspections.perform.photos")}</h2>
           <p className="text-muted-foreground text-sm">
             {t("inspections.perform.photoCount", {
-              count: inspection.photos.length + pendingUploads.filter((p) => p.status !== "error").length,
+              count:
+                inspection.photos.length +
+                pendingUploads.filter((p) => p.status !== "error").length,
             })}
           </p>
         </div>
@@ -1123,10 +1152,7 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
         <InspectionPhotosGrid
           photos={inspection.photos}
           pending={pendingUploads}
-          canRemove={
-            editable &&
-            (can("inspection.photo.delete") || can("inspection.edit"))
-          }
+          canRemove={editable && (can("inspection.photo.delete") || can("inspection.edit"))}
           removingId={removingPhotoId}
           onRemove={removePhoto}
           onDismissPending={dismissFailedUpload}
@@ -1182,11 +1208,9 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
           <Button
             type="button"
             className="h-11 min-w-24 flex-1 sm:h-12 sm:min-w-28"
-            disabled={!editable || !canSubmit}
-            onClick={async () => {
-              if (dirty) await saveNow();
-              setSubmitOpen(true);
-            }}
+            disabled={!editable || !canSubmit || draftBusy}
+            aria-busy={draftBusy}
+            onClick={() => setSubmitOpen(true)}
           >
             {t("inspections.actions.submit")}
           </Button>
@@ -1204,12 +1228,12 @@ export function InspectionPerformClient({ inspectionId }: { inspectionId: string
           itemsTotal: progressCounts.total,
           itemsRemaining: Math.max(0, progressCounts.total - progressCounts.completed),
           failedItems: progressCounts.failed,
-          advisoryItems: Object.values(items).filter((item) => item.result === "advisory")
-            .length,
+          advisoryItems: Object.values(items).filter((item) => item.result === "advisory").length,
           criticalFindings: progressCounts.critical,
           photosCount: inspection.photos.length,
           estimatedRepairsTotal: inspection.progress.estimatedRepairsTotal,
         }}
+        uncheckedSections={uncheckedSections}
         onSubmitted={() => router.push(`/inspections/${inspectionId}`)}
       />
 

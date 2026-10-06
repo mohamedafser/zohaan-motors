@@ -46,7 +46,9 @@ export function validateVehiclePhotoFile(file: File): string | null {
     !(VEHICLE_PHOTO_ALLOWED_MIME as readonly string[]).includes(mime) &&
     !mime.startsWith("image/jpeg") &&
     !mime.startsWith("image/png") &&
-    !mime.startsWith("image/webp")
+    !mime.startsWith("image/webp") &&
+    !mime.startsWith("image/heic") &&
+    !mime.startsWith("image/heif")
   ) {
     return "inventory.photos.errors.invalidType";
   }

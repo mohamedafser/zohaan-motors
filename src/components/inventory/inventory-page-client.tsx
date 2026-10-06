@@ -17,7 +17,9 @@ import { VehicleTable } from "@/components/inventory/vehicle-table";
 import { PageHeader } from "@/components/layout/page-header";
 import { ListPagination } from "@/components/tables/list-pagination";
 import { ListSkeleton } from "@/components/tables/list-skeleton";
+import { ViewModeToggle } from "@/components/tables/view-mode-toggle";
 import { Button } from "@/components/ui/button";
+import { useListViewMode } from "@/hooks/use-list-view-mode";
 import { usePermission } from "@/hooks/use-permission";
 import { useVehicleList } from "@/hooks/use-vehicles";
 import { Link } from "@/lib/i18n/navigation";
@@ -27,6 +29,7 @@ export function InventoryPageClient() {
   const { can } = usePermission();
   const searchParams = useSearchParams();
   const { update } = useInventoryUrlState();
+  const { mode, setMode } = useListViewMode("zohaan.inventory.viewMode", "list");
 
   const apiQuery = buildApiQuery(searchParams);
   const { data, isLoading, error, refetch, isFetching } = useVehicleList(apiQuery);
@@ -51,7 +54,7 @@ export function InventoryPageClient() {
 
       <VehicleSummary summary={data?.summary} />
 
-      <VehicleFilters />
+      <VehicleFilters actions={<ViewModeToggle mode={mode} onChange={setMode} />} />
 
       {isLoading ? <ListSkeleton /> : null}
 
@@ -74,8 +77,8 @@ export function InventoryPageClient() {
           action={
             can("vehicle.create") && !filtered ? (
               <Button nativeButton={false} render={<Link href="/inventory/new" />}>
-              {t("actions.add")}
-            </Button>
+                {t("actions.add")}
+              </Button>
             ) : null
           }
         />
@@ -83,7 +86,7 @@ export function InventoryPageClient() {
 
       {data && data.items.length > 0 ? (
         <>
-          <VehicleTable vehicles={data.items} />
+          <VehicleTable vehicles={data.items} viewMode={mode} />
 
           <ListPagination
             namespace="inventory"

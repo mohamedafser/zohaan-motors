@@ -9,6 +9,7 @@ import { InspectionStatusBadge } from "@/components/inspections/inspection-statu
 import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
+import type { ListViewMode } from "@/hooks/use-list-view-mode";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
@@ -18,7 +19,13 @@ function vehicleLabel(item: InspectionListItem) {
   return [item.vehicleYear, item.vehicleMake, item.vehicleModel].filter(Boolean).join(" ") || "—";
 }
 
-export function InspectionTable({ inspections }: { inspections: InspectionListItem[] }) {
+export function InspectionTable({
+  inspections,
+  viewMode = "auto",
+}: {
+  inspections: InspectionListItem[];
+  viewMode?: ListViewMode | "auto";
+}) {
   const t = useTranslations();
   const locale = useAppLocale();
 
@@ -97,6 +104,8 @@ export function InspectionTable({ inspections }: { inspections: InspectionListIt
           <Link
             href={`/inspections/${row.id}`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            data-row-stop
+            onClick={(event) => event.stopPropagation()}
           >
             {t("inspections.table.view")}
           </Link>
@@ -110,6 +119,8 @@ export function InspectionTable({ inspections }: { inspections: InspectionListIt
     <ResponsiveTable
       columns={columns}
       rows={inspections}
+      viewMode={viewMode}
+      hrefForRow={(inspection) => `/inspections/${inspection.id}`}
       renderCard={(inspection) => (
         <InspectionCard key={inspection.id} inspection={inspection} />
       )}

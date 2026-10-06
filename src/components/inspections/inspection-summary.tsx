@@ -6,7 +6,6 @@ import {
   ClockIcon,
   EyeIcon,
   TimerIcon,
-  TriangleAlertIcon,
   UserCheckIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -24,7 +23,6 @@ const summaryKeys = [
   "awaitingReview",
   "approved",
   "rejected",
-  "criticalFindings",
 ] as const satisfies readonly (keyof Summary)[];
 
 const summaryVisuals = {
@@ -34,7 +32,6 @@ const summaryVisuals = {
   awaitingReview: { icon: EyeIcon, tone: "warning" },
   approved: { icon: CircleCheckIcon, tone: "success" },
   rejected: { icon: CircleXIcon, tone: "danger" },
-  criticalFindings: { icon: TriangleAlertIcon, tone: "danger" },
 } satisfies Record<(typeof summaryKeys)[number], { icon: typeof ClockIcon; tone: KpiTone }>;
 
 export function InspectionSummary({ summary }: { summary?: Summary }) {
@@ -43,7 +40,7 @@ export function InspectionSummary({ summary }: { summary?: Summary }) {
 
   return (
     <section
-      className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7"
+      className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6"
       aria-label={t("inspections.summary.pending")}
     >
       {summaryKeys.map((key) =>

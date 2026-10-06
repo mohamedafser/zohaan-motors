@@ -2,7 +2,6 @@
 
 import {
   BadgeCheckIcon,
-  CalendarClockIcon,
   CarIcon,
   ClipboardCheckIcon,
   HandCoinsIcon,
@@ -21,7 +20,6 @@ const summaryKeys = [
   "readyForSale",
   "underInspection",
   "underRepair",
-  "reserved",
   "sold",
 ] as const satisfies readonly (keyof InventorySummary)[];
 
@@ -30,7 +28,6 @@ const summaryVisuals = {
   readyForSale: { icon: BadgeCheckIcon, tone: "success" },
   underInspection: { icon: ClipboardCheckIcon, tone: "info" },
   underRepair: { icon: WrenchIcon, tone: "warning" },
-  reserved: { icon: CalendarClockIcon, tone: "brand" },
   sold: { icon: HandCoinsIcon, tone: "violet" },
 } satisfies Record<(typeof summaryKeys)[number], { icon: typeof CarIcon; tone: KpiTone }>;
 
@@ -40,7 +37,7 @@ export function VehicleSummary({ summary }: { summary?: InventorySummary }) {
 
   return (
     <section
-      className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6"
+      className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"
       aria-label={t("inventory.summary.total")}
     >
       {summaryKeys.map((key) =>

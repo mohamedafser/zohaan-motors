@@ -1,10 +1,11 @@
 "use client";
 
-import { ClipboardCheckIcon } from "lucide-react";
+import { AlertTriangleIcon, ClipboardCheckIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { InspectionResultBadge } from "@/components/inspections/inspection-result-badge";
 import { InspectionStatusBadge } from "@/components/inspections/inspection-status-badge";
+import { VehicleInspectionBadge } from "@/components/inventory/vehicle-inspection-badge";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
@@ -50,31 +51,37 @@ export function VehicleInspectionsPanel({ vehicleId }: { vehicleId: string }) {
 
   if (inspections.length === 0) {
     return (
-      <EmptyState
-        icon={ClipboardCheckIcon}
-        title={t("inventory.tabEmpty.inspection.title")}
-        description={t("inventory.tabEmpty.inspection.description")}
-        action={
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("inventory.inspectionCard.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <VehicleInspectionBadge value="not_inspected" />
+          <p className="text-muted-foreground text-sm">
+            {t("inventory.inspectionCard.notInspectedHint")}
+          </p>
           <PermissionGate permission="inspection.create">
             <Link
               href={`/inspections/new?vehicleId=${vehicleId}`}
-              className={cn(buttonVariants())}
+              className={cn(buttonVariants({ className: "w-fit" }))}
             >
-              {t("inspections.actions.add")}
+              {t("inventory.inspectionCard.inspectVehicle")}
             </Link>
           </PermissionGate>
-        }
-      />
+        </CardContent>
+      </Card>
     );
   }
+
+  const failed = latest?.status === "approved" && latest.result === "fail";
 
   return (
     <div className="grid gap-4">
       {latest ? (
-        <Card>
+        <Card className={cn(failed && "border-destructive/50")}>
           <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
             <div>
-              <CardTitle className="text-base">{t("inspections.detail.latest")}</CardTitle>
+              <CardTitle className="text-base">{t("inventory.inspectionCard.title")}</CardTitle>
               <p className="text-muted-foreground mt-1 text-sm tabular-nums">
                 {latest.inspectionNumber}
               </p>
@@ -84,60 +91,73 @@ export function VehicleInspectionsPanel({ vehicleId }: { vehicleId: string }) {
               <InspectionResultBadge result={latest.result} />
             </div>
           </CardHeader>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-muted-foreground text-sm">
+          <CardContent className="grid gap-3">
+            {failed ? (
+              <div className="border-destructive/40 bg-destructive/5 text-destructive flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium">
+                <AlertTriangleIcon className="size-4 shrink-0" aria-hidden />
+                {t("inventory.inspectionCard.failedWarning")}
+              </div>
+            ) : null}
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground text-xs">{t("inventory.inspectionCard.date")}</dt>
+                <dd className="font-medium tabular-nums">
+                  {formatDate(
+                    latest.inspectedAt ?? latest.submittedAt ?? latest.createdAt,
+                    locale,
+                    "medium",
+                  )}
+                </dd>
+              </div>
               {latest.overallScore != null ? (
-                <span className="me-3 tabular-nums">{latest.overallScore}%</span>
+                <div>
+                  <dt className="text-muted-foreground text-xs">
+                    {t("inventory.inspectionCard.score")}
+                  </dt>
+                  <dd className="font-medium tabular-nums">{latest.overallScore}%</dd>
+                </div>
               ) : null}
-              {latest.criticalFindingsCount > 0 ? (
-                <span className="text-rose-700 dark:text-rose-300 me-3">
-                  {t("inspections.progress.critical", {
-                    count: latest.criticalFindingsCount,
-                  })}
-                </span>
-              ) : null}
-              <span className="tabular-nums">
-                {formatDate(latest.submittedAt ?? latest.createdAt, locale, "medium")}
-              </span>
+            </dl>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/inspections/${latest.id}`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                {t("inventory.inspectionCard.viewInspection")}
+              </Link>
+              <PermissionGate permission="inspection.create">
+                <Link
+                  href={`/inspections/new?vehicleId=${vehicleId}`}
+                  className={cn(buttonVariants({ size: "sm" }))}
+                >
+                  {t("inventory.inspectionCard.inspectVehicle")}
+                </Link>
+              </PermissionGate>
             </div>
-            <Link
-              href={`/inspections/${latest.id}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              {t("inspections.table.view")}
-            </Link>
           </CardContent>
         </Card>
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">{t("inspections.detail.historyList")}</h3>
-        <PermissionGate permission="inspection.create">
-          <Link
-            href={`/inspections/new?vehicleId=${vehicleId}`}
-            className={cn(buttonVariants({ size: "sm" }))}
-          >
-            {t("inspections.actions.add")}
-          </Link>
-        </PermissionGate>
       </div>
 
       <ul className="grid gap-2">
-        {inspections.map((inspection) => (
-          <li key={inspection.id}>
+        {inspections.map((item) => (
+          <li key={item.id}>
             <Link
-              href={`/inspections/${inspection.id}`}
-              className="hover:bg-muted/40 focus-visible:ring-ring/50 flex items-center justify-between gap-3 rounded-xl border p-3 outline-none focus-visible:ring-3"
+              href={`/inspections/${item.id}`}
+              className="hover:bg-muted/50 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2.5 transition-colors"
             >
               <div className="min-w-0">
-                <p className="font-medium tabular-nums">{inspection.inspectionNumber}</p>
+                <p className="font-medium tabular-nums">{item.inspectionNumber}</p>
                 <p className="text-muted-foreground text-xs tabular-nums">
-                  {formatDate(inspection.submittedAt ?? inspection.createdAt, locale, "medium")}
+                  {formatDate(item.submittedAt ?? item.createdAt, locale, "medium")}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <InspectionStatusBadge status={inspection.status} />
-                <InspectionResultBadge result={inspection.result} />
+              <div className="flex flex-wrap gap-2">
+                <InspectionStatusBadge status={item.status} />
+                <InspectionResultBadge result={item.result} />
               </div>
             </Link>
           </li>

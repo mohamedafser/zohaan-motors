@@ -75,7 +75,14 @@
     "searchCountry": "ابحث عن دولة…",
     "noCountry": "لا توجد دولة",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "viewMode": "وضع العرض",
+    "listView": "قائمة",
+    "gridView": "شبكة",
+    "filters": "عوامل التصفية",
+    "filtersHint": "ضيّق النتائج بمزيد من الخيارات.",
+    "clearAll": "مسح الكل",
+    "done": "تم"
   },
   "quick": {
     "title": "إنشاء",
@@ -408,7 +415,33 @@
     "securityHint": "تُدار كلمات المرور عبر الدعوة وروابط إعادة التعيين.",
     "passwordHint": "استخدم نسيت كلمة المرور في شاشة تسجيل الدخول إذا احتجت تغييرها.",
     "preferences": "تفضيلات المعرض",
-    "preferencesHint": "الفرع وعرض العملة وإعدادات المستندات ستكون هنا لاحقًا. العملة هي الدرهم والمنطقة الزمنية Asia/Dubai."
+    "preferencesHint": "الفرع وعرض العملة وإعدادات المستندات ستكون هنا لاحقًا. العملة هي الدرهم والمنطقة الزمنية Asia/Dubai.",
+    "catalog": {
+      "title": "كتالوج المركبات الأساسي",
+      "description": "علامات وطرازات وسنوات وتجهيزات الإمارات المستخدمة في المخزون. عطّل السجلات المرتبطة بالمركبات بدل حذفها.",
+      "brands": "العلامات",
+      "models": "الطرازات",
+      "years": "السنوات",
+      "variants": "الفئات",
+      "addBrand": "إضافة علامة",
+      "addModel": "إضافة طراز",
+      "addYear": "إضافة سنة",
+      "addVariant": "إضافة فئة",
+      "name": "الاسم",
+      "nameAr": "الاسم بالعربية",
+      "slug": "المعرّف",
+      "year": "السنة",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "activate": "تفعيل",
+      "deactivate": "تعطيل",
+      "save": "حفظ",
+      "selectBrand": "اختر علامة",
+      "selectModel": "اختر طرازًا",
+      "selectYear": "اختر سنة",
+      "empty": "لا يوجد شيء هنا بعد.",
+      "manageHint": "يتطلب صلاحية إدارة الإعدادات."
+    }
   },
   "media": {
     "title": "الصور",
@@ -447,9 +480,16 @@
       "vin": "رقم الهيكل (VIN)",
       "vinHint": "17 خانة. اتركه فارغاً إذا كان غير معروف.",
       "chassis": "رقم الشاسيه",
-      "make": "الماركة",
+      "make": "العلامة التجارية",
       "model": "الطراز",
       "variant": "الفئة / التجهيز",
+      "customVariant": "فئة مخصصة",
+      "customVariantOption": "أخرى / فئة مخصصة",
+      "customVariantPlaceholder": "مثال: اسم التجهيز من المصنع",
+      "searchBrand": "ابحث عن علامة…",
+      "searchModel": "ابحث عن طراز…",
+      "searchYear": "ابحث عن سنة…",
+      "searchVariant": "ابحث عن فئة…",
       "year": "السنة",
       "mileage": "المسافة المقطوعة",
       "mileageUnit": "الوحدة",
@@ -493,7 +533,9 @@
       "acquisitionNumber": "رقم الاستحواذ",
       "acquisitionStatus": "حالة الاستحواذ",
       "acquisitionType": "نوع الاستحواذ",
-      "purchasePrice": "سعر الشراء"
+      "purchasePrice": "سعر الشراء",
+      "marketType": "حالة المركبة",
+      "brand": "العلامة التجارية"
     },
     "enums": {
       "transmission": {
@@ -546,6 +588,10 @@
         "wagon": "ستيشن",
         "sports_car": "سيارة رياضية",
         "other": "أخرى"
+      },
+      "marketType": {
+        "new": "جديد",
+        "used": "مستعمل"
       }
     },
     "sections": {
@@ -561,7 +607,7 @@
       "acquisition": "الاستحواذ"
     },
     "filters": {
-      "searchPlaceholder": "ابحث برقم المخزون أو VIN أو الماركة أو الموديل",
+      "searchPlaceholder": "ابحث برقم المخزون أو VIN أو العلامة التجارية أو الموديل",
       "searchLabel": "بحث في المركبات",
       "status": "الحالة",
       "allStatuses": "كل الحالات",
@@ -569,7 +615,7 @@
       "allBranches": "كل الفروع",
       "location": "الموقع",
       "allLocations": "كل المواقع",
-      "make": "الماركة",
+      "make": "العلامة التجارية",
       "model": "الطراز",
       "yearFrom": "من سنة",
       "yearTo": "إلى سنة",
@@ -593,12 +639,18 @@
       "title": "عوامل التصفية",
       "search": "بحث",
       "any": "الكل",
-      "anyMake": "أي ماركة",
+      "anyMake": "أي علامة تجارية",
       "anyModel": "أي طراز",
       "year": "السنة",
       "groupVehicle": "المركبة",
       "groupSpecs": "المواصفات",
-      "select": "اختر"
+      "select": "اختر",
+      "marketType": "الحالة",
+      "allMarketTypes": "كل الحالات",
+      "inspection": "الفحص",
+      "allInspections": "كل الفحوصات",
+      "drawerTitle": "عوامل التصفية",
+      "drawerHint": "ضيّق النتائج بمزيد من الخيارات."
     },
     "sort": {
       "created_at": "تاريخ الإضافة",
@@ -608,7 +660,7 @@
       "mileage": "المسافة المقطوعة",
       "status": "الحالة",
       "purchase_date": "تاريخ الشراء",
-      "make": "الماركة",
+      "make": "العلامة التجارية",
       "model": "الطراز"
     },
     "table": {
@@ -622,7 +674,11 @@
       "location": "الموقع",
       "price": "السعر",
       "actions": "الإجراءات",
-      "view": "عرض"
+      "view": "عرض",
+      "marketType": "الحالة",
+      "inspection": "الفحص",
+      "brand": "العلامة التجارية",
+      "model": "الطراز"
     },
     "pagination": {
       "summary": "عرض {from}–{to} من {total}",
@@ -659,7 +715,7 @@
     },
     "readyForSale": {
       "panelTitle": "حالة المركبة",
-      "alreadyReady": "هذه المركبة متاحة للبيع بالفعل.",
+      "alreadyReady": "هذه المركبة جاهزة للبيع. الفحص اختياري ولا يمنع البيع.",
       "loadFailed": "تعذر تحميل أهلية الجاهزية للبيع.",
       "eligibleTitle": "جاهزة للتعيين للبيع",
       "blockedTitle": "غير جاهزة للبيع",
@@ -845,8 +901,8 @@
         "description": "أضف الصور عند إنشاء أو تعديل هذه المركبة."
       },
       "inspection": {
-        "title": "لا توجد فحوصات بعد",
-        "description": "ستظهر تقارير الفحص هنا عند ربط الفحوصات."
+        "title": "لم يتم الفحص",
+        "description": "الفحص اختياري. ابدأ فحصًا عند الحاجة إلى تقرير حالة."
       },
       "costs": {
         "title": "لا توجد تكاليف مسجلة",
@@ -1023,16 +1079,16 @@
     },
     "photos": {
       "title": "صور المركبة",
-      "hint": "الصور اختيارية. أضف من المعرض أو الكاميرا. يمكن تعيين صورة واحدة كأساسية.",
-      "add": "إضافة صورة",
+      "hint": "ارفع معرض صور مرن. اسحب لإعادة الترتيب، وعيّن صورة رئيسية لبطاقات المخزون.",
+      "add": "إضافة صور",
       "camera": "الكاميرا",
-      "remove": "إزالة الصورة",
-      "primary": "أساسية",
-      "setPrimary": "تعيين كأساسية",
+      "remove": "حذف الصورة",
+      "primary": "رئيسية",
+      "setPrimary": "تعيين كرئيسية",
       "moveLeft": "تحريك لليسار",
       "moveRight": "تحريك لليمين",
       "emptyTitle": "لا توجد صور بعد",
-      "emptyHint": "أضف صور الأمام والداخل والأضرار وغيرها لهذه المركبة.",
+      "emptyHint": "أضف عدة صور للمركبة. لا حاجة لاختيار فئة.",
       "emptyCategory": "لا توجد صور في هذه الفئة.",
       "retryUpload": "إعادة رفع الصور",
       "uploadToCategory": "الرفع إلى: {category}",
@@ -1059,7 +1115,7 @@
         "other": "أخرى"
       },
       "errors": {
-        "invalidType": "يجب أن تكون الصورة JPG أو PNG أو WebP.",
+        "invalidType": "يجب أن تكون الصورة JPG أو PNG أو WebP أو HEIC.",
         "tooLarge": "يجب أن يكون حجم الصورة أقل من 10 ميجابايت.",
         "uploadFailed": "فشل رفع الصورة.",
         "deleteFailed": "تعذّر حذف الصورة. حاول مرة أخرى.",
@@ -1078,7 +1134,34 @@
         "primarySet": "تم تحديث الصورة الأساسية",
         "partialUpload": "تم إنشاء المركبة، لكن تعذّر رفع بعض الصور.",
         "retrySuccess": "تم رفع الصور بنجاح"
+      },
+      "dropHint": "أو اسحب الصور وأفلتها هنا",
+      "confirmDelete": "حذف صورة المركبة هذه؟",
+      "lightbox": {
+        "counter": "{current} / {total}",
+        "previous": "الصورة السابقة",
+        "next": "الصورة التالية",
+        "goTo": "الانتقال إلى الصورة {current}",
+        "unavailable": "المعاينة غير متاحة"
       }
+    },
+    "inspectionFilter": {
+      "not_inspected": "لم يتم الفحص",
+      "in_progress": "قيد الفحص",
+      "pass": "ناجح",
+      "pass_with_issues": "ناجح مع ملاحظات",
+      "fail": "فشل",
+      "approved": "معتمد"
+    },
+    "inspectionCard": {
+      "title": "الفحص",
+      "notInspected": "لم يتم الفحص",
+      "notInspectedHint": "الفحص اختياري. يمكنك فحص هذه المركبة في أي وقت.",
+      "inspectVehicle": "فحص المركبة",
+      "viewInspection": "عرض الفحص",
+      "failedWarning": "فشل الفحص",
+      "date": "التاريخ",
+      "score": "الدرجة"
     }
   },
   "acquisitions": {
@@ -1115,7 +1198,7 @@
       "createNew": "إنشاء مركبة جديدة",
       "selectExisting": "اختر مركبة موجودة",
       "placeholder": "ابحث عن مركبة…",
-      "searchPlaceholder": "رقم المخزون أو VIN أو الهيكل أو الماركة أو الموديل",
+      "searchPlaceholder": "رقم المخزون أو VIN أو الهيكل أو العلامة التجارية أو الموديل",
       "empty": "لا توجد مركبات مستحوذ عليها",
       "emptyHint": "لا توجد مركبات مستحوذ عليها في المخزون بعد. أضف مركبة أولاً، أو أنشئ واحدة جديدة هنا.",
       "loadFailed": "تعذر تحميل المركبات. حاول مرة أخرى.",
@@ -1237,15 +1320,16 @@
       "description": "الوصف",
       "amount": "المبلغ",
       "vendor": "المورد",
-      "expenseDate": "التاريخ"
+      "expenseDate": "التاريخ",
+      "make": "العلامة التجارية"
     },
     "filters": {
       "searchLabel": "بحث",
-      "searchPlaceholder": "الرقم، المخزون، VIN، المصدر، الماركة، الموديل…",
+      "searchPlaceholder": "الرقم، المخزون، VIN، المصدر، العلامة التجارية، الموديل…",
       "status": "الحالة",
       "branch": "الفرع",
       "sourceType": "نوع المصدر",
-      "make": "الماركة",
+      "make": "العلامة التجارية",
       "model": "الموديل",
       "purchaseDateFrom": "الشراء من",
       "purchaseDateTo": "الشراء إلى",
@@ -1269,13 +1353,15 @@
       "allPaymentStatuses": "كل حالات الدفع",
       "allDocumentStatuses": "كل حالات المستندات",
       "allRegistrationStatuses": "كل حالات التسجيل",
-      "anyMake": "أي ماركة",
+      "anyMake": "أي علامة تجارية",
       "anyModel": "أي موديل",
       "groupSource": "المصدر والمركبة",
       "groupStatus": "الحالات",
       "groupDates": "التواريخ",
       "groupPrice": "السعر",
-      "active": "{count} نشط"
+      "active": "{count} نشط",
+      "drawerTitle": "عوامل التصفية",
+      "drawerHint": "ضيّق النتائج بمزيد من الخيارات."
     },
     "fields": {
       "number": "رقم الاستحواذ",
@@ -1305,7 +1391,7 @@
       "vin": "رقم الهيكل (VIN)",
       "vinHint": "١٧ حرفاً. اتركه فارغاً إن لم يكن معروفاً.",
       "chassis": "رقم الشاصي",
-      "make": "الماركة",
+      "make": "العلامة التجارية",
       "model": "الموديل",
       "variant": "الفئة",
       "year": "السنة",
@@ -1330,7 +1416,8 @@
       "createdAt": "تاريخ الإنشاء",
       "createdBy": "أنشئ بواسطة",
       "updatedAt": "تاريخ التحديث",
-      "updatedBy": "حدّث بواسطة"
+      "updatedBy": "حدّث بواسطة",
+      "brand": "العلامة التجارية"
     },
     "sections": {
       "vehicle": "المركبة",
@@ -1502,6 +1589,7 @@
       "reject": "رفض",
       "review": "مراجعة",
       "reinspect": "طلب إعادة فحص",
+      "updateOutcome": "تحديث حالة المركبة والفحص",
       "addFinding": "إضافة ملاحظة",
       "editFinding": "تعديل الملاحظة",
       "removeFinding": "إزالة الملاحظة",
@@ -1534,12 +1622,11 @@
     },
     "summary": {
       "pending": "معلّق",
-      "myInspections": "خاصتي",
+      "myInspections": "معيّنة لي",
       "inProgress": "قيد التنفيذ",
       "awaitingReview": "بانتظار المراجعة",
       "approved": "معتمد",
-      "rejected": "مرفوض",
-      "criticalFindings": "حرج"
+      "rejected": "مرفوض"
     },
     "status": {
       "draft": "مسودة",
@@ -1650,7 +1737,7 @@
     },
     "filters": {
       "searchLabel": "بحث",
-      "searchPlaceholder": "الرقم، المخزون، الهيكل، الماركة، الموديل…",
+      "searchPlaceholder": "الرقم، المخزون، الهيكل، العلامة التجارية، الموديل…",
       "status": "الحالة",
       "branch": "الفرع",
       "type": "النوع",
@@ -1679,7 +1766,9 @@
       "groupType": "النوع والتعيين",
       "groupFlags": "العلامات",
       "groupDates": "التواريخ",
-      "active": "{count} نشط"
+      "active": "{count} نشط",
+      "drawerTitle": "عوامل التصفية",
+      "drawerHint": "ضيّق النتائج بمزيد من الخيارات."
     },
     "fields": {
       "number": "رقم الفحص",
@@ -1805,6 +1894,8 @@
         "progressSummary": "اكتمل {completed} من {total} بندًا",
         "failedCount": "{count} بنود فاشلة",
         "criticalCount": "{count} ملاحظات حرجة",
+        "uncheckedTitle": "أقسام غير مكتملة الفحص",
+        "uncheckedHint": "هذه التبويبات ما زالت تحتوي بنودًا غير مفحوصة أو محددة كـ غير مختبر:",
         "overrideIncomplete": "أرسل حتى لو كانت البنود المطلوبة غير مكتملة",
         "submit": "إرسال للمراجعة"
       },
@@ -1814,6 +1905,20 @@
         "reason": "السبب",
         "reasonPlaceholder": "لماذا يلزم إعادة الفحص؟",
         "submit": "إنشاء إعادة فحص"
+      },
+      "outcome": {
+        "title": "تحديث حالة المركبة والفحص",
+        "description": "حدّد نتيجة الفحص وحالة المركبة بعد الاعتماد. اختيار النجاح يقترح جاهزة للبيع.",
+        "currentTitle": "الحالة الحالية",
+        "currentHint": "الفحص: {inspection}. المركبة: {vehicle}.",
+        "noResult": "لا توجد نتيجة",
+        "unknownVehicle": "غير معروف",
+        "inspectionStatus": "نتيجة الفحص",
+        "vehicleStatus": "حالة المركبة",
+        "note": "ملاحظة",
+        "notePlaceholder": "ملاحظة اختيارية لهذا التحديث",
+        "overrideCritical": "تجاوز الملاحظات الحرجة غير المحلولة واعتمد النجاح",
+        "submit": "تحديث الحالات"
       },
       "finding": {
         "title": "إضافة ملاحظة",
@@ -1856,6 +1961,7 @@
       "rejected": "تم رفض الفحص",
       "cancelled": "تم إلغاء الفحص",
       "reinspect": "تم إنشاء إعادة الفحص {number}",
+      "outcomeUpdated": "تم تحديث حالة المركبة والفحص",
       "findingAdded": "تمت إضافة الملاحظة",
       "findingUpdated": "تم تحديث الملاحظة",
       "findingRemoved": "تمت إزالة الملاحظة",

@@ -45,6 +45,8 @@ export const VEHICLE_PHOTO_ALLOWED_MIME = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/heic",
+  "image/heif",
 ] as const;
 
 export type VehiclePhoto = {

@@ -2,18 +2,14 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { requireSupabaseEnv } from "@/lib/supabase/env";
-import type { VehiclePhotoCategory } from "@/types/vehicle-photo";
 
 export function safePhotoFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 80) || "photo.jpg";
 }
 
-export function buildVehiclePhotoPath(
-  vehicleId: string,
-  category: VehiclePhotoCategory,
-  fileName: string,
-) {
-  return `${vehicleId}/${category}/${crypto.randomUUID()}-${safePhotoFileName(fileName)}`;
+/** Gallery storage path — category folders are no longer used for new uploads. */
+export function buildVehiclePhotoPath(vehicleId: string, fileName: string) {
+  return `${vehicleId}/gallery/${crypto.randomUUID()}-${safePhotoFileName(fileName)}`;
 }
 
 export async function uploadVehiclePhotoFile(

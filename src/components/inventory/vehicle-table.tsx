@@ -1,22 +1,30 @@
 "use client";
 
-import { ChevronRightIcon, ImageIcon } from "lucide-react";
+import { ClipboardCheckIcon, ImageIcon, PencilIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
+import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
 import { VehicleCard } from "@/components/inventory/vehicle-card";
+import { VehicleInspectionBadge } from "@/components/inventory/vehicle-inspection-badge";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
 import { usePermission } from "@/hooks/use-permission";
+import type { ListViewMode } from "@/hooks/use-list-view-mode";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatNumber } from "@/lib/utils/currency";
 import type { VehicleListItem } from "@/types/vehicle";
 
-/** Cards below `md`, table from `md` up (via ResponsiveTable). */
-export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
+export function VehicleTable({
+  vehicles,
+  viewMode = "auto",
+}: {
+  vehicles: VehicleListItem[];
+  viewMode?: ListViewMode | "auto";
+}) {
   const t = useTranslations();
   const locale = useAppLocale();
   const { can } = usePermission();
@@ -29,9 +37,7 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
         header: t("inventory.table.stockId"),
         className: "tabular-nums",
         cell: (row) => (
-          <Link href={`/inventory/${row.id}`} className="font-medium underline-offset-4 hover:underline">
-            {row.stockNumber}
-          </Link>
+          <span className="font-medium">{row.stockNumber}</span>
         ),
       },
       {
@@ -64,6 +70,21 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
         ),
       },
       {
+        key: "brand",
+        header: t("inventory.table.brand"),
+        cell: (row) => row.make,
+      },
+      {
+        key: "model",
+        header: t("inventory.table.model"),
+        cell: (row) => row.model,
+      },
+      {
+        key: "marketType",
+        header: t("inventory.table.marketType"),
+        cell: (row) => <MarketTypeBadge value={row.marketType} />,
+      },
+      {
         key: "mileage",
         header: t("inventory.table.mileage"),
         className: "tabular-nums",
@@ -74,6 +95,13 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
         key: "status",
         header: t("inventory.table.status"),
         cell: (row) => <VehicleStatusBadge status={row.status} />,
+      },
+      {
+        key: "inspection",
+        header: t("inventory.table.inspection"),
+        cell: (row) => (
+          <VehicleInspectionBadge value={row.inspection?.label ?? "not_inspected"} />
+        ),
       },
       {
         key: "branch",
@@ -104,23 +132,44 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
       header: t("inventory.table.actions"),
       className: "text-end",
       cell: (row) => (
-        <Link
-          href={`/inventory/${row.id}`}
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-        >
-          {t("inventory.table.view")}
-          <ChevronRightIcon data-icon="inline-end" className="rtl:rotate-180" />
-        </Link>
+        <div className="flex items-center justify-end gap-1" data-row-stop>
+          {can("vehicle.edit") ? (
+            <Link
+              href={`/inventory/${row.id}/edit`}
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              aria-label={t("inventory.actions.edit")}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <PencilIcon className="size-4" aria-hidden />
+              <span className="sr-only sm:not-sr-only">{t("inventory.actions.edit")}</span>
+            </Link>
+          ) : null}
+          {can("inspection.create") ? (
+            <Link
+              href={`/inspections/new?vehicleId=${row.id}`}
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              aria-label={t("inventory.inspectionCard.inspectVehicle")}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <ClipboardCheckIcon className="size-4" aria-hidden />
+              <span className="sr-only sm:not-sr-only">
+                {t("inventory.inspectionCard.inspectVehicle")}
+              </span>
+            </Link>
+          ) : null}
+        </div>
       ),
     });
 
     return base;
-  }, [t, locale, showPrice]);
+  }, [t, locale, showPrice, can]);
 
   return (
     <ResponsiveTable
       columns={columns}
       rows={vehicles}
+      viewMode={viewMode}
+      hrefForRow={(vehicle) => `/inventory/${vehicle.id}`}
       renderCard={(vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} />}
     />
   );

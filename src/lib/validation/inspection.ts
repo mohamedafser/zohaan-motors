@@ -185,6 +185,20 @@ export const reinspectSchema = z.object({
   assignedTo: optionalUuid,
 });
 
+export const UPDATE_OUTCOME_VEHICLE_STATUSES = [
+  "under_inspection",
+  "under_repair",
+  "inspection_failed",
+  "ready_for_sale",
+] as const;
+
+export const updateInspectionOutcomeSchema = z.object({
+  result: z.enum(INSPECTION_RESULTS),
+  vehicleStatus: z.enum(UPDATE_OUTCOME_VEHICLE_STATUSES),
+  note: optionalText,
+  overrideCritical: z.boolean().optional().default(false),
+});
+
 export const inspectionFindingSchema = z.object({
   inspectionItemId: optionalUuid,
   sectionId: optionalUuid,
@@ -303,6 +317,7 @@ export type ApproveInspectionValues = z.infer<typeof approveInspectionSchema>;
 export type RejectInspectionValues = z.infer<typeof rejectInspectionSchema>;
 export type CancelInspectionValues = z.infer<typeof cancelInspectionSchema>;
 export type ReinspectValues = z.infer<typeof reinspectSchema>;
+export type UpdateInspectionOutcomeValues = z.infer<typeof updateInspectionOutcomeSchema>;
 export type InspectionFindingValues = z.infer<typeof inspectionFindingSchema>;
 export type UpdateInspectionFindingValues = z.infer<typeof updateInspectionFindingSchema>;
 export type InspectionPhotoValues = z.infer<typeof inspectionPhotoSchema>;

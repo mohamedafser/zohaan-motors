@@ -1,3 +1,8 @@
+"use client";
+
+import { useRouter } from "@/lib/i18n/navigation";
+import { cn } from "@/lib/utils";
+import type { ListViewMode } from "@/hooks/use-list-view-mode";
 import {
   Table,
   TableBody,
@@ -14,51 +19,118 @@ export type TableColumn<T> = {
   className?: string;
 };
 
+function isInteractiveTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      "a,button,input,select,textarea,label,[role='button'],[role='menuitem'],[data-row-stop]",
+    ),
+  );
+}
+
 export function ResponsiveTable<T extends { id: string }>({
   columns,
   rows,
   renderCard,
   bare = false,
+  viewMode = "auto",
+  hrefForRow,
+  gridClassName,
 }: {
   columns: TableColumn<T>[];
   rows: T[];
   renderCard: (row: T) => React.ReactNode;
   /** Skip the framed container, e.g. when the table already sits inside a Card. */
   bare?: boolean;
+  /**
+   * `auto` — cards on small screens, table from md up (legacy).
+   * `list` — table (scrollable on small screens).
+   * `grid` — card grid at all breakpoints.
+   */
+  viewMode?: ListViewMode | "auto";
+  /** Makes the whole row open this href (interactive children are excluded). */
+  hrefForRow?: (row: T) => string;
+  gridClassName?: string;
 }) {
+  const router = useRouter();
+  const showGrid = viewMode === "grid" || viewMode === "auto";
+  const showTable = viewMode === "list" || viewMode === "auto";
+
   return (
     <>
-      <div className="grid gap-3 md:hidden">{rows.map((row) => renderCard(row))}</div>
-      <div
-        className={
-          bare
-            ? "hidden md:block"
-            : "bg-card ring-foreground/[0.07] hidden overflow-hidden rounded-xl shadow-xs ring-1 md:block"
-        }
-      >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.key} className={column.className}>
-                  {column.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id}>
+      {showGrid ? (
+        <div
+          className={cn(
+            viewMode === "grid"
+              ? cn(
+                  "grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
+                  gridClassName,
+                )
+              : "grid gap-3 md:hidden",
+            viewMode === "auto" && "md:hidden",
+          )}
+        >
+          {rows.map((row) => renderCard(row))}
+        </div>
+      ) : null}
+
+      {showTable ? (
+        <div
+          className={cn(
+            bare ? "" : "bg-card ring-foreground/[0.07] overflow-hidden rounded-xl shadow-xs ring-1",
+            viewMode === "auto" && "hidden md:block",
+            viewMode === "list" && "overflow-x-auto",
+          )}
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {columns.map((column) => (
-                  <TableCell key={column.key} className={column.className}>
-                    {column.cell(row)}
-                  </TableCell>
+                  <TableHead key={column.key} className={column.className}>
+                    {column.header}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => {
+                const href = hrefForRow?.(row);
+                return (
+                  <TableRow
+                    key={row.id}
+                    className={cn(href && "hover:bg-muted/50 cursor-pointer")}
+                    onClick={
+                      href
+                        ? (event) => {
+                            if (isInteractiveTarget(event.target)) return;
+                            router.push(href);
+                          }
+                        : undefined
+                    }
+                    onKeyDown={
+                      href
+                        ? (event) => {
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            if (isInteractiveTarget(event.target)) return;
+                            event.preventDefault();
+                            router.push(href);
+                          }
+                        : undefined
+                    }
+                    tabIndex={href ? 0 : undefined}
+                  >
+                    {columns.map((column) => (
+                      <TableCell key={column.key} className={column.className}>
+                        {column.cell(row)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      ) : null}
     </>
   );
 }

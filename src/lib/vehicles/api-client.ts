@@ -5,6 +5,9 @@ import type {
   LocationOption,
   MakeOption,
   ModelOption,
+  CatalogModel,
+  CatalogModelYear,
+  CatalogVariant,
   VehicleActivityItem,
   VehicleStatusHistoryItem,
 } from "@/types/vehicle";
@@ -168,6 +171,35 @@ export async function fetchInventoryMeta(params?: {
   if (params?.branchId) search.set("branchId", params.branchId);
   if (params?.makeId) search.set("makeId", params.makeId);
   const response = await fetch(`/api/inventory/meta?${search}`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  });
+  return parseJson(response);
+}
+
+export async function fetchCatalogModels(makeId: string): Promise<ApiResult<CatalogModel[]>> {
+  const search = new URLSearchParams({ makeId });
+  const response = await fetch(`/api/inventory/catalog/models?${search}`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  });
+  return parseJson(response);
+}
+
+export async function fetchCatalogYears(modelId: string): Promise<ApiResult<CatalogModelYear[]>> {
+  const search = new URLSearchParams({ modelId });
+  const response = await fetch(`/api/inventory/catalog/years?${search}`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  });
+  return parseJson(response);
+}
+
+export async function fetchCatalogVariants(
+  modelYearId: string,
+): Promise<ApiResult<CatalogVariant[]>> {
+  const search = new URLSearchParams({ modelYearId });
+  const response = await fetch(`/api/inventory/catalog/variants?${search}`, {
     credentials: "same-origin",
     headers: { Accept: "application/json" },
   });

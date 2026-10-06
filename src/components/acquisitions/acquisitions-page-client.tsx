@@ -17,8 +17,10 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { ListPagination } from "@/components/tables/list-pagination";
 import { ListSkeleton } from "@/components/tables/list-skeleton";
+import { ViewModeToggle } from "@/components/tables/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useAcquisitionList } from "@/hooks/use-acquisitions";
+import { useListViewMode } from "@/hooks/use-list-view-mode";
 import { usePermission } from "@/hooks/use-permission";
 import { Link } from "@/lib/i18n/navigation";
 
@@ -27,6 +29,7 @@ export function AcquisitionsPageClient() {
   const { can } = usePermission();
   const searchParams = useSearchParams();
   const { update } = useAcquisitionUrlState();
+  const { mode, setMode } = useListViewMode("zohaan.acquisitions.viewMode", "list");
 
   const apiQuery = buildApiQuery(searchParams);
   const { data, isLoading, error, refetch, isFetching } = useAcquisitionList(apiQuery);
@@ -51,7 +54,7 @@ export function AcquisitionsPageClient() {
 
       <AcquisitionSummary summary={data?.summary} />
 
-      <AcquisitionFilters />
+      <AcquisitionFilters actions={<ViewModeToggle mode={mode} onChange={setMode} />} />
 
       {isLoading ? <ListSkeleton /> : null}
 
@@ -83,7 +86,7 @@ export function AcquisitionsPageClient() {
 
       {data && data.items.length > 0 ? (
         <>
-          <AcquisitionTable acquisitions={data.items} />
+          <AcquisitionTable acquisitions={data.items} viewMode={mode} />
 
           <ListPagination
             namespace="acquisitions"

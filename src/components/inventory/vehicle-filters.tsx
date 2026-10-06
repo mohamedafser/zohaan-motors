@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronDownIcon, ListFilterIcon, SearchIcon, XIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { FormField } from "@/components/forms/form-field";
 import {
@@ -21,14 +21,9 @@ import {
   TRANSMISSION_ICONS,
   bodyTypeIcon,
 } from "@/components/inventory/vehicle-select-icons";
-import {
-  DebouncedFilterInput,
-  FilterChip,
-  FilterGroup,
-  FilterToolbar,
-} from "@/components/shared/filter-controls";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { VEHICLE_INSPECTION_ICONS } from "@/components/inventory/vehicle-inspection-badge";
+import { DebouncedFilterInput, FilterGroup } from "@/components/shared/filter-controls";
+import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -38,11 +33,15 @@ import {
   FUEL_TYPES,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
+  VEHICLE_INSPECTION_FILTERS,
+  VEHICLE_MARKET_TYPES,
   VEHICLE_SORT_FIELDS,
   VEHICLE_STATUSES,
 } from "@/types/vehicle";
 
 const ADVANCED_KEYS = [
+  "inspection",
+  "branchId",
   "locationId",
   "make",
   "model",
@@ -53,20 +52,24 @@ const ADVANCED_KEYS = [
   "transmission",
   "bodyType",
   "includeArchived",
+  "sort",
+  "order",
 ] as const;
 
-export function VehicleFilters() {
+export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
   const t = useTranslations();
   const { searchParams, update, clear } = useInventoryUrlState();
   const meta = useInventoryMeta();
-  const [expanded, setExpanded] = useState(false);
 
   const activeCount = countActiveFilters(searchParams);
   const hasQuery = activeCount > 0 || Boolean(searchParams.get("q"));
   const branchId = searchParams.get("branchId") ?? "";
   const makeValue = searchParams.get("make") ?? "";
-  const advancedCount = ADVANCED_KEYS.filter((key) => Boolean(searchParams.get(key))).length;
-  const showAdvanced = expanded || advancedCount > 0;
+  const advancedCount = ADVANCED_KEYS.filter((key) => {
+    if (key === "sort") return (searchParams.get("sort") ?? "created_at") !== "created_at";
+    if (key === "order") return (searchParams.get("order") ?? "desc") !== "desc";
+    return Boolean(searchParams.get(key));
+  }).length;
 
   const locations = useMemo(() => {
     const all = meta.data?.locations ?? [];
@@ -89,8 +92,12 @@ export function VehicleFilters() {
   }, [meta.data?.models, selectedMake]);
 
   const chips = useMemo(() => {
-    const items: { key: string; label: string; value: string; clear: Record<string, null> }[] =
-      [];
+    const items: {
+      key: string;
+      label: string;
+      value: string;
+      onRemove: () => void;
+    }[] = [];
 
     const q = searchParams.get("q")?.trim();
     if (q) {
@@ -98,7 +105,7 @@ export function VehicleFilters() {
         key: "q",
         label: t("inventory.filters.search"),
         value: q,
-        clear: { q: null },
+        onRemove: () => update({ q: null }),
       });
     }
 
@@ -108,7 +115,27 @@ export function VehicleFilters() {
         key: "status",
         label: t("inventory.filters.status"),
         value: t(`inventory.status.${status}`),
-        clear: { status: null },
+        onRemove: () => update({ status: null }),
+      });
+    }
+
+    const marketType = searchParams.get("marketType");
+    if (marketType) {
+      items.push({
+        key: "marketType",
+        label: t("inventory.filters.marketType"),
+        value: t(`inventory.enums.marketType.${marketType}`),
+        onRemove: () => update({ marketType: null }),
+      });
+    }
+
+    const inspection = searchParams.get("inspection");
+    if (inspection) {
+      items.push({
+        key: "inspection",
+        label: t("inventory.filters.inspection"),
+        value: t(`inventory.inspectionFilter.${inspection}`),
+        onRemove: () => update({ inspection: null }),
       });
     }
 
@@ -118,7 +145,7 @@ export function VehicleFilters() {
         key: "branchId",
         label: t("inventory.filters.branch"),
         value: branch?.name ?? branchId,
-        clear: { branchId: null, locationId: null },
+        onRemove: () => update({ branchId: null, locationId: null }),
       });
     }
 
@@ -129,7 +156,7 @@ export function VehicleFilters() {
         key: "locationId",
         label: t("inventory.filters.location"),
         value: location?.name ?? locationId,
-        clear: { locationId: null },
+        onRemove: () => update({ locationId: null }),
       });
     }
 
@@ -138,7 +165,7 @@ export function VehicleFilters() {
         key: "make",
         label: t("inventory.filters.make"),
         value: makeValue,
-        clear: { make: null, model: null },
+        onRemove: () => update({ make: null, model: null }),
       });
     }
 
@@ -148,7 +175,7 @@ export function VehicleFilters() {
         key: "model",
         label: t("inventory.filters.model"),
         value: model,
-        clear: { model: null },
+        onRemove: () => update({ model: null }),
       });
     }
 
@@ -158,7 +185,7 @@ export function VehicleFilters() {
         key: "bodyType",
         label: t("inventory.filters.bodyType"),
         value: t(`inventory.enums.bodyType.${bodyTypeKey(bodyType)}`),
-        clear: { bodyType: null },
+        onRemove: () => update({ bodyType: null }),
       });
     }
 
@@ -169,7 +196,7 @@ export function VehicleFilters() {
         key: "year",
         label: t("inventory.filters.year"),
         value: [yearFrom || "…", yearTo || "…"].join(" – "),
-        clear: { yearFrom: null, yearTo: null },
+        onRemove: () => update({ yearFrom: null, yearTo: null }),
       });
     }
 
@@ -179,7 +206,7 @@ export function VehicleFilters() {
         key: "originType",
         label: t("inventory.filters.origin"),
         value: t(`inventory.enums.origin.${originType}`),
-        clear: { originType: null },
+        onRemove: () => update({ originType: null }),
       });
     }
 
@@ -189,7 +216,7 @@ export function VehicleFilters() {
         key: "fuelType",
         label: t("inventory.filters.fuelType"),
         value: t(`inventory.enums.fuel.${fuelType}`),
-        clear: { fuelType: null },
+        onRemove: () => update({ fuelType: null }),
       });
     }
 
@@ -199,7 +226,7 @@ export function VehicleFilters() {
         key: "transmission",
         label: t("inventory.filters.transmission"),
         value: t(`inventory.enums.transmission.${transmission}`),
-        clear: { transmission: null },
+        onRemove: () => update({ transmission: null }),
       });
     }
 
@@ -208,131 +235,111 @@ export function VehicleFilters() {
         key: "includeArchived",
         label: t("inventory.filters.includeArchived"),
         value: t("common.yes"),
-        clear: { includeArchived: null },
+        onRemove: () => update({ includeArchived: null }),
       });
     }
 
     return items;
-  }, [branchId, locations, makeValue, meta.data?.branches, searchParams, t]);
+  }, [branchId, locations, makeValue, meta.data?.branches, searchParams, t, update]);
 
   return (
-    <section
-      className="bg-card flex flex-col gap-3 rounded-xl border p-3 md:p-4"
-      aria-label={t("inventory.filters.searchLabel")}
-    >
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-        <div className="relative lg:col-span-1">
-          <SearchIcon
-            className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
-            aria-hidden
-          />
-          <DebouncedFilterInput
-            type="search"
-            inputMode="search"
-            aria-label={t("inventory.filters.searchLabel")}
-            placeholder={t("inventory.filters.searchPlaceholder")}
-            className="h-11 ps-9 md:h-10"
-            value={searchParams.get("q") ?? ""}
-            onCommit={(value) => update({ q: value })}
-          />
-        </div>
-        <SearchableSelect
-          aria-label={t("inventory.filters.status")}
-          value={searchParams.get("status") ?? ""}
-          onValueChange={(value) => update({ status: value })}
-          optional
-          placeholder={t("inventory.filters.allStatuses")}
-          options={VEHICLE_STATUSES.map((status) => ({
-            value: status,
-            label: t(`inventory.status.${status}`),
-            icon: STATUS_ICONS[status],
-          }))}
-        />
-        <SearchableSelect
-          aria-label={t("inventory.filters.branch")}
-          value={branchId}
-          onValueChange={(value) => update({ branchId: value, locationId: null })}
-          optional
-          placeholder={t("inventory.filters.allBranches")}
-          options={(meta.data?.branches ?? []).map((branch) => ({
-            value: branch.id,
-            label: branch.name,
-            icon: BRANCH_ICON,
-          }))}
-        />
-        <SearchableSelect
-          aria-label={t("inventory.filters.sort")}
-          value={searchParams.get("sort") ?? "created_at"}
-          onValueChange={(value) => update({ sort: value })}
-          searchable={false}
-          options={VEHICLE_SORT_FIELDS.map((field) => ({
-            value: field,
-            label: t(`inventory.sort.${field}`),
-            icon: SORT_ICONS[field],
-          }))}
-        />
-      </div>
-
-      {chips.length > 0 ? (
-        <FilterToolbar>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            {chips.map((chip) => (
-              <FilterChip
-                key={chip.key}
-                label={chip.label}
-                value={chip.value}
-                onRemove={() => update(chip.clear)}
-              />
-            ))}
+    <ListFilterBar
+      ariaLabel={t("inventory.filters.searchLabel")}
+      actions={actions}
+      advancedCount={advancedCount}
+      hasActiveFilters={hasQuery}
+      onClear={clear}
+      chips={chips}
+      drawerTitle={t("inventory.filters.drawerTitle")}
+      drawerDescription={t("inventory.filters.drawerHint")}
+      basicFilters={
+        <>
+          <div className="relative sm:col-span-2 xl:col-span-1">
+            <SearchIcon
+              className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
+              aria-hidden
+            />
+            <DebouncedFilterInput
+              type="search"
+              inputMode="search"
+              aria-label={t("inventory.filters.searchLabel")}
+              placeholder={t("inventory.filters.searchPlaceholder")}
+              className="h-11 ps-9 md:h-10"
+              value={searchParams.get("q") ?? ""}
+              onCommit={(value) => update({ q: value })}
+            />
           </div>
-          {hasQuery ? (
-            <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0" onClick={clear}>
-              <XIcon aria-hidden />
-              {t("inventory.filters.clear")}
-            </Button>
-          ) : null}
-        </FilterToolbar>
-      ) : null}
-
-      <FilterToolbar>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9"
-          aria-expanded={showAdvanced}
-          onClick={() => setExpanded((current) => !current)}
-        >
-          <ListFilterIcon aria-hidden />
-          {showAdvanced ? t("inventory.filters.less") : t("inventory.filters.more")}
-          {advancedCount > 0 ? (
-            <Badge variant="secondary" className="ms-0.5">
-              {advancedCount}
-            </Badge>
-          ) : null}
-          <ChevronDownIcon
-            className={`size-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </Button>
-        <div className="ms-auto flex min-w-40 items-center gap-2">
           <SearchableSelect
-            aria-label={t("inventory.filters.order")}
-            value={searchParams.get("order") ?? "desc"}
-            onValueChange={(value) => update({ order: value })}
-            searchable={false}
-            className="w-40"
-            options={[
-              { value: "desc", label: t("inventory.filters.desc"), icon: ORDER_ICONS.desc },
-              { value: "asc", label: t("inventory.filters.asc"), icon: ORDER_ICONS.asc },
-            ]}
+            aria-label={t("inventory.filters.status")}
+            value={searchParams.get("status") ?? ""}
+            onValueChange={(value) => update({ status: value })}
+            optional
+            placeholder={t("inventory.filters.allStatuses")}
+            options={VEHICLE_STATUSES.map((status) => ({
+              value: status,
+              label: t(`inventory.status.${status}`),
+              icon: STATUS_ICONS[status],
+            }))}
           />
-        </div>
-      </FilterToolbar>
-
-      {showAdvanced ? (
-        <div className="grid gap-5 border-t pt-4">
-          <FilterGroup title={t("inventory.filters.groupVehicle")}>
+          <SearchableSelect
+            aria-label={t("inventory.filters.marketType")}
+            value={searchParams.get("marketType") ?? ""}
+            onValueChange={(value) => update({ marketType: value })}
+            optional
+            searchable={false}
+            placeholder={t("inventory.filters.allMarketTypes")}
+            options={VEHICLE_MARKET_TYPES.map((type) => ({
+              value: type,
+              label: t(`inventory.enums.marketType.${type}`),
+            }))}
+          />
+        </>
+      }
+      drawerContent={
+        <div className="grid gap-2.5">
+          <FilterGroup
+            title={t("inventory.filters.groupVehicle")}
+            dense
+            collapsible
+            defaultOpen
+            activeCount={
+              ["inspection", "branchId", "locationId", "make", "model", "bodyType"].filter((key) =>
+                Boolean(searchParams.get(key)),
+              ).length
+            }
+          >
+            <FormField label={t("inventory.filters.inspection")} htmlFor="filter-inspection">
+              <SearchableSelect
+                id="filter-inspection"
+                value={searchParams.get("inspection") ?? ""}
+                onValueChange={(value) => update({ inspection: value })}
+                optional
+                searchable={false}
+                placeholder={t("inventory.filters.allInspections")}
+                options={VEHICLE_INSPECTION_FILTERS.map((value) => {
+                  const Icon = VEHICLE_INSPECTION_ICONS[value];
+                  return {
+                    value,
+                    label: t(`inventory.inspectionFilter.${value}`),
+                    icon: <Icon />,
+                  };
+                })}
+              />
+            </FormField>
+            <FormField label={t("inventory.filters.branch")} htmlFor="filter-branch">
+              <SearchableSelect
+                id="filter-branch"
+                value={branchId}
+                onValueChange={(value) => update({ branchId: value, locationId: null })}
+                optional
+                placeholder={t("inventory.filters.allBranches")}
+                options={(meta.data?.branches ?? []).map((branch) => ({
+                  value: branch.id,
+                  label: branch.name,
+                  icon: BRANCH_ICON,
+                }))}
+              />
+            </FormField>
             <FormField label={t("inventory.filters.location")} htmlFor="filter-location">
               <SearchableSelect
                 id="filter-location"
@@ -389,7 +396,23 @@ export function VehicleFilters() {
             </FormField>
           </FilterGroup>
 
-          <FilterGroup title={t("inventory.filters.groupSpecs")}>
+          <FilterGroup
+            title={t("inventory.filters.groupSpecs")}
+            dense
+            collapsible
+            activeCount={
+              [
+                "yearFrom",
+                "yearTo",
+                "originType",
+                "fuelType",
+                "transmission",
+                "includeArchived",
+              ].filter((key) => Boolean(searchParams.get(key))).length +
+              ((searchParams.get("sort") ?? "created_at") !== "created_at" ? 1 : 0) +
+              ((searchParams.get("order") ?? "desc") !== "desc" ? 1 : 0)
+            }
+          >
             <FormField label={t("inventory.filters.yearFrom")} htmlFor="filter-year-from">
               <DebouncedFilterInput
                 id="filter-year-from"
@@ -457,23 +480,46 @@ export function VehicleFilters() {
                 }))}
               />
             </FormField>
-            <div className="flex items-end pb-2.5 sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="filter-archived"
-                  checked={searchParams.get("includeArchived") === "true"}
-                  onCheckedChange={(checked) =>
-                    update({ includeArchived: checked ? "true" : null })
-                  }
-                />
-                <Label htmlFor="filter-archived" className="cursor-pointer">
-                  {t("inventory.filters.includeArchived")}
-                </Label>
-              </div>
+            <FormField label={t("inventory.filters.sort")} htmlFor="filter-sort">
+              <SearchableSelect
+                id="filter-sort"
+                value={searchParams.get("sort") ?? "created_at"}
+                onValueChange={(value) => update({ sort: value })}
+                searchable={false}
+                options={VEHICLE_SORT_FIELDS.map((field) => ({
+                  value: field,
+                  label: t(`inventory.sort.${field}`),
+                  icon: SORT_ICONS[field],
+                }))}
+              />
+            </FormField>
+            <FormField label={t("inventory.filters.order")} htmlFor="filter-order">
+              <SearchableSelect
+                id="filter-order"
+                value={searchParams.get("order") ?? "desc"}
+                onValueChange={(value) => update({ order: value })}
+                searchable={false}
+                options={[
+                  { value: "desc", label: t("inventory.filters.desc"), icon: ORDER_ICONS.desc },
+                  { value: "asc", label: t("inventory.filters.asc"), icon: ORDER_ICONS.asc },
+                ]}
+              />
+            </FormField>
+            <div className="flex items-center gap-2 pt-1">
+              <Checkbox
+                id="filter-archived"
+                checked={searchParams.get("includeArchived") === "true"}
+                onCheckedChange={(checked) =>
+                  update({ includeArchived: checked ? "true" : null })
+                }
+              />
+              <Label htmlFor="filter-archived" className="cursor-pointer">
+                {t("inventory.filters.includeArchived")}
+              </Label>
             </div>
           </FilterGroup>
         </div>
-      ) : null}
-    </section>
+      }
+    />
   );
 }

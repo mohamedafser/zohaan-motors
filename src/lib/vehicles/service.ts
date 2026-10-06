@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/permissions";
+import { assertCatalogSelection } from "@/lib/vehicles/catalog";
 import { isValidVehicleStatusTransition } from "@/lib/vehicles/status-transitions";
 import { getPrimaryPhotoUrls } from "@/lib/vehicles/photos";
 import type { UserContext } from "@/types/auth";
@@ -11,8 +12,11 @@ import type {
   ModelOption,
   VehicleActivityItem,
   VehicleDetail,
+  VehicleInspectionFilter,
+  VehicleListInspectionInfo,
   VehicleListItem,
   VehicleListResult,
+  VehicleMarketType,
   VehicleStatus,
   VehicleStatusHistoryItem,
 } from "@/types/vehicle";
@@ -72,6 +76,7 @@ type VehicleRow = {
   origin_type: VehicleListItem["originType"];
   country_of_origin: string | null;
   condition: string | null;
+  market_type: VehicleMarketType | null;
   branch_id: string;
   location_id: string | null;
   source: string;
@@ -83,6 +88,9 @@ type VehicleRow = {
   current_selling_price: number | null;
   make_id: string | null;
   model_id: string | null;
+  model_year_id: string | null;
+  variant_id: string | null;
+  custom_variant: string | null;
   archived_at: string | null;
   created_by: string | null;
   updated_by: string | null;
@@ -100,6 +108,62 @@ function asRelation<T extends { id: string }>(
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
+function inspectionSummaryLabel(
+  status: string | null | undefined,
+  result: string | null | undefined,
+): VehicleInspectionFilter {
+  if (!status) return "not_inspected";
+  if (status === "approved") {
+    if (result === "fail") return "fail";
+    if (result === "pass_with_advisories" || result === "repair_required") return "pass_with_issues";
+    if (result === "pass") return "pass";
+    return "approved";
+  }
+  if (
+    status === "draft" ||
+    status === "assigned" ||
+    status === "in_progress" ||
+    status === "submitted" ||
+    status === "under_review"
+  ) {
+    return "in_progress";
+  }
+  return "not_inspected";
+}
+
+async function getLatestInspectionSummaries(
+  vehicleIds: string[],
+): Promise<Map<string, VehicleListInspectionInfo>> {
+  const map = new Map<string, VehicleListInspectionInfo>();
+  if (vehicleIds.length === 0) return map;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("inspections")
+    .select("id, vehicle_id, status, result, created_at, approved_at, completed_at")
+    .in("vehicle_id", vehicleIds)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return map;
+
+  for (const row of data as {
+    id: string;
+    vehicle_id: string;
+    status: string;
+    result: string | null;
+  }[]) {
+    if (map.has(row.vehicle_id)) continue;
+    map.set(row.vehicle_id, {
+      id: row.id,
+      status: row.status,
+      result: row.result,
+      label: inspectionSummaryLabel(row.status, row.result),
+    });
+  }
+
+  return map;
+}
+
 function mapListItem(row: VehicleRow): VehicleListItem {
   const branch = asRelation(row.branches);
   const location = asRelation(row.branch_locations);
@@ -114,6 +178,7 @@ function mapListItem(row: VehicleRow): VehicleListItem {
     year: row.year,
     mileage: row.mileage,
     mileageUnit: row.mileage_unit,
+    marketType: row.market_type === "new" ? "new" : "used",
     status: row.status,
     branchId: row.branch_id,
     branchName: branch?.name ?? null,
@@ -223,7 +288,11 @@ function formToInsert(values: CreateVehicleValues, userId: string) {
     description: values.description,
     make_id: values.makeId,
     model_id: values.modelId,
-    status: "acquired" as const,
+    model_year_id: values.modelYearId,
+    variant_id: values.variantId,
+    custom_variant: values.customVariant,
+    market_type: values.marketType,
+    status: "ready_for_sale" as const,
     source: "other" as const,
     created_by: userId,
     updated_by: userId,
@@ -233,100 +302,90 @@ function formToInsert(values: CreateVehicleValues, userId: string) {
 const LIST_SELECT = `
   id, stock_number, vin, chassis_number, make, model, variant, year, mileage, mileage_unit,
   exterior_color, interior_color, body_type, transmission, fuel_type, engine_size, engine_cylinders,
-  seats, doors, drive_type, origin_type, country_of_origin, condition, branch_id, location_id,
+  seats, doors, drive_type, origin_type, country_of_origin, condition, market_type, branch_id, location_id,
   source, status, purchase_date, registration_date, registration_expiry, description,
-  current_selling_price, make_id, model_id, archived_at, created_by, updated_by, created_at, updated_at, deleted_at,
+  current_selling_price, make_id, model_id, model_year_id, variant_id, custom_variant,
+  archived_at, created_by, updated_by, created_at, updated_at, deleted_at,
   branches:branch_id ( id, name ),
   branch_locations:location_id ( id, name )
 `;
 
-export async function listVehicles(
-  query: VehicleListQuery,
-): Promise<ServiceResult<VehicleListResult>> {
-  const supabase = await createClient();
-
-  let builder = supabase
-    .from("vehicles")
-    .select(LIST_SELECT, { count: "exact" })
-    .is("deleted_at", null);
+function applyVehicleListFilters<T extends { eq: Function; neq: Function; ilike: Function; gte: Function; lte: Function; or: Function }>(
+  builder: T,
+  query: Partial<
+    Pick<
+      VehicleListQuery,
+      | "includeArchived"
+      | "status"
+      | "marketType"
+      | "branchId"
+      | "locationId"
+      | "make"
+      | "model"
+      | "bodyType"
+      | "originType"
+      | "fuelType"
+      | "transmission"
+      | "yearFrom"
+      | "yearTo"
+      | "mileageMin"
+      | "mileageMax"
+      | "purchaseDateFrom"
+      | "purchaseDateTo"
+      | "q"
+    >
+  >,
+): T {
+  let next = builder;
 
   if (!query.includeArchived) {
-    builder = builder.neq("status", "archived");
+    next = next.neq("status", "archived") as T;
   }
 
-  if (query.status) builder = builder.eq("status", query.status);
-  if (query.branchId) builder = builder.eq("branch_id", query.branchId);
-  if (query.locationId) builder = builder.eq("location_id", query.locationId);
-  if (query.make) builder = builder.ilike("make", `%${query.make}%`);
-  if (query.model) builder = builder.ilike("model", `%${query.model}%`);
-  if (query.bodyType) builder = builder.ilike("body_type", `%${query.bodyType}%`);
-  if (query.originType) builder = builder.eq("origin_type", query.originType);
-  if (query.fuelType) builder = builder.eq("fuel_type", query.fuelType);
-  if (query.transmission) builder = builder.eq("transmission", query.transmission);
-  if (query.yearFrom != null) builder = builder.gte("year", query.yearFrom);
-  if (query.yearTo != null) builder = builder.lte("year", query.yearTo);
-  if (query.mileageMin != null) builder = builder.gte("mileage", query.mileageMin);
-  if (query.mileageMax != null) builder = builder.lte("mileage", query.mileageMax);
-  if (query.purchaseDateFrom) builder = builder.gte("purchase_date", query.purchaseDateFrom);
-  if (query.purchaseDateTo) builder = builder.lte("purchase_date", query.purchaseDateTo);
+  if (query.status) next = next.eq("status", query.status) as T;
+  if (query.marketType) next = next.eq("market_type", query.marketType) as T;
+  if (query.branchId) next = next.eq("branch_id", query.branchId) as T;
+  if (query.locationId) next = next.eq("location_id", query.locationId) as T;
+  if (query.make) next = next.ilike("make", `%${query.make}%`) as T;
+  if (query.model) next = next.ilike("model", `%${query.model}%`) as T;
+  if (query.bodyType) next = next.ilike("body_type", `%${query.bodyType}%`) as T;
+  if (query.originType) next = next.eq("origin_type", query.originType) as T;
+  if (query.fuelType) next = next.eq("fuel_type", query.fuelType) as T;
+  if (query.transmission) next = next.eq("transmission", query.transmission) as T;
+  if (query.yearFrom != null) next = next.gte("year", query.yearFrom) as T;
+  if (query.yearTo != null) next = next.lte("year", query.yearTo) as T;
+  if (query.mileageMin != null) next = next.gte("mileage", query.mileageMin) as T;
+  if (query.mileageMax != null) next = next.lte("mileage", query.mileageMax) as T;
+  if (query.purchaseDateFrom) next = next.gte("purchase_date", query.purchaseDateFrom) as T;
+  if (query.purchaseDateTo) next = next.lte("purchase_date", query.purchaseDateTo) as T;
 
   if (query.q) {
-    const q = query.q.replace(/[%_]/g, "");
-    builder = builder.or(
-      `stock_number.ilike.%${q}%,vin.ilike.%${q}%,chassis_number.ilike.%${q}%,make.ilike.%${q}%,model.ilike.%${q}%,variant.ilike.%${q}%`,
-    );
+    const q = query.q.replace(/[%_,()"]/g, "").trim();
+    if (q.length > 0) {
+      const pattern = `"%${q}%"`;
+      next = next.or(
+        `stock_number.ilike.${pattern},vin.ilike.${pattern},chassis_number.ilike.${pattern},make.ilike.${pattern},model.ilike.${pattern},variant.ilike.${pattern}`,
+      ) as T;
+    }
   }
 
-  const from = (query.page - 1) * query.pageSize;
-  const to = from + query.pageSize - 1;
-
-  const { data, error, count } = await builder
-    .order(query.sort, { ascending: query.order === "asc" })
-    .range(from, to);
-
-  if (error) {
-    return { data: null, error: mapDbError(error) };
-  }
-
-  const summary = await getInventorySummary();
-
-  const items = ((data ?? []) as unknown as VehicleRow[]).map(mapListItem);
-  const primaryUrls = await getPrimaryPhotoUrls(items.map((item) => item.id));
-  const withPhotos = items.map((item) => ({
-    ...item,
-    primaryPhotoUrl: primaryUrls.get(item.id) ?? null,
-  }));
-
-  return {
-    data: {
-      items: withPhotos,
-      page: query.page,
-      pageSize: query.pageSize,
-      total: count ?? 0,
-      summary: summary.data ?? {
-        total: 0,
-        readyForSale: 0,
-        underInspection: 0,
-        underRepair: 0,
-        reserved: 0,
-        sold: 0,
-      },
-    },
-    error: null,
-  };
+  return next;
 }
 
-export async function getInventorySummary(): Promise<ServiceResult<InventorySummary>> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("vehicles")
-    .select("status")
-    .is("deleted_at", null)
-    .neq("status", "archived");
+function matchesInspectionFilter(
+  info: VehicleListInspectionInfo | undefined,
+  inspection: VehicleInspectionFilter,
+) {
+  const label = info?.label ?? "not_inspected";
+  if (inspection === "approved") {
+    return info?.status === "approved";
+  }
+  return label === inspection;
+}
 
-  if (error) return { data: null, error: mapDbError(error) };
-
-  const rows = (data ?? []) as { status: VehicleStatus }[];
+function buildInventorySummary(
+  rows: { status: VehicleStatus }[],
+): InventorySummary {
   const summary: InventorySummary = {
     total: rows.length,
     readyForSale: 0,
@@ -344,7 +403,117 @@ export async function getInventorySummary(): Promise<ServiceResult<InventorySumm
     if (row.status === "sold" || row.status === "delivered") summary.sold += 1;
   }
 
-  return { data: summary, error: null };
+  return summary;
+}
+
+export async function listVehicles(
+  query: VehicleListQuery,
+): Promise<ServiceResult<VehicleListResult>> {
+  const supabase = await createClient();
+
+  let builder = supabase
+    .from("vehicles")
+    .select(LIST_SELECT, { count: "exact" })
+    .is("deleted_at", null);
+
+  builder = applyVehicleListFilters(builder, query);
+
+  const from = (query.page - 1) * query.pageSize;
+  const to = from + query.pageSize - 1;
+
+  const { data, error, count } = await builder
+    .order(query.sort, { ascending: query.order === "asc" })
+    .range(from, to);
+
+  if (error) {
+    return { data: null, error: mapDbError(error) };
+  }
+
+  const summary = await getInventorySummary(query);
+
+  const items = ((data ?? []) as unknown as VehicleRow[]).map(mapListItem);
+  const primaryUrls = await getPrimaryPhotoUrls(items.map((item) => item.id));
+  const inspections = await getLatestInspectionSummaries(items.map((item) => item.id));
+
+  let withMeta = items.map((item) => ({
+    ...item,
+    primaryPhotoUrl: primaryUrls.get(item.id) ?? null,
+    inspection: inspections.get(item.id) ?? {
+      id: null,
+      status: null,
+      result: null,
+      label: "not_inspected" as const,
+    },
+  }));
+
+  if (query.inspection) {
+    withMeta = withMeta.filter((item) =>
+      matchesInspectionFilter(item.inspection, query.inspection!),
+    );
+  }
+
+  return {
+    data: {
+      items: withMeta,
+      page: query.page,
+      pageSize: query.pageSize,
+      total: query.inspection ? withMeta.length : (count ?? 0),
+      summary: summary.data ?? {
+        total: 0,
+        readyForSale: 0,
+        underInspection: 0,
+        underRepair: 0,
+        reserved: 0,
+        sold: 0,
+      },
+    },
+    error: null,
+  };
+}
+
+export async function getInventorySummary(
+  query: Partial<VehicleListQuery> = {},
+): Promise<ServiceResult<InventorySummary>> {
+  const supabase = await createClient();
+  let builder = supabase
+    .from("vehicles")
+    .select("id, status")
+    .is("deleted_at", null);
+
+  builder = applyVehicleListFilters(builder, {
+    includeArchived: query.includeArchived ?? false,
+    status: query.status,
+    marketType: query.marketType,
+    branchId: query.branchId,
+    locationId: query.locationId,
+    make: query.make,
+    model: query.model,
+    bodyType: query.bodyType,
+    originType: query.originType,
+    fuelType: query.fuelType,
+    transmission: query.transmission,
+    yearFrom: query.yearFrom,
+    yearTo: query.yearTo,
+    mileageMin: query.mileageMin,
+    mileageMax: query.mileageMax,
+    purchaseDateFrom: query.purchaseDateFrom,
+    purchaseDateTo: query.purchaseDateTo,
+    q: query.q,
+  });
+
+  const { data, error } = await builder;
+  if (error) return { data: null, error: mapDbError(error) };
+
+  let rows = (data ?? []) as { id: string; status: VehicleStatus }[];
+
+  if (query.inspection) {
+    const inspections = await getLatestInspectionSummaries(rows.map((row) => row.id));
+    rows = rows.filter((row) =>
+      matchesInspectionFilter(inspections.get(row.id), query.inspection!),
+    );
+  }
+
+  return { data: buildInventorySummary(rows), error: null };
 }
 
 export async function findDuplicateVehicle(input: {
@@ -441,6 +610,9 @@ export async function getVehicle(
     condition: row.condition,
     makeId: row.make_id,
     modelId: row.model_id,
+    modelYearId: row.model_year_id,
+    variantId: row.variant_id,
+    customVariant: row.custom_variant,
     archivedAt: row.archived_at,
     createdBy: row.created_by,
     updatedBy: row.updated_by,
@@ -558,6 +730,20 @@ export async function createVehicle(
     };
   }
 
+  const catalogCheck = await assertCatalogSelection({
+    makeId: values.makeId,
+    modelId: values.modelId,
+    modelYearId: values.modelYearId,
+    variantId: values.variantId,
+    year: values.year,
+  });
+  if (catalogCheck.error) {
+    return {
+      data: null,
+      error: { code: "validation", message: catalogCheck.error.message },
+    };
+  }
+
   const supabase = await createClient();
   const insert = formToInsert(values, context.userId);
   // stock_number assigned by DB trigger
@@ -597,6 +783,20 @@ export async function updateVehicle(
           : "A vehicle with this chassis number already exists.",
         existingVehicleId: duplicate.data.id,
       },
+    };
+  }
+
+  const catalogCheck = await assertCatalogSelection({
+    makeId: values.makeId,
+    modelId: values.modelId,
+    modelYearId: values.modelYearId,
+    variantId: values.variantId,
+    year: values.year,
+  });
+  if (catalogCheck.error) {
+    return {
+      data: null,
+      error: { code: "validation", message: catalogCheck.error.message },
     };
   }
 
@@ -641,6 +841,10 @@ export async function updateVehicle(
       description: values.description,
       make_id: values.makeId,
       model_id: values.modelId,
+      model_year_id: values.modelYearId,
+      variant_id: values.variantId,
+      custom_variant: values.customVariant,
+      market_type: values.marketType,
       updated_by: context.userId,
     } as never)
     .eq("id", id)
@@ -1040,17 +1244,21 @@ export async function listMakes(): Promise<ServiceResult<MakeOption[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vehicle_makes")
-    .select("id, name")
+    .select("id, name, name_ar, slug")
     .eq("is_active", true)
     .order("sort_order")
     .order("name");
 
   if (error) return { data: null, error: mapDbError(error) };
   return {
-    data: ((data ?? []) as { id: string; name: string }[]).map((row) => ({
-      id: row.id,
-      name: row.name,
-    })),
+    data: ((data ?? []) as { id: string; name: string; name_ar: string | null; slug: string }[]).map(
+      (row) => ({
+        id: row.id,
+        name: row.name,
+        nameAr: row.name_ar,
+        slug: row.slug,
+      }),
+    ),
     error: null,
   };
 }
@@ -1059,18 +1267,29 @@ export async function listModels(makeId?: string): Promise<ServiceResult<ModelOp
   const supabase = await createClient();
   let q = supabase
     .from("vehicle_models")
-    .select("id, make_id, name")
+    .select("id, make_id, name, name_ar, slug")
     .eq("is_active", true)
+    .order("sort_order")
     .order("name");
   if (makeId) q = q.eq("make_id", makeId);
 
   const { data, error } = await q;
   if (error) return { data: null, error: mapDbError(error) };
   return {
-    data: ((data ?? []) as { id: string; make_id: string; name: string }[]).map((row) => ({
+    data: (
+      (data ?? []) as {
+        id: string;
+        make_id: string;
+        name: string;
+        name_ar: string | null;
+        slug: string;
+      }[]
+    ).map((row) => ({
       id: row.id,
       makeId: row.make_id,
       name: row.name,
+      nameAr: row.name_ar,
+      slug: row.slug,
     })),
     error: null,
   };

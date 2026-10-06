@@ -2,7 +2,7 @@
 
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import {
@@ -121,6 +121,7 @@ function withVehicleLink(
 }
 
 type CreateStepId = "vehicle" | "acquisition" | "photos" | "review";
+type EditStepId = "vehicle" | "acquisition" | "photos";
 
 function CreateVehicle() {
   const t = useTranslations();
@@ -633,7 +634,10 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
   const query = useVehicle(vehicleId);
   const { update } = useVehicleMutations(vehicleId);
   const errors = useSubmitErrors();
+  const vehicleRef = useRef<VehicleFormHandle | null>(null);
   const acquisitionRef = useRef<AcquisitionFormHandle | null>(null);
+  const stepScrollRef = useRef<HTMLDivElement | null>(null);
+  const [stepId, setStepId] = useState<EditStepId>("vehicle");
   const [acquisitionDirty, setAcquisitionDirty] = useState(false);
   const [savingAcquisition, setSavingAcquisition] = useState(false);
   const [localAcquisitionId, setLocalAcquisitionId] = useState<string | null>(null);
@@ -650,8 +654,47 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
   const canManageAcquisition = can("acquisition.create") || can("acquisition.edit");
   const showAcquisition = canManageAcquisition || Boolean(linkedAcquisitionId);
 
-  async function onSubmit(values: VehicleFormValues) {
+  const steps = useMemo(() => {
+    const items: FormStepperStep[] = [
+      {
+        id: "vehicle",
+        label: t("inventory.stepper.steps.vehicle"),
+        description: t("inventory.stepper.hints.vehicle"),
+      },
+    ];
+    if (showAcquisition) {
+      items.push({
+        id: "acquisition",
+        label: t("inventory.stepper.steps.acquisition"),
+        description: t("inventory.stepper.hints.acquisition"),
+        optional: !linkedAcquisitionId,
+      });
+    }
+    items.push({
+      id: "photos",
+      label: t("inventory.stepper.steps.photos"),
+      description: t("inventory.stepper.hints.photos"),
+      optional: true,
+    });
+    return items;
+  }, [linkedAcquisitionId, showAcquisition, t]);
+
+  const stepIndex = steps.findIndex((step) => step.id === stepId);
+  const isFirst = stepIndex <= 0;
+  const isLast = stepIndex >= steps.length - 1;
+
+  useEffect(() => {
+    stepScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [stepId]);
+
+  async function saveAll() {
     errors.reset();
+    const values = await vehicleRef.current?.validate();
+    if (!values) {
+      setStepId("vehicle");
+      toast.error(t("inventory.stepper.fillVehicle"));
+      return;
+    }
 
     const wantsAcquisition =
       canManageAcquisition && (acquisitionDirty || pendingDocuments.length > 0);
@@ -660,6 +703,7 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
     if (wantsAcquisition) {
       acquisitionValues = (await acquisitionRef.current?.validate()) ?? null;
       if (!acquisitionValues) {
+        if (showAcquisition) setStepId("acquisition");
         toast.error(t("inventory.acquisition.purchasePriceRequired"));
         return;
       }
@@ -710,6 +754,40 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
     }
   }
 
+  async function goNext() {
+    if (stepId === "vehicle") {
+      const values = await vehicleRef.current?.validate();
+      if (!values) {
+        toast.error(t("inventory.stepper.fillVehicle"));
+        return;
+      }
+      setStepId(showAcquisition ? "acquisition" : "photos");
+      return;
+    }
+    if (stepId === "acquisition") {
+      if (acquisitionDirty || pendingDocuments.length > 0) {
+        const values = await acquisitionRef.current?.validate();
+        if (!values) {
+          toast.error(t("inventory.acquisition.purchasePriceRequired"));
+          return;
+        }
+      }
+      setStepId("photos");
+    }
+  }
+
+  function goBack() {
+    if (isFirst) {
+      router.push(`/inventory/${vehicleId}`);
+      return;
+    }
+    if (stepId === "photos") {
+      setStepId(showAcquisition ? "acquisition" : "vehicle");
+      return;
+    }
+    if (stepId === "acquisition") setStepId("vehicle");
+  }
+
   if (query.isPending || (linkedAcquisitionId && acquisitionQuery.isPending)) {
     return (
       <div className="flex flex-col gap-6" aria-busy>
@@ -742,73 +820,139 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
   const acquisitionMode = resolvedAcquisitionId && acquisitionQuery.data ? "edit" : "create";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <PageHeader title={t("inventory.editTitle")} description={query.data.stockNumber} />
-      <VehicleForm
-        mode="edit"
-        vehicle={query.data}
-        submitting={busy}
-        submittingLabel={
-          savingAcquisition ? t("inventory.acquisition.savingAcquisition") : undefined
-        }
-        fieldErrors={errors.fieldErrors}
-        formError={errors.formError}
-        cancelHref={`/inventory/${vehicleId}`}
-        onSubmit={onSubmit}
-        allowSubmitWhenClean={acquisitionDirty || pendingDocuments.length > 0}
-        extraSections={
-          <>
-            {showAcquisition ? (
-              acquisitionMode === "edit" && acquisitionQuery.data ? (
-                <AcquisitionForm
-                  key={acquisitionQuery.data.id}
-                  ref={acquisitionRef}
-                  embedded
-                  mode="edit"
-                  acquisition={acquisitionQuery.data}
-                  branchId={query.data.branchId}
-                  submitting={busy}
-                  fieldErrors={errors.fieldErrors}
-                  formError={null}
-                  onDirtyChange={setAcquisitionDirty}
-                  extraSections={
-                    can("document.view") || can("document.create") ? (
-                      <AcquisitionDocumentsManager
-                        mode="manage"
-                        acquisitionId={acquisitionQuery.data.id}
-                        vehicleId={vehicleId}
-                        readOnly={busy || !can("document.create")}
-                      />
-                    ) : null
-                  }
-                />
-              ) : can("acquisition.create") ? (
-                <AcquisitionForm
-                  ref={acquisitionRef}
-                  embedded
-                  mode="create"
-                  branchId={query.data.branchId}
-                  submitting={busy}
-                  fieldErrors={errors.fieldErrors}
-                  formError={null}
-                  onDirtyChange={setAcquisitionDirty}
-                  extraSections={
-                    can("document.create") ? (
-                      <AcquisitionDocumentsManager
-                        mode="draft"
-                        documents={pendingDocuments}
-                        onChange={setPendingDocuments}
-                        disabled={busy}
-                      />
-                    ) : null
-                  }
-                />
-              ) : null
+
+      <Card className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-0 !p-0">
+          <div
+            ref={stepScrollRef}
+            className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+          >
+            <FormStepper
+              steps={steps}
+              currentId={stepId}
+              onStepSelect={(id) => setStepId(id as EditStepId)}
+            />
+
+            {errors.formError ? (
+              <div className="border-destructive/40 bg-destructive/5 rounded-xl border px-4 py-3 text-sm">
+                {errors.formError}
+              </div>
             ) : null}
-            <VehicleImageManager mode="manage" vehicleId={vehicleId} />
-          </>
-        }
-      />
+
+            <div className={cn(stepId === "vehicle" ? "block" : "hidden")}>
+              <VehicleForm
+                ref={vehicleRef}
+                mode="edit"
+                vehicle={query.data}
+                submitting={busy}
+                fieldErrors={errors.fieldErrors}
+                formError={null}
+                cancelHref={`/inventory/${vehicleId}`}
+                hideActions
+                onSubmit={async () => undefined}
+                allowSubmitWhenClean
+              />
+            </div>
+
+            {showAcquisition ? (
+              <div className={cn(stepId === "acquisition" ? "block" : "hidden")}>
+                {acquisitionMode === "edit" && acquisitionQuery.data ? (
+                  <AcquisitionForm
+                    key={acquisitionQuery.data.id}
+                    ref={acquisitionRef}
+                    embedded
+                    mode="edit"
+                    acquisition={acquisitionQuery.data}
+                    branchId={query.data.branchId}
+                    submitting={busy}
+                    fieldErrors={errors.fieldErrors}
+                    formError={null}
+                    onDirtyChange={setAcquisitionDirty}
+                    extraSections={
+                      can("document.view") || can("document.create") ? (
+                        <AcquisitionDocumentsManager
+                          mode="manage"
+                          acquisitionId={acquisitionQuery.data.id}
+                          vehicleId={vehicleId}
+                          readOnly={busy || !can("document.create")}
+                        />
+                      ) : null
+                    }
+                  />
+                ) : can("acquisition.create") ? (
+                  <AcquisitionForm
+                    ref={acquisitionRef}
+                    embedded
+                    mode="create"
+                    branchId={query.data.branchId}
+                    submitting={busy}
+                    fieldErrors={errors.fieldErrors}
+                    formError={null}
+                    onDirtyChange={setAcquisitionDirty}
+                    extraSections={
+                      can("document.create") ? (
+                        <AcquisitionDocumentsManager
+                          mode="draft"
+                          documents={pendingDocuments}
+                          onChange={setPendingDocuments}
+                          disabled={busy}
+                        />
+                      ) : null
+                    }
+                  />
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className={cn(stepId === "photos" ? "block" : "hidden")}>
+              <VehicleImageManager mode="manage" vehicleId={vehicleId} />
+            </div>
+          </div>
+
+          <div className="bg-background shrink-0 border-t px-4 py-2.5 sm:px-6">
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-w-24"
+                onClick={goBack}
+                disabled={busy}
+              >
+                <ChevronLeftIcon aria-hidden className="rtl:rotate-180" />
+                {t("inventory.stepper.back")}
+              </Button>
+              {isLast ? (
+                <LoadingButton
+                  type="button"
+                  size="sm"
+                  className="min-w-28"
+                  loading={busy}
+                  onClick={() => void saveAll()}
+                >
+                  {savingAcquisition
+                    ? t("inventory.acquisition.savingAcquisition")
+                    : t("inventory.actions.updateSubmit")}
+                  <CheckIcon aria-hidden />
+                </LoadingButton>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="min-w-24"
+                  onClick={() => void goNext()}
+                  disabled={busy}
+                >
+                  {t("inventory.stepper.continue")}
+                  <ChevronRightIcon aria-hidden className="rtl:rotate-180" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,21 +1,30 @@
 "use client";
 
 import {
+  BadgeCheckIcon,
+  CameraIcon,
   CheckIcon,
   ClipboardCheckIcon,
+  ClipboardListIcon,
+  HistoryIcon,
+  LayoutDashboardIcon,
+  MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
   RotateCcwIcon,
+  ShieldCheckIcon,
+  TriangleAlertIcon,
   UserPlusIcon,
   XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { InspectionApprovalDialog } from "@/components/inspections/inspection-approval-dialog";
 import { InspectionAssignDialog } from "@/components/inspections/inspection-assign-dialog";
 import { InspectionCancelDialog } from "@/components/inspections/inspection-cancel-dialog";
 import { InspectionFindingsList } from "@/components/inspections/inspection-findings-list";
+import { InspectionOutcomeDialog } from "@/components/inspections/inspection-outcome-dialog";
 import { InspectionPhotosGrid } from "@/components/inspections/inspection-photos-grid";
 import { InspectionProgressBar } from "@/components/inspections/inspection-progress";
 import { InspectionReinspectDialog } from "@/components/inspections/inspection-reinspect-dialog";
@@ -32,6 +41,13 @@ import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInspection, useInspectionMutations } from "@/hooks/use-inspections";
@@ -82,10 +98,7 @@ function Overview({ inspection }: { inspection: InspectionDetail }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <DetailCard title={t("inspections.detail.overview")}>
-        <DetailItem
-          label={t("inspections.fields.number")}
-          value={inspection.inspectionNumber}
-        />
+        <DetailItem label={t("inspections.fields.number")} value={inspection.inspectionNumber} />
         <DetailItem
           label={t("inspections.fields.status")}
           value={<InspectionStatusBadge status={inspection.status} />}
@@ -153,10 +166,7 @@ function Overview({ inspection }: { inspection: InspectionDetail }) {
       </DetailCard>
 
       <DetailCard title={t("inspections.detail.assignment")}>
-        <DetailItem
-          label={t("inspections.fields.assignedTo")}
-          value={inspection.assignedToName}
-        />
+        <DetailItem label={t("inspections.fields.assignedTo")} value={inspection.assignedToName} />
         <DetailItem
           label={t("inspections.fields.inspectedBy")}
           value={inspection.inspectedByName}
@@ -203,10 +213,7 @@ function Overview({ inspection }: { inspection: InspectionDetail }) {
       </DetailCard>
 
       <DetailCard title={t("inspections.detail.review")}>
-        <DetailItem
-          label={t("inspections.fields.reviewedBy")}
-          value={inspection.reviewedByName}
-        />
+        <DetailItem label={t("inspections.fields.reviewedBy")} value={inspection.reviewedByName} />
         <DetailItem
           label={t("inspections.fields.reviewedAt")}
           value={dateTime(inspection.reviewedAt)}
@@ -216,10 +223,7 @@ function Overview({ inspection }: { inspection: InspectionDetail }) {
           label={t("inspections.fields.rejectionReason")}
           value={inspection.rejectionReason}
         />
-        <DetailItem
-          label={t("inspections.fields.cancelReason")}
-          value={inspection.cancelReason}
-        />
+        <DetailItem label={t("inspections.fields.cancelReason")} value={inspection.cancelReason} />
         <DetailItem
           label={t("inspections.fields.approvedAt")}
           value={dateTime(inspection.approvedAt)}
@@ -231,18 +235,12 @@ function Overview({ inspection }: { inspection: InspectionDetail }) {
           label={t("inspections.fields.createdAt")}
           value={dateTime(inspection.createdAt)}
         />
-        <DetailItem
-          label={t("inspections.fields.createdBy")}
-          value={inspection.createdByName}
-        />
+        <DetailItem label={t("inspections.fields.createdBy")} value={inspection.createdByName} />
         <DetailItem
           label={t("inspections.fields.updatedAt")}
           value={dateTime(inspection.updatedAt)}
         />
-        <DetailItem
-          label={t("inspections.fields.updatedBy")}
-          value={inspection.updatedByName}
-        />
+        <DetailItem label={t("inspections.fields.updatedBy")} value={inspection.updatedByName} />
         <DetailItem label={t("inspections.fields.startedAt")} value={date(inspection.startedAt)} />
       </DetailCard>
     </div>
@@ -305,8 +303,30 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
   const [assignOpen, setAssignOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [reinspectOpen, setReinspectOpen] = useState(false);
+  const [outcomeOpen, setOutcomeOpen] = useState(false);
   const [approvalMode, setApprovalMode] = useState<"approve" | "reject" | null>(null);
   const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
+
+  const tabs = useMemo(
+    () =>
+      [
+        {
+          id: "overview" as const,
+          label: t("inspections.tabs.overview"),
+          icon: LayoutDashboardIcon,
+        },
+        {
+          id: "checklist" as const,
+          label: t("inspections.tabs.checklist"),
+          icon: ClipboardListIcon,
+        },
+        { id: "findings" as const, label: t("inspections.tabs.findings"), icon: TriangleAlertIcon },
+        { id: "photos" as const, label: t("inspections.tabs.photos"), icon: CameraIcon },
+        { id: "review" as const, label: t("inspections.tabs.review"), icon: ShieldCheckIcon },
+        { id: "history" as const, label: t("inspections.tabs.history"), icon: HistoryIcon },
+      ] as const,
+    [t],
+  );
 
   if (query.isPending) {
     return (
@@ -343,21 +363,29 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
     [inspection.vehicleYear, inspection.vehicleMake, inspection.vehicleModel]
       .filter(Boolean)
       .join(" ") || inspection.inspectionNumber;
-  const actionClass = "h-10 md:h-8";
+  const meta = [inspection.inspectionNumber, inspection.vehicleStockNumber, inspection.branchName]
+    .filter(Boolean)
+    .join(" · ");
+  const actionClass = "h-10 md:h-9";
   const canPerform = can("inspection.edit") && canEditInspectionChecklist(inspection.status);
   const canAssign = can("inspection.edit") && canAssignInspection(inspection.status);
   const canReview =
     (can("inspection.approve") || can("inspection.review")) &&
     canReviewInspection(inspection.status);
   const canCancel =
-    can("inspection.edit") &&
-    !["approved", "cancelled"].includes(inspection.status);
+    can("inspection.edit") && !["approved", "cancelled"].includes(inspection.status);
   const canReinspect =
     (can("inspection.reinspect") || can("inspection.approve")) &&
     (inspection.status === "approved" || inspection.status === "rejected");
+  const canUpdateOutcome = can("inspection.approve") && inspection.status === "approved";
   const canRemovePhotos =
     canEditInspectionChecklist(inspection.status) &&
     (can("inspection.photo.delete") || can("inspection.edit"));
+  const hasMoreActions = canAssign || canReview || canUpdateOutcome || canReinspect || canCancel;
+  const progressPct =
+    inspection.progress.itemsTotal > 0
+      ? Math.round((inspection.progress.itemsCompleted / inspection.progress.itemsTotal) * 100)
+      : 0;
 
   async function handleRemovePhoto(photoId: string) {
     setRemovingPhotoId(photoId);
@@ -370,109 +398,201 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <PageHeader
         title={title}
-        description={[inspection.inspectionNumber, inspection.vehicleStockNumber]
-          .filter(Boolean)
-          .join(" · ")}
+        description={meta || undefined}
         actions={
           <>
-            <InspectionStatusBadge status={inspection.status} />
-            <InspectionResultBadge result={inspection.result} />
+            <div className="flex flex-wrap items-center gap-2">
+              <InspectionStatusBadge status={inspection.status} />
+              <InspectionResultBadge result={inspection.result} />
+            </div>
             {canPerform ? (
               <PermissionGate permission="inspection.edit">
                 <Link
                   href={`/inspections/${inspection.id}/edit`}
-                  className={cn(buttonVariants({ variant: "outline" }), actionClass)}
+                  className={cn(buttonVariants(), actionClass)}
                 >
                   <PencilIcon aria-hidden />
                   {t("inspections.actions.perform")}
                 </Link>
               </PermissionGate>
             ) : null}
-            {canAssign ? (
-              <Button
-                variant="outline"
-                className={actionClass}
-                onClick={() => setAssignOpen(true)}
-              >
-                <UserPlusIcon aria-hidden />
-                {t("inspections.actions.assign")}
-              </Button>
-            ) : null}
             {canReview ? (
-              <>
-                <Link
-                  href={`/inspections/${inspection.id}/review`}
-                  className={cn(buttonVariants(), actionClass)}
-                >
-                  <ClipboardCheckIcon aria-hidden />
-                  {t("inspections.actions.review")}
-                </Link>
-                <Button
-                  variant="outline"
-                  className={actionClass}
-                  onClick={() => setApprovalMode("approve")}
-                >
-                  <CheckIcon aria-hidden />
-                  {t("inspections.actions.approve")}
-                </Button>
-                <Button
-                  variant="destructive"
-                  className={actionClass}
-                  onClick={() => setApprovalMode("reject")}
-                >
-                  <XIcon aria-hidden />
-                  {t("inspections.actions.reject")}
-                </Button>
-              </>
-            ) : null}
-            {canReinspect ? (
-              <Button
-                variant="outline"
-                className={actionClass}
-                onClick={() => setReinspectOpen(true)}
+              <Link
+                href={`/inspections/${inspection.id}/review`}
+                className={cn(
+                  buttonVariants(canPerform ? { variant: "outline" } : undefined),
+                  actionClass,
+                )}
               >
-                <RotateCcwIcon aria-hidden />
-                {t("inspections.actions.reinspect")}
+                <ClipboardCheckIcon aria-hidden />
+                {t("inspections.actions.review")}
+              </Link>
+            ) : null}
+            {canUpdateOutcome && !canPerform && !canReview ? (
+              <Button className={actionClass} onClick={() => setOutcomeOpen(true)}>
+                <BadgeCheckIcon aria-hidden />
+                {t("inspections.actions.updateOutcome")}
               </Button>
             ) : null}
-            {canCancel ? (
-              <Button
-                variant="destructive"
-                className={actionClass}
-                onClick={() => setCancelOpen(true)}
-              >
-                {t("inspections.actions.cancelInspection")}
-              </Button>
+            {hasMoreActions ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 md:h-9 md:w-9"
+                      aria-label={t("nav.more")}
+                    />
+                  }
+                >
+                  <MoreHorizontalIcon aria-hidden />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-52">
+                  {canAssign ? (
+                    <DropdownMenuItem onClick={() => setAssignOpen(true)}>
+                      <UserPlusIcon aria-hidden />
+                      {t("inspections.actions.assign")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canReview ? (
+                    <>
+                      <DropdownMenuItem onClick={() => setApprovalMode("approve")}>
+                        <CheckIcon aria-hidden />
+                        {t("inspections.actions.approve")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setApprovalMode("reject")}
+                      >
+                        <XIcon aria-hidden />
+                        {t("inspections.actions.reject")}
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                  {canUpdateOutcome ? (
+                    <DropdownMenuItem onClick={() => setOutcomeOpen(true)}>
+                      <BadgeCheckIcon aria-hidden />
+                      {t("inspections.actions.updateOutcome")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canReinspect ? (
+                    <DropdownMenuItem onClick={() => setReinspectOpen(true)}>
+                      <RotateCcwIcon aria-hidden />
+                      {t("inspections.actions.reinspect")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canCancel ? (
+                    <>
+                      {(canAssign || canReview || canUpdateOutcome || canReinspect) && (
+                        <DropdownMenuSeparator />
+                      )}
+                      <DropdownMenuItem variant="destructive" onClick={() => setCancelOpen(true)}>
+                        <XIcon aria-hidden />
+                        {t("inspections.actions.cancelInspection")}
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : null}
           </>
         }
       />
 
-      <Tabs defaultValue="overview">
-        <div className="-mx-4 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
-          <TabsList variant="line" className="h-10 w-max min-w-full justify-start">
-            <TabsTrigger value="overview">{t("inspections.tabs.overview")}</TabsTrigger>
-            <TabsTrigger value="checklist">{t("inspections.tabs.checklist")}</TabsTrigger>
-            <TabsTrigger value="findings">{t("inspections.tabs.findings")}</TabsTrigger>
-            <TabsTrigger value="photos">{t("inspections.tabs.photos")}</TabsTrigger>
-            <TabsTrigger value="recommendations">
-              {t("inspections.tabs.recommendations")}
-            </TabsTrigger>
-            <TabsTrigger value="review">{t("inspections.tabs.review")}</TabsTrigger>
-            <TabsTrigger value="history">{t("inspections.tabs.history")}</TabsTrigger>
-          </TabsList>
+      <section className="bg-card grid gap-3 rounded-2xl border p-4 shadow-none sm:grid-cols-[1fr_auto] sm:items-center sm:gap-6">
+        <div className="grid min-w-0 gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium tracking-tight">{t("inspections.detail.progress")}</p>
+            <p className="text-muted-foreground text-xs tabular-nums">
+              {t("inspections.progress.items", {
+                completed: inspection.progress.itemsCompleted,
+                total: inspection.progress.itemsTotal,
+              })}
+              {" · "}
+              {progressPct}%
+            </p>
+          </div>
+          <InspectionProgressBar
+            completed={inspection.progress.itemsCompleted}
+            total={inspection.progress.itemsTotal}
+          />
+        </div>
+        <dl className="flex flex-wrap gap-x-5 gap-y-2 text-sm sm:justify-end">
+          <div className="grid gap-0.5">
+            <dt className="text-muted-foreground text-xs">{t("inspections.fields.score")}</dt>
+            <dd className="font-medium tabular-nums">
+              {inspection.overallScore != null ? `${inspection.overallScore}%` : "—"}
+            </dd>
+          </div>
+          <div className="grid gap-0.5">
+            <dt className="text-muted-foreground text-xs">
+              {t("inspections.fields.criticalFindings")}
+            </dt>
+            <dd
+              className={cn(
+                "font-medium tabular-nums",
+                inspection.progress.criticalFindings > 0 && "text-rose-700 dark:text-rose-300",
+              )}
+            >
+              {inspection.progress.criticalFindings}
+            </dd>
+          </div>
+          <div className="grid gap-0.5">
+            <dt className="text-muted-foreground text-xs">{t("inspections.fields.failedItems")}</dt>
+            <dd className="font-medium tabular-nums">{inspection.progress.failedItems}</dd>
+          </div>
+          <div className="grid gap-0.5">
+            <dt className="text-muted-foreground text-xs">{t("inspections.fields.photos")}</dt>
+            <dd className="font-medium tabular-nums">{inspection.progress.photosCount}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <Tabs defaultValue="overview" className="gap-4">
+        <div
+          className={cn(
+            "bg-background/95 supports-backdrop-filter:bg-background/90 sticky z-10 border-b backdrop-blur-md",
+            // Cancel #main py-5 / lg:py-8 so the bar sits flush under the app header.
+            "-top-5 -mx-4 px-4 py-2 md:-mx-6 md:px-6 lg:-top-8 lg:-mx-8 lg:px-8",
+          )}
+        >
+          <div className="bg-muted/40 overflow-x-auto rounded-2xl border p-1.5">
+            <TabsList
+              variant="default"
+              className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0"
+            >
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className={cn(
+                      "h-10 shrink-0 rounded-xl px-3.5 text-sm font-medium",
+                      "data-active:bg-background data-active:text-foreground data-active:shadow-sm",
+                      "dark:data-active:bg-background",
+                    )}
+                  >
+                    <Icon data-icon="inline-start" aria-hidden />
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
         </div>
 
-        <TabsContent value="overview" className="pt-2">
+        <TabsContent value="overview" className="outline-none">
           <Overview inspection={inspection} />
         </TabsContent>
-        <TabsContent value="checklist" className="pt-2">
+        <TabsContent value="checklist" className="outline-none">
           <ChecklistTab inspection={inspection} />
         </TabsContent>
-        <TabsContent value="findings" className="pt-2">
+        <TabsContent value="findings" className="outline-none">
           <div className="grid gap-4">
             <InspectionFindingsList
               findings={inspection.findings}
@@ -480,7 +600,7 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
             />
           </div>
         </TabsContent>
-        <TabsContent value="photos" className="pt-2">
+        <TabsContent value="photos" className="outline-none">
           <InspectionPhotosGrid
             photos={inspection.photos}
             canRemove={canRemovePhotos}
@@ -488,37 +608,13 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
             onRemove={handleRemovePhoto}
           />
         </TabsContent>
-        <TabsContent value="recommendations" className="pt-2">
-          {inspection.recommendations.length === 0 ? (
-            <EmptyState
-              title={t("inspections.empty.recommendationsTitle")}
-              description={t("inspections.empty.recommendationsHint")}
-            />
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {inspection.recommendations.map((item) => (
-                <li key={item.id} className="bg-card rounded-xl border p-4 text-sm">
-                  <p className="font-medium">
-                    {t(`inspections.recommendations.${item.recommendation}`)}
-                  </p>
-                  {item.notes ? (
-                    <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{item.notes}</p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </TabsContent>
-        <TabsContent value="review" className="pt-2">
+        <TabsContent value="review" className="outline-none">
           <DetailCard title={t("inspections.detail.review")}>
             <DetailItem
               label={t("inspections.fields.reviewedBy")}
               value={inspection.reviewedByName}
             />
-            <DetailItem
-              label={t("inspections.fields.reviewNote")}
-              value={inspection.reviewNote}
-            />
+            <DetailItem label={t("inspections.fields.reviewNote")} value={inspection.reviewNote} />
             <DetailItem
               label={t("inspections.fields.rejectionReason")}
               value={inspection.rejectionReason}
@@ -529,7 +625,7 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
             />
           </DetailCard>
         </TabsContent>
-        <TabsContent value="history" className="pt-2">
+        <TabsContent value="history" className="outline-none">
           <InspectionTimeline inspectionId={inspection.id} />
         </TabsContent>
       </Tabs>
@@ -549,6 +645,14 @@ export function InspectionDetailClient({ inspectionId }: { inspectionId: string 
         inspectionId={inspection.id}
         open={reinspectOpen}
         onOpenChange={setReinspectOpen}
+      />
+      <InspectionOutcomeDialog
+        inspectionId={inspection.id}
+        vehicleId={inspection.vehicleId}
+        open={outcomeOpen}
+        onOpenChange={setOutcomeOpen}
+        currentResult={inspection.result}
+        hasCritical={inspection.progress.criticalFindings > 0}
       />
       {approvalMode ? (
         <InspectionApprovalDialog

@@ -21,11 +21,13 @@ import {
   rejectInspectionRequest,
   reinspectRequest,
   saveInspectionDraftRequest,
+  updateInspectionOutcomeRequest,
   startInspectionRequest,
   submitInspectionRequest,
   updateFindingRequest,
   updateInspectionRequest,
 } from "@/lib/inspections/api-client";
+import { vehicleKeys } from "@/hooks/use-vehicles";
 import type {
   ApproveInspectionValues,
   AssignInspectionValues,
@@ -39,6 +41,7 @@ import type {
   SaveInspectionDraftValues,
   SubmitInspectionValues,
   UpdateInspectionFindingValues,
+  UpdateInspectionOutcomeValues,
   UpdateInspectionValues,
 } from "@/lib/validation/inspection";
 
@@ -135,13 +138,28 @@ export function useVehicleInspections(vehicleId: string) {
 export function useInspectionMutations(inspectionId?: string) {
   const queryClient = useQueryClient();
 
-  const invalidate = async () => {
+  const invalidate = async (vehicleId?: string | null) => {
     await queryClient.invalidateQueries({ queryKey: inspectionKeys.all });
     if (inspectionId) {
       await queryClient.invalidateQueries({ queryKey: inspectionKeys.detail(inspectionId) });
       await queryClient.invalidateQueries({ queryKey: inspectionKeys.history(inspectionId) });
       await queryClient.invalidateQueries({ queryKey: inspectionKeys.activity(inspectionId) });
     }
+    if (vehicleId) {
+      await queryClient.invalidateQueries({ queryKey: vehicleKeys.detail(vehicleId) });
+      await queryClient.invalidateQueries({ queryKey: vehicleKeys.history(vehicleId) });
+      await queryClient.invalidateQueries({ queryKey: vehicleKeys.readyForSale(vehicleId) });
+      await queryClient.invalidateQueries({ queryKey: inspectionKeys.vehicle(vehicleId) });
+    }
+    await queryClient.invalidateQueries({ queryKey: vehicleKeys.all });
+  };
+
+  const refresh = () => {
+    void invalidate();
+  };
+
+  const refreshVehicle = (data: { vehicleId: string }) => {
+    void invalidate(data.vehicleId);
   };
 
   const create = useMutation({
@@ -150,7 +168,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const update = useMutation({
@@ -160,7 +178,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const saveDraft = useMutation({
@@ -170,7 +188,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const assign = useMutation({
@@ -180,7 +198,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const start = useMutation({
@@ -190,7 +208,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const submit = useMutation({
@@ -200,7 +218,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const approve = useMutation({
@@ -210,7 +228,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const reject = useMutation({
@@ -220,7 +238,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const cancel = useMutation({
@@ -230,7 +248,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const reinspect = useMutation({
@@ -240,7 +258,17 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
+  });
+
+  const updateOutcome = useMutation({
+    mutationFn: async (body: UpdateInspectionOutcomeValues) => {
+      if (!inspectionId) throw new Error("Missing inspection id");
+      const result = await updateInspectionOutcomeRequest(inspectionId, body);
+      if (result.status === "error") throw new Error(result.message);
+      return result.data;
+    },
+    onSuccess: refreshVehicle,
   });
 
   const changeStatus = useMutation({
@@ -250,7 +278,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refreshVehicle,
   });
 
   const addFinding = useMutation({
@@ -260,7 +288,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const updateFinding = useMutation({
@@ -276,7 +304,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const deleteFinding = useMutation({
@@ -286,7 +314,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const addPhoto = useMutation({
@@ -296,7 +324,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw mutationError(result);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   const deletePhoto = useMutation({
@@ -306,7 +334,7 @@ export function useInspectionMutations(inspectionId?: string) {
       if (result.status === "error") throw new Error(result.message);
       return result.data;
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   });
 
   return {
@@ -320,6 +348,7 @@ export function useInspectionMutations(inspectionId?: string) {
     reject,
     cancel,
     reinspect,
+    updateOutcome,
     changeStatus,
     addFinding,
     updateFinding,

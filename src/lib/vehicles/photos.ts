@@ -182,17 +182,28 @@ export async function getPrimaryPhotoUrls(
   if (vehicleIds.length === 0) return result;
 
   const supabase = await createClient();
+  // Prefer primary photo; otherwise first by sort_order (gallery fallback).
   const { data } = await supabase
     .from("vehicle_photos")
-    .select("vehicle_id, storage_path")
+    .select("vehicle_id, storage_path, is_primary, sort_order")
     .in("vehicle_id", vehicleIds)
-    .eq("is_primary", true);
+    .order("is_primary", { ascending: false })
+    .order("sort_order", { ascending: true });
 
-  const rows = (data ?? []) as Array<{ vehicle_id: string; storage_path: string }>;
+  const chosen = new Map<string, string>();
+  for (const row of (data ?? []) as Array<{
+    vehicle_id: string;
+    storage_path: string;
+  }>) {
+    if (!chosen.has(row.vehicle_id)) {
+      chosen.set(row.vehicle_id, row.storage_path);
+    }
+  }
+
   await Promise.all(
-    rows.map(async (row) => {
-      const { url } = await createSignedStorageUrl("vehicle-photos", row.storage_path, 60 * 30);
-      result.set(row.vehicle_id, url);
+    [...chosen.entries()].map(async ([vehicleId, storagePath]) => {
+      const { url } = await createSignedStorageUrl("vehicle-photos", storagePath, 60 * 30);
+      result.set(vehicleId, url);
     }),
   );
   return result;
@@ -234,7 +245,7 @@ export async function addVehiclePhoto(
 
   const isFirst = (count ?? 0) === 0;
   let makePrimary = Boolean(values.isPrimary) || isFirst;
-  if (!makePrimary && values.category === "front") {
+  if (!makePrimary) {
     const { count: primaryCount } = await supabase
       .from("vehicle_photos")
       .select("id", { count: "exact", head: true })

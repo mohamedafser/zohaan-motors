@@ -17,8 +17,10 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { ListPagination } from "@/components/tables/list-pagination";
 import { ListSkeleton } from "@/components/tables/list-skeleton";
+import { ViewModeToggle } from "@/components/tables/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useInspectionList } from "@/hooks/use-inspections";
+import { useListViewMode } from "@/hooks/use-list-view-mode";
 import { usePermission } from "@/hooks/use-permission";
 import { Link } from "@/lib/i18n/navigation";
 
@@ -27,6 +29,7 @@ export function InspectionsPageClient() {
   const { can } = usePermission();
   const searchParams = useSearchParams();
   const { update } = useInspectionUrlState();
+  const { mode, setMode } = useListViewMode("zohaan.inspections.viewMode", "list");
 
   const apiQuery = buildApiQuery(searchParams);
   const { data, isLoading, error, refetch, isFetching } = useInspectionList(apiQuery);
@@ -51,7 +54,7 @@ export function InspectionsPageClient() {
 
       <InspectionSummary summary={data?.summary} />
 
-      <InspectionFilters />
+      <InspectionFilters actions={<ViewModeToggle mode={mode} onChange={setMode} />} />
 
       {isLoading ? <ListSkeleton /> : null}
 
@@ -83,7 +86,7 @@ export function InspectionsPageClient() {
 
       {data && data.items.length > 0 ? (
         <>
-          <InspectionTable inspections={data.items} />
+          <InspectionTable inspections={data.items} viewMode={mode} />
 
           <ListPagination
             namespace="inspections"

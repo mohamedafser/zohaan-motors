@@ -13,6 +13,28 @@ export const VEHICLE_STATUSES = [
 
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number];
 
+/** New vs used — separate from cosmetic `condition` (excellent/good/…). */
+export const VEHICLE_MARKET_TYPES = ["new", "used"] as const;
+export type VehicleMarketType = (typeof VEHICLE_MARKET_TYPES)[number];
+
+/** Inspection summary filters on inventory list (not vehicle status). */
+export const VEHICLE_INSPECTION_FILTERS = [
+  "not_inspected",
+  "in_progress",
+  "pass",
+  "pass_with_issues",
+  "fail",
+  "approved",
+] as const;
+export type VehicleInspectionFilter = (typeof VEHICLE_INSPECTION_FILTERS)[number];
+
+export type VehicleListInspectionInfo = {
+  id: string | null;
+  status: string | null;
+  result: string | null;
+  label: VehicleInspectionFilter;
+};
+
 export const TRANSMISSION_TYPES = ["automatic", "manual", "cvt", "other"] as const;
 export type TransmissionType = (typeof TRANSMISSION_TYPES)[number];
 
@@ -67,6 +89,7 @@ export type VehicleListItem = {
   year: number;
   mileage: number;
   mileageUnit: MileageUnit;
+  marketType: VehicleMarketType;
   status: VehicleStatus;
   branchId: string;
   branchName: string | null;
@@ -80,6 +103,7 @@ export type VehicleListItem = {
   purchaseDate: string | null;
   currentSellingPrice: number | null;
   primaryPhotoUrl?: string | null;
+  inspection?: VehicleListInspectionInfo | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -99,6 +123,9 @@ export type VehicleDetail = VehicleListItem & {
   condition: string | null;
   makeId: string | null;
   modelId: string | null;
+  modelYearId: string | null;
+  variantId: string | null;
+  customVariant: string | null;
   archivedAt: string | null;
   createdBy: string | null;
   updatedBy: string | null;
@@ -168,12 +195,64 @@ export type LocationOption = {
 export type MakeOption = {
   id: string;
   name: string;
+  nameAr?: string | null;
+  slug?: string;
 };
 
 export type ModelOption = {
   id: string;
   makeId: string;
   name: string;
+  nameAr?: string | null;
+  slug?: string;
+};
+
+/** Sentinel value for inventory “Other / custom variant” option. */
+export const CUSTOM_VARIANT_VALUE = "__custom__" as const;
+
+export type CatalogMake = {
+  id: string;
+  name: string;
+  nameAr: string | null;
+  slug: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+export type CatalogModel = {
+  id: string;
+  makeId: string;
+  name: string;
+  nameAr: string | null;
+  slug: string;
+  vehicleType: string | null;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+export type CatalogModelYear = {
+  id: string;
+  modelId: string;
+  year: number;
+  market: string;
+  isActive: boolean;
+};
+
+export type CatalogVariant = {
+  id: string;
+  modelYearId: string;
+  name: string;
+  nameAr: string | null;
+  slug: string;
+  engine: string | null;
+  engineCapacity: number | null;
+  fuelType: FuelType | null;
+  transmission: TransmissionType | null;
+  drivetrain: DriveType | null;
+  bodyType: string | null;
+  seatingCapacity: number | null;
+  isActive: boolean;
+  sortOrder: number;
 };
 
 export type VehicleListResult = {

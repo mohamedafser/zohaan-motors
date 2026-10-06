@@ -546,7 +546,7 @@ function AcquisitionFormBody({
               />
             </FormField>
             <FormField
-              label={t("acquisitions.fields.make")}
+              label={t("acquisitions.fields.brand")}
               htmlFor="vehicle.make"
               error={vehicleError("make")}
             >

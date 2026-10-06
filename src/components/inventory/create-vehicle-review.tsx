@@ -109,10 +109,14 @@ export function CreateVehicleReview({
           <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <ReviewField label={t("inventory.fields.vin")} value={vehicle.vin} />
             <ReviewField label={t("inventory.fields.chassisNumber")} value={vehicle.chassisNumber} />
-            <ReviewField label={t("inventory.fields.make")} value={vehicle.make} />
+            <ReviewField label={t("inventory.fields.brand")} value={vehicle.make} />
             <ReviewField label={t("inventory.fields.model")} value={vehicle.model} />
             <ReviewField label={t("inventory.fields.variant")} value={vehicle.variant} />
             <ReviewField label={t("inventory.fields.year")} value={vehicle.year} />
+            <ReviewField
+              label={t("inventory.fields.marketType")}
+              value={t(`inventory.enums.marketType.${vehicle.marketType}`)}
+            />
             <ReviewField
               label={t("inventory.fields.mileage")}
               value={`${vehicle.mileage} ${t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`)}`}
@@ -240,15 +244,18 @@ export function CreateVehicleReview({
                   <ul className="grid gap-2">
                     {documents.map((doc) => {
                       const isImage = doc.file.type.startsWith("image/");
+                      const previewUrl =
+                        doc.previewUrl ||
+                        (typeof URL !== "undefined" ? URL.createObjectURL(doc.file) : "");
                       return (
                         <li
                           key={doc.localId}
                           className="bg-muted/30 flex items-start gap-3 rounded-xl border p-3"
                         >
-                          {isImage ? (
+                          {isImage && previewUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element -- local blob preview
                             <img
-                              src={doc.previewUrl}
+                              src={previewUrl}
                               alt={doc.title || doc.file.name}
                               className="size-14 shrink-0 rounded-lg object-cover"
                             />
@@ -273,14 +280,19 @@ export function CreateVehicleReview({
                                 {doc.notes}
                               </p>
                             ) : null}
-                            <a
-                              href={doc.previewUrl}
-                              target="_blank"
-                              rel="noreferrer"
+                            <button
+                              type="button"
                               className="text-primary w-fit text-xs font-medium underline-offset-2 hover:underline"
+                              onClick={() => {
+                                const url = doc.previewUrl || URL.createObjectURL(doc.file);
+                                window.open(url, "_blank", "noopener,noreferrer");
+                                if (!doc.previewUrl) {
+                                  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                                }
+                              }}
                             >
                               {t("acquisitions.documents.view")}
-                            </a>
+                            </button>
                           </div>
                         </li>
                       );
@@ -301,22 +313,21 @@ export function CreateVehicleReview({
         {photos.length === 0 ? (
           <p className="text-muted-foreground text-sm">{t("inventory.stepper.review.photosNone")}</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {photos.map((photo) => (
-              <li key={photo.localId} className="overflow-hidden rounded-xl border">
+              <li key={photo.localId} className="relative overflow-hidden rounded-xl border">
                 {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
                 <img
                   src={photo.previewUrl}
-                  alt={t(`inventory.photos.categories.${photo.category}`)}
-                  className="aspect-square w-full object-cover"
+                  alt={photo.file.name}
+                  className="aspect-[4/3] w-full object-cover"
                 />
-                <div className="grid gap-0.5 p-2 text-xs">
-                  <p className="font-medium">{t(`inventory.photos.categories.${photo.category}`)}</p>
-                  <p className="text-muted-foreground truncate">{photo.file.name}</p>
-                  {photo.isPrimary ? (
-                    <p className="text-primary font-medium">{t("inventory.photos.primary")}</p>
-                  ) : null}
-                </div>
+                {photo.isPrimary ? (
+                  <span className="bg-primary text-primary-foreground absolute start-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-medium">
+                    {t("inventory.photos.primary")}
+                  </span>
+                ) : null}
+                <p className="text-muted-foreground truncate px-2 py-1.5 text-xs">{photo.file.name}</p>
               </li>
             ))}
           </ul>

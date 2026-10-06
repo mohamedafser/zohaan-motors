@@ -1,8 +1,9 @@
 "use client";
 
-import { XIcon } from "lucide-react";
+import { ChevronDownIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -82,14 +83,75 @@ export function FilterChip({
 export function FilterGroup({
   title,
   children,
+  dense = false,
+  collapsible = false,
+  defaultOpen,
+  activeCount = 0,
 }: {
   title: string;
   children: React.ReactNode;
+  /** Single-column layout for filter drawers. */
+  dense?: boolean;
+  /** Accordion-style section for filter drawers. */
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  /** Highlights the section when it contributes active filters. */
+  activeCount?: number;
 }) {
+  const initiallyOpen = defaultOpen ?? (collapsible ? activeCount > 0 : true);
+  const [open, setOpen] = useState(initiallyOpen);
+
+  useEffect(() => {
+    if (activeCount > 0) setOpen(true);
+  }, [activeCount]);
+
+  const fields = (
+    <div className={cn("grid gap-3", dense ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4")}>
+      {children}
+    </div>
+  );
+
+  if (!collapsible) {
+    return (
+      <div className="grid gap-3">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {title}
+        </p>
+        {fields}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-3">
-      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{title}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{children}</div>
+    <div
+      className={cn(
+        "bg-background overflow-hidden rounded-xl border transition-colors",
+        activeCount > 0 ? "border-foreground/15" : "border-border",
+      )}
+    >
+      <button
+        type="button"
+        className="hover:bg-muted/50 flex w-full items-center gap-2 px-3.5 py-3 text-start transition-colors"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="min-w-0 flex-1 text-sm font-medium tracking-tight">{title}</span>
+        {activeCount > 0 ? (
+          <Badge variant="secondary" className="tabular-nums">
+            {activeCount}
+          </Badge>
+        ) : null}
+        <ChevronDownIcon
+          className={cn(
+            "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
+            open && "rotate-180",
+          )}
+          aria-hidden
+        />
+      </button>
+      {open ? (
+        <div className="border-border/70 space-y-0 border-t px-3.5 py-3.5">{fields}</div>
+      ) : null}
     </div>
   );
 }

@@ -187,9 +187,8 @@ function DraftManager({
       title = `${defaultTitle} ${sameCategoryCount + 1}`;
     }
 
-    const previewUrl = values.file.type.startsWith("image/")
-      ? URL.createObjectURL(values.file)
-      : "";
+    // Always create a blob URL so PDFs/images can be opened from Review / View.
+    const previewUrl = URL.createObjectURL(values.file);
 
     onChange([
       ...documents,
@@ -301,16 +300,46 @@ function DraftManager({
                   }
                   errorMessage={doc.errorMessage}
                   actions={
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={disabled || loading || status === "waiting"}
-                      onClick={() => removeLocal(doc.localId)}
-                    >
-                      <Trash2Icon className="size-4" aria-hidden />
-                      {t("acquisitions.documents.remove")}
-                    </Button>
+                    <>
+                      {doc.previewUrl ? (
+                        <a
+                          href={doc.previewUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ExternalLinkIcon className="size-4" aria-hidden />
+                          {t("acquisitions.documents.view")}
+                        </a>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={disabled || loading || status === "waiting"}
+                          onClick={() => {
+                            const url = URL.createObjectURL(doc.file);
+                            window.open(url, "_blank", "noopener,noreferrer");
+                            // Revoke after the browser has a chance to load it.
+                            window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                          }}
+                        >
+                          <ExternalLinkIcon className="size-4" aria-hidden />
+                          {t("acquisitions.documents.view")}
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={disabled || loading || status === "waiting"}
+                        onClick={() => removeLocal(doc.localId)}
+                      >
+                        <Trash2Icon className="size-4" aria-hidden />
+                        {t("acquisitions.documents.remove")}
+                      </Button>
+                    </>
                   }
                 />
               );

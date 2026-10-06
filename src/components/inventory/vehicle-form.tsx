@@ -9,6 +9,7 @@ import type { z } from "zod";
 import { ErrorState } from "@/components/feedback/error-state";
 import { FormField } from "@/components/forms/form-field";
 import { bodyTypeKey, toDateInputValue } from "@/components/inventory/inventory-utils";
+import { VehicleCatalogFields } from "@/components/inventory/vehicle-catalog-fields";
 import { VehicleColorField } from "@/components/inventory/vehicle-color-field";
 import {
   BRANCH_ICON,
@@ -44,6 +45,7 @@ import {
   MILEAGE_UNITS,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
+  VEHICLE_MARKET_TYPES,
   type VehicleDetail,
 } from "@/types/vehicle";
 
@@ -86,6 +88,7 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
       year: undefined as unknown as number,
       mileage: 0,
       mileageUnit: "km",
+      marketType: "used",
       bodyType: "",
       transmission: null,
       fuelType: null,
@@ -105,6 +108,9 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
       description: "",
       makeId: "",
       modelId: "",
+      modelYearId: "",
+      variantId: "",
+      customVariant: "",
     };
   }
   return {
@@ -116,6 +122,7 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
     year: vehicle.year,
     mileage: vehicle.mileage,
     mileageUnit: vehicle.mileageUnit,
+    marketType: vehicle.marketType ?? "used",
     bodyType: vehicle.bodyType ?? "",
     transmission: vehicle.transmission,
     fuelType: vehicle.fuelType,
@@ -135,6 +142,9 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
     description: vehicle.description ?? "",
     makeId: vehicle.makeId ?? "",
     modelId: vehicle.modelId ?? "",
+    modelYearId: vehicle.modelYearId ?? "",
+    variantId: vehicle.variantId ?? "",
+    customVariant: vehicle.customVariant ?? "",
   };
 }
 
@@ -182,7 +192,17 @@ function VehicleFormBody({
   const { errors, isDirty } = form.formState;
 
   const branchId = useWatch({ control: form.control, name: "branchId" });
-  const makeValue = useWatch({ control: form.control, name: "make" });
+
+  // Resolve catalog ids from legacy text snapshots when FKs are missing.
+  useEffect(() => {
+    const values = form.getValues();
+    if (!values.makeId && values.make) {
+      const make = meta.makes.find(
+        (item) => item.name.toLowerCase() === values.make.trim().toLowerCase(),
+      );
+      if (make) form.setValue("makeId", make.id, { shouldDirty: false });
+    }
+  }, [form, meta.makes]);
 
   useEffect(() => {
     if (!fieldErrors) return;
@@ -192,17 +212,19 @@ function VehicleFormBody({
   }, [fieldErrors, form]);
 
   function enrich(values: VehicleFormValues): VehicleFormValues {
-    const make = meta.makes.find(
-      (item) => item.name.toLowerCase() === values.make.trim().toLowerCase(),
-    );
-    const model = make
-      ? meta.models.find(
-          (item) =>
-            item.makeId === make.id &&
-            item.name.toLowerCase() === values.model.trim().toLowerCase(),
-        )
-      : undefined;
-    return { ...values, makeId: make?.id ?? null, modelId: model?.id ?? null };
+    const make = values.makeId
+      ? meta.makes.find((item) => item.id === values.makeId)
+      : meta.makes.find((item) => item.name.toLowerCase() === values.make.trim().toLowerCase());
+    return {
+      ...values,
+      make: make?.name ?? values.make,
+      makeId: values.makeId ?? make?.id ?? null,
+      modelId: values.modelId,
+      modelYearId: values.modelYearId,
+      variantId: values.variantId,
+      customVariant: values.customVariant,
+      variant: values.customVariant ?? values.variant,
+    };
   }
 
   useImperativeHandle(formRef, () => ({
@@ -217,12 +239,6 @@ function VehicleFormBody({
   }));
 
   const locations = meta.locations.filter((location) => location.branchId === branchId);
-  const selectedMake = meta.makes.find(
-    (make) => make.name.toLowerCase() === (makeValue ?? "").trim().toLowerCase(),
-  );
-  const modelSuggestions = selectedMake
-    ? meta.models.filter((model) => model.makeId === selectedMake.id)
-    : [];
 
   const bodyTypes: string[] = [...BODY_TYPES];
   if (vehicle?.bodyType && !bodyTypes.includes(vehicle.bodyType)) bodyTypes.push(vehicle.bodyType);
@@ -358,16 +374,22 @@ function VehicleFormBody({
           className: "font-mono uppercase",
           autoCapitalize: "characters",
         })}
-        {textField("make", t("inventory.fields.make"), { list: "vehicle-makes", required: true })}
-        {textField("model", t("inventory.fields.model"), { list: "vehicle-models", required: true })}
-        {textField("variant", t("inventory.fields.variant"))}
-        {textField("year", t("inventory.fields.year"), {
-          type: "number",
-          inputMode: "numeric",
-          number: true,
-          placeholder: t("inventory.form.yearPlaceholder"),
-          required: true,
-        })}
+        <VehicleCatalogFields
+          control={form.control}
+          setValue={form.setValue}
+          makes={meta.makes}
+          errors={errors}
+          initialCustomVariant={Boolean(vehicle?.customVariant) && !vehicle?.variantId}
+        />
+        {selectField(
+          "marketType",
+          t("inventory.fields.marketType"),
+          VEHICLE_MARKET_TYPES.map((type) => ({
+            value: type,
+            label: t(`inventory.enums.marketType.${type}`),
+          })),
+          { required: true, optional: false },
+        )}
         {textField("mileage", t("inventory.fields.mileage"), {
           type: "number",
           inputMode: "numeric",
@@ -384,16 +406,6 @@ function VehicleFormBody({
           })),
           { searchable: false, optional: false, required: true },
         )}
-        <datalist id="vehicle-makes">
-          {meta.makes.map((make) => (
-            <option key={make.id} value={make.name} />
-          ))}
-        </datalist>
-        <datalist id="vehicle-models">
-          {modelSuggestions.map((model) => (
-            <option key={model.id} value={model.name} />
-          ))}
-        </datalist>
       </Section>
 
       <Section title={t("inventory.sections.specs")}>

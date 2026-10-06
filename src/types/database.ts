@@ -93,6 +93,9 @@ export type Database = {
       vehicle_pricing_history: GenericTable;
       vehicle_makes: GenericTable;
       vehicle_models: GenericTable;
+      vehicle_model_years: GenericTable;
+      vehicle_variants: GenericTable;
+      vehicle_catalog_mapping_unmatched: GenericTable;
       branch_locations: GenericTable;
       acquisitions: GenericTable;
       inspections: GenericTable;
@@ -355,6 +358,16 @@ export type Database = {
           p_inspection_id: string;
           p_note?: string | null;
           p_override_critical?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+      update_approved_inspection_outcome: {
+        Args: {
+          p_inspection_id: string;
+          p_result: string;
+          p_note?: string | null;
+          p_override_critical?: boolean;
+          p_vehicle_status?: string | null;
         };
         Returns: Record<string, unknown>;
       };

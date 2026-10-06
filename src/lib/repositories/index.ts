@@ -47,6 +47,7 @@ export {
   startInspection,
   submitInspection,
   approveInspection,
+  updateApprovedInspectionOutcome,
   rejectInspection,
   cancelInspection,
   requestReinspection,

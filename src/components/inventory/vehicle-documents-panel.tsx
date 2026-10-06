@@ -178,12 +178,6 @@ export function VehicleDocumentsPanel({ vehicleId }: { vehicleId: string }) {
                   {formatCurrency(costs.acquisitionExpenses ?? 0, locale)}
                 </dd>
               </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("inventory.documents.workshopCost")}</dt>
-                <dd className="font-medium tabular-nums">
-                  {formatCurrency(costs.workshopCost ?? 0, locale)}
-                </dd>
-              </div>
               <div className="flex justify-between gap-2 border-t border-border/60 pt-2 font-medium sm:col-span-2">
                 <dt>{t("inventory.documents.totalCost")}</dt>
                 <dd className="tabular-nums">
@@ -307,12 +301,6 @@ export function VehicleCostsPanel({ vehicleId }: { vehicleId: string }) {
           <span className="text-muted-foreground">{t("inventory.documents.acquisitionExpenses")}</span>
           <span className="font-medium tabular-nums">
             {formatCurrency(costs.acquisitionExpenses ?? 0, locale)}
-          </span>
-        </div>
-        <div className="flex justify-between gap-2">
-          <span className="text-muted-foreground">{t("inventory.documents.workshopCost")}</span>
-          <span className="font-medium tabular-nums">
-            {formatCurrency(costs.workshopCost ?? 0, locale)}
           </span>
         </div>
         <div className="flex justify-between gap-2">

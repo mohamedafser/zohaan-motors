@@ -9,6 +9,7 @@ import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
 import { usePermission } from "@/hooks/use-permission";
+import type { ListViewMode } from "@/hooks/use-list-view-mode";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -19,8 +20,14 @@ function vehicleLabel(item: AcquisitionListItem) {
   return [item.vehicleYear, item.vehicleMake, item.vehicleModel].filter(Boolean).join(" ") || "—";
 }
 
-/** Cards below `md`, table from `md` up (via ResponsiveTable). */
-export function AcquisitionTable({ acquisitions }: { acquisitions: AcquisitionListItem[] }) {
+/** Cards below `md`, table from `md` up (via ResponsiveTable), or forced list/grid. */
+export function AcquisitionTable({
+  acquisitions,
+  viewMode = "auto",
+}: {
+  acquisitions: AcquisitionListItem[];
+  viewMode?: ListViewMode | "auto";
+}) {
   const t = useTranslations();
   const locale = useAppLocale();
   const { can } = usePermission();
@@ -111,6 +118,8 @@ export function AcquisitionTable({ acquisitions }: { acquisitions: AcquisitionLi
           <Link
             href={`/acquisitions/${row.id}`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            data-row-stop
+            onClick={(event) => event.stopPropagation()}
           >
             {t("acquisitions.table.view")}
           </Link>
@@ -125,6 +134,8 @@ export function AcquisitionTable({ acquisitions }: { acquisitions: AcquisitionLi
     <ResponsiveTable
       columns={columns}
       rows={acquisitions}
+      viewMode={viewMode}
+      hrefForRow={(acquisition) => `/acquisitions/${acquisition.id}`}
       renderCard={(acquisition) => (
         <AcquisitionCard key={acquisition.id} acquisition={acquisition} />
       )}
