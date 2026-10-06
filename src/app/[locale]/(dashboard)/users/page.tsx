@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-import { ModuleScreen } from "@/components/layout/module-screen";
+import { requirePagePermission } from "@/lib/auth/authorize";
+import { listRoles, listUsers } from "@/lib/users/service";
+import { UsersPageClient } from "@/components/users/users-page-client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   return { title: t("modules.users.title") };
 }
 
-export default function Page() {
-  return (
-    <ModuleScreen
-      permission="user.manage"
-      titleKey="modules.users.title"
-      descriptionKey="modules.users.description"
-    />
-  );
+export default async function Page() {
+  await requirePagePermission("user.manage");
+
+  const [users, roles] = await Promise.all([listUsers(), listRoles()]);
+
+  return <UsersPageClient initialUsers={users} roles={roles} />;
 }

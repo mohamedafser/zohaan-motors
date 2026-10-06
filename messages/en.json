@@ -157,7 +157,8 @@
       "session": "The reset session expired. Request a new link.",
       "accountSuspended": "This account is suspended. Contact an administrator.",
       "accountDisabled": "This account is disabled. Contact an administrator.",
-      "unauthorized": "You do not have permission to perform this action."
+      "unauthorized": "You do not have permission to perform this action.",
+      "samePassword": "Choose a password different from your current one."
     }
   },
   "validation": {
@@ -376,11 +377,74 @@
     },
     "branches": {
       "title": "Branches",
-      "description": "Showrooms and yards."
+      "description": "Showrooms and yards.",
+      "create": "New branch",
+      "createTitle": "New branch",
+      "createDescription": "Add a showroom or yard. Staff can then be assigned to it.",
+      "createSuccess": "Branch created.",
+      "name": "Branch name",
+      "code": "Code",
+      "emirate": "Emirate",
+      "city": "City",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "active": "Active",
+      "inactive": "Inactive",
+      "empty": "No branches yet.",
+      "emirates": {
+        "abu_dhabi": "Abu Dhabi",
+        "dubai": "Dubai",
+        "sharjah": "Sharjah",
+        "ajman": "Ajman",
+        "umm_al_quwain": "Umm Al Quwain",
+        "ras_al_khaimah": "Ras Al Khaimah",
+        "fujairah": "Fujairah"
+      },
+      "errors": {
+        "unauthorized": "Only Super Admins can create branches.",
+        "codeExists": "A branch with this code already exists.",
+        "createFailed": "Could not create the branch. Try again."
+      }
     },
     "users": {
       "title": "Users",
-      "description": "People who can sign in to this workspace."
+      "description": "People who can sign in to this workspace.",
+      "invite": "Invite user",
+      "inviteTitle": "Invite user",
+      "inviteDescription": "They will receive an email with a link to set their password.",
+      "inviteSuccess": "Invitation sent.",
+      "editTitle": "Edit user",
+      "editSuccess": "User updated.",
+      "removeTitle": "Remove user",
+      "removeDescription": "This will immediately revoke their access. This cannot be undone.",
+      "removeSuccess": "User removed.",
+      "removeConfirm": "Remove",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined",
+      "noUsers": "No users yet. Invite someone to get started.",
+      "statusActive": "Active",
+      "statusInvited": "Invited",
+      "statusSuspended": "Suspended",
+      "statusDisabled": "Disabled",
+      "errors": {
+        "inviteFailed": "Could not send the invitation. Try again.",
+        "updateFailed": "Could not update the user.",
+        "removeFailed": "Could not remove the user.",
+        "alreadyExists": "A user with that email already exists.",
+        "notFound": "User not found.",
+        "unauthorized": "Only Super Admins can manage users.",
+        "emailNotConfigured": "Email sending isn't set up. Add the SMTP settings to .env.local.",
+        "emailFailed": "The invitation email could not be sent. Check the SMTP settings and try again."
+      },
+      "roleNames": {
+        "super_admin": "Super Admin",
+        "viewer": "Employee"
+      }
     },
     "roles": {
       "title": "Roles",

@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-import { ModuleScreen } from "@/components/layout/module-screen";
+import { BranchesPageClient } from "@/components/branches/branches-page-client";
+import { requirePagePermission } from "@/lib/auth/authorize";
+import { listBranchesForUser } from "@/lib/branches/service";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   return { title: t("modules.branches.title") };
 }
 
-export default function Page() {
+export default async function Page() {
+  const context = await requirePagePermission("branch.view");
+  const branches = await listBranchesForUser();
+
   return (
-    <ModuleScreen
-      permission="branch.view"
-      titleKey="modules.branches.title"
-      descriptionKey="modules.branches.description"
+    <BranchesPageClient
+      initialBranches={branches}
+      canCreate={context.roles.includes("super_admin")}
     />
   );
 }

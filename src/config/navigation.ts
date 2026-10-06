@@ -9,9 +9,7 @@ import {
   Handshake,
   LayoutDashboard,
   Receipt,
-  ScrollText,
   Settings,
-  Shield,
   UserCog,
   UserPlus,
   Users,
@@ -94,8 +92,6 @@ export const navigation: NavGroup[] = [
     items: [
       { href: "/branches", labelKey: "nav.branches", icon: Building2, permission: "branch.view" },
       { href: "/users", labelKey: "nav.users", icon: UserCog, permission: "user.manage" },
-      { href: "/roles", labelKey: "nav.roles", icon: Shield, permission: "role.manage" },
-      { href: "/audit-logs", labelKey: "nav.auditLogs", icon: ScrollText, permission: "audit.view" },
     ],
   },
   {
