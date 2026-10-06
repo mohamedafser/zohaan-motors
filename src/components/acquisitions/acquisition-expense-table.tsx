@@ -157,6 +157,7 @@ export function AcquisitionExpenseTable({
           />
         ) : (
           <ResponsiveTable
+            bare
             columns={columns}
             rows={expenses}
             renderCard={(expense) => (

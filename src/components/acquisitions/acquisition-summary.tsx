@@ -36,7 +36,7 @@ export function AcquisitionSummary({ summary }: { summary?: Summary }) {
             value={formatNumber(summary[key], locale)}
           />
         ) : (
-          <Skeleton key={key} className="h-[88px] rounded-xl" />
+          <Skeleton key={key} className="h-[104px] rounded-xl" />
         ),
       )}
     </section>

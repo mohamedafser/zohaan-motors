@@ -1,9 +1,18 @@
 "use client";
 
+import {
+  CircleCheckIcon,
+  CircleXIcon,
+  ClockIcon,
+  EyeIcon,
+  TimerIcon,
+  TriangleAlertIcon,
+  UserCheckIcon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useAppLocale } from "@/components/inventory/inventory-utils";
-import { KpiCard } from "@/components/cards/kpi-card";
+import { KpiCard, type KpiTone } from "@/components/cards/kpi-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils/currency";
 import type { InspectionSummary as Summary } from "@/types/inspection";
@@ -17,6 +26,16 @@ const summaryKeys = [
   "rejected",
   "criticalFindings",
 ] as const satisfies readonly (keyof Summary)[];
+
+const summaryVisuals = {
+  pending: { icon: ClockIcon, tone: "neutral" },
+  myInspections: { icon: UserCheckIcon, tone: "brand" },
+  inProgress: { icon: TimerIcon, tone: "info" },
+  awaitingReview: { icon: EyeIcon, tone: "warning" },
+  approved: { icon: CircleCheckIcon, tone: "success" },
+  rejected: { icon: CircleXIcon, tone: "danger" },
+  criticalFindings: { icon: TriangleAlertIcon, tone: "danger" },
+} satisfies Record<(typeof summaryKeys)[number], { icon: typeof ClockIcon; tone: KpiTone }>;
 
 export function InspectionSummary({ summary }: { summary?: Summary }) {
   const t = useTranslations();
@@ -33,9 +52,11 @@ export function InspectionSummary({ summary }: { summary?: Summary }) {
             key={key}
             label={t(`inspections.summary.${key}`)}
             value={formatNumber(summary[key], locale)}
+            icon={summaryVisuals[key].icon}
+            tone={summaryVisuals[key].tone}
           />
         ) : (
-          <Skeleton key={key} className="h-[88px] rounded-xl" />
+          <Skeleton key={key} className="h-[104px] rounded-xl" />
         ),
       )}
     </section>

@@ -15,8 +15,9 @@ import { AcquisitionSummary } from "@/components/acquisitions/acquisition-summar
 import { AcquisitionTable } from "@/components/acquisitions/acquisition-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
+import { ListPagination } from "@/components/tables/list-pagination";
+import { ListSkeleton } from "@/components/tables/list-skeleton";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAcquisitionList } from "@/hooks/use-acquisitions";
 import { usePermission } from "@/hooks/use-permission";
 import { Link } from "@/lib/i18n/navigation";
@@ -32,7 +33,6 @@ export function AcquisitionsPageClient() {
 
   const page = readPage(searchParams);
   const pageSize = readPageSize(searchParams);
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
   const filtered = hasActiveQuery(searchParams);
 
   return (
@@ -49,16 +49,11 @@ export function AcquisitionsPageClient() {
         }
       />
 
-      {data ? <AcquisitionSummary summary={data.summary} /> : <Skeleton className="h-24 w-full" />}
+      <AcquisitionSummary summary={data?.summary} />
 
       <AcquisitionFilters />
 
-      {isLoading ? (
-        <div className="grid gap-3">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      ) : null}
+      {isLoading ? <ListSkeleton /> : null}
 
       {error ? (
         <EmptyState
@@ -90,49 +85,14 @@ export function AcquisitionsPageClient() {
         <>
           <AcquisitionTable acquisitions={data.items} />
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-muted-foreground text-xs">
-              {t("pagination.showing", {
-                from: (page - 1) * pageSize + 1,
-                to: Math.min(page * pageSize, data.total),
-                total: data.total,
-              })}
-              {isFetching ? ` · ${t("actions.loading")}` : ""}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                className="border-input bg-background h-8 rounded-lg border px-2 text-sm"
-                value={String(pageSize)}
-                onChange={(event) => update({ pageSize: event.target.value, page: 1 })}
-                aria-label={t("pagination.pageSize")}
-              >
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => update({ page: page - 1 })}
-              >
-                {t("pagination.previous")}
-              </Button>
-              <span className="text-muted-foreground text-xs tabular-nums">
-                {page} / {totalPages}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => update({ page: page + 1 })}
-              >
-                {t("pagination.next")}
-              </Button>
-            </div>
-          </div>
+          <ListPagination
+            namespace="acquisitions"
+            page={page}
+            pageSize={pageSize}
+            total={data.total}
+            fetching={isFetching}
+            onChange={update}
+          />
         </>
       ) : null}
     </div>

@@ -31,21 +31,35 @@ export function NavLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2",
+        "group/nav relative flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2",
         collapsed && "justify-center px-0",
+        tone === "surface" && "h-11",
         tone === "sidebar" && "focus-visible:ring-sidebar-ring",
         tone === "surface" && "focus-visible:ring-ring",
         tone === "sidebar" &&
           (active
-            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--brand)] rtl:shadow-[inset_-2px_0_0_0_var(--brand)]"
-            : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"),
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"),
         tone === "surface" &&
-          (active
-            ? "bg-muted text-foreground"
-            : "text-foreground hover:bg-muted"),
+          (active ? "bg-brand-soft text-foreground" : "text-foreground hover:bg-muted"),
       )}
     >
-      <Icon className="size-4 shrink-0" aria-hidden />
+      {active && tone === "sidebar" ? (
+        <span
+          className={cn(
+            "bg-sidebar-primary absolute inset-y-2 w-1 rounded-e-full",
+            collapsed ? "-start-2.5" : "-start-3",
+          )}
+          aria-hidden
+        />
+      ) : null}
+      <Icon
+        className={cn(
+          "size-[1.125rem] shrink-0 transition-colors",
+          active && (tone === "sidebar" ? "text-sidebar-primary" : "text-brand"),
+        )}
+        aria-hidden
+      />
       <span className={cn("truncate", collapsed && "sr-only")}>{label}</span>
     </Link>
   );

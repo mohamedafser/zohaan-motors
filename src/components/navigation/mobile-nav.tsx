@@ -47,7 +47,7 @@ export function MobileNav() {
     <>
       <nav
         aria-label={t("nav.more")}
-        className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1 backdrop-blur lg:hidden"
+        className="border-border bg-background/90 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 shadow-[0_-4px_16px_-8px_hsl(var(--shadow-color)/0.12)] backdrop-blur-lg lg:hidden"
         style={{ paddingBottom: "calc(0.4rem + env(safe-area-inset-bottom))" }}
       >
         <ul className="grid grid-cols-5 items-end">
@@ -56,11 +56,11 @@ export function MobileNav() {
           <li className="flex justify-center">
             <button
               type="button"
-              className="bg-primary text-primary-foreground focus-visible:ring-ring -mt-4 flex size-12 items-center justify-center rounded-full shadow-sm outline-none focus-visible:ring-2"
+              className="bg-brand text-brand-foreground focus-visible:ring-ring ring-background -mt-5 flex size-14 items-center justify-center rounded-2xl shadow-md ring-4 outline-none transition-transform focus-visible:ring-2 active:scale-95"
               onClick={() => setCreateOpen(true)}
               aria-label={t("quick.title")}
             >
-              <PlusIcon className="size-5" />
+              <PlusIcon className="size-6" />
             </button>
           </li>
           {leads ? <MobileSlot item={leads} label={t("nav.leads")} pathname={pathname} /> : null}
@@ -68,12 +68,19 @@ export function MobileNav() {
             <button
               type="button"
               className={cn(
-                "flex w-full flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "group flex w-full flex-col items-center gap-1 rounded-lg px-1 py-1 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 moreOpen ? "text-foreground" : "text-muted-foreground",
               )}
               onClick={() => setMoreOpen(true)}
             >
-              <EllipsisIcon className="size-5" aria-hidden />
+              <span
+                className={cn(
+                  "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+                  moreOpen && "bg-brand-soft",
+                )}
+              >
+                <EllipsisIcon className="size-5" aria-hidden />
+              </span>
               {t("nav.more")}
             </button>
           </li>
@@ -90,7 +97,7 @@ export function MobileNav() {
             {filtered.map((group) => (
               <div key={group.id} className="space-y-1">
                 {group.labelKey ? (
-                  <p className="text-muted-foreground px-2 text-xs font-medium">
+                  <p className="text-muted-foreground px-3 text-[0.6875rem] font-semibold tracking-[0.08em] uppercase">
                     {t(group.labelKey as Parameters<typeof t>[0])}
                   </p>
                 ) : null}
@@ -112,16 +119,19 @@ export function MobileNav() {
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader>
             <SheetTitle>{t("quick.title")}</SheetTitle>
-            <SheetDescription>{t("common.comingSoon")}</SheetDescription>
+            <SheetDescription>{t("quick.description")}</SheetDescription>
           </SheetHeader>
-          <ul className="grid gap-1 px-4 pb-6">
+          <ul className="grid grid-cols-2 gap-3 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             {allowedQuickActions.map((action) => (
               <li key={action.href}>
                 <Link
                   href={action.href}
                   onClick={() => setCreateOpen(false)}
-                  className="hover:bg-muted focus-visible:ring-ring flex rounded-lg px-3 py-3 text-sm font-medium outline-none focus-visible:ring-2"
+                  className="bg-card hover:bg-muted focus-visible:ring-ring flex flex-col items-start gap-3 rounded-xl border p-4 text-sm font-medium shadow-xs outline-none focus-visible:ring-2 active:scale-[0.98]"
                 >
+                  <span className="bg-brand-soft text-brand flex size-10 items-center justify-center rounded-lg">
+                    <action.icon className="size-5" aria-hidden />
+                  </span>
                   {t(action.labelKey as Parameters<typeof t>[0])}
                 </Link>
               </li>
@@ -150,11 +160,18 @@ function MobileSlot({
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          active ? "text-foreground" : "text-muted-foreground",
+          "flex flex-col items-center gap-1 rounded-lg px-1 py-1 text-[0.7rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          active ? "text-foreground font-semibold" : "text-muted-foreground",
         )}
       >
-        <Icon className="size-5" aria-hidden />
+        <span
+          className={cn(
+            "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+            active && "bg-brand-soft text-brand",
+          )}
+        >
+          <Icon className="size-5" aria-hidden />
+        </span>
         {label}
       </Link>
     </li>

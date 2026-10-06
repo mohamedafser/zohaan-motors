@@ -1,8 +1,16 @@
 "use client";
 
+import {
+  BadgeCheckIcon,
+  CalendarClockIcon,
+  CarIcon,
+  ClipboardCheckIcon,
+  HandCoinsIcon,
+  WrenchIcon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { KpiCard } from "@/components/cards/kpi-card";
+import { KpiCard, type KpiTone } from "@/components/cards/kpi-card";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils/currency";
@@ -16,6 +24,15 @@ const summaryKeys = [
   "reserved",
   "sold",
 ] as const satisfies readonly (keyof InventorySummary)[];
+
+const summaryVisuals = {
+  total: { icon: CarIcon, tone: "neutral" },
+  readyForSale: { icon: BadgeCheckIcon, tone: "success" },
+  underInspection: { icon: ClipboardCheckIcon, tone: "info" },
+  underRepair: { icon: WrenchIcon, tone: "warning" },
+  reserved: { icon: CalendarClockIcon, tone: "brand" },
+  sold: { icon: HandCoinsIcon, tone: "violet" },
+} satisfies Record<(typeof summaryKeys)[number], { icon: typeof CarIcon; tone: KpiTone }>;
 
 export function VehicleSummary({ summary }: { summary?: InventorySummary }) {
   const t = useTranslations();
@@ -32,9 +49,11 @@ export function VehicleSummary({ summary }: { summary?: InventorySummary }) {
             key={key}
             label={t(`inventory.summary.${key}`)}
             value={formatNumber(summary[key], locale)}
+            icon={summaryVisuals[key].icon}
+            tone={summaryVisuals[key].tone}
           />
         ) : (
-          <Skeleton key={key} className="h-[88px] rounded-xl" />
+          <Skeleton key={key} className="h-[104px] rounded-xl" />
         ),
       )}
     </section>

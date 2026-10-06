@@ -85,7 +85,8 @@
     "customer": "New customer",
     "reservation": "New reservation",
     "sale": "New sale",
-    "workshop": "New workshop order"
+    "workshop": "New workshop order",
+    "description": "Start a new record"
   },
   "auth": {
     "login": {
@@ -289,7 +290,8 @@
       "inspection": "Inspection waiting",
       "reservation": "Reservation to confirm",
       "pricing": "Pricing to set"
-    }
+    },
+    "viewAll": "View all"
   },
   "modules": {
     "inventory": {

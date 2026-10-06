@@ -30,7 +30,7 @@ export function AppShell({ user, children }: { user: UserContext; children: Reac
               <HeaderBar user={user} />
               <main
                 id="main"
-                className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 lg:px-8 lg:py-6 lg:pb-8"
+                className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-6 lg:px-8 lg:py-8 lg:pb-10"
               >
                 {children}
               </main>

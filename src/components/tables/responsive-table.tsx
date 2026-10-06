@@ -18,15 +18,24 @@ export function ResponsiveTable<T extends { id: string }>({
   columns,
   rows,
   renderCard,
+  bare = false,
 }: {
   columns: TableColumn<T>[];
   rows: T[];
   renderCard: (row: T) => React.ReactNode;
+  /** Skip the framed container, e.g. when the table already sits inside a Card. */
+  bare?: boolean;
 }) {
   return (
     <>
       <div className="grid gap-3 md:hidden">{rows.map((row) => renderCard(row))}</div>
-      <div className="hidden md:block">
+      <div
+        className={
+          bare
+            ? "hidden md:block"
+            : "bg-card ring-foreground/[0.07] hidden overflow-hidden rounded-xl shadow-xs ring-1 md:block"
+        }
+      >
         <Table>
           <TableHeader>
             <TableRow>

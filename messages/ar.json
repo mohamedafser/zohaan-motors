@@ -85,7 +85,8 @@
     "customer": "عميل جديد",
     "reservation": "حجز جديد",
     "sale": "عملية بيع جديدة",
-    "workshop": "أمر ورشة جديد"
+    "workshop": "أمر ورشة جديد",
+    "description": "ابدأ سجلاً جديداً"
   },
   "auth": {
     "login": {
@@ -289,7 +290,8 @@
       "inspection": "فحص بانتظار التنفيذ",
       "reservation": "حجز بانتظار التأكيد",
       "pricing": "تسعير بانتظار التعيين"
-    }
+    },
+    "viewAll": "عرض الكل"
   },
   "modules": {
     "inventory": {

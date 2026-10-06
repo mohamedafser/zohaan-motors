@@ -23,7 +23,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
       href={`/inventory/${vehicle.id}`}
       className="focus-visible:ring-ring/50 block rounded-xl outline-none focus-visible:ring-3"
     >
-      <Card className="hover:bg-muted/40 overflow-hidden transition-colors">
+      <Card className="overflow-hidden pt-0 transition-shadow hover:shadow-md">
         <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
           {vehicle.primaryPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
@@ -38,14 +38,16 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               <ImageIcon className="size-8" aria-hidden />
             </div>
           )}
+          <div className="absolute start-3 top-3 rounded-full bg-white/90 shadow-sm backdrop-blur dark:bg-black/60">
+            <VehicleStatusBadge status={vehicle.status} />
+          </div>
         </div>
         <CardContent className="grid gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-muted-foreground text-xs tabular-nums">{vehicle.stockNumber}</p>
-              <p className="truncate text-base font-medium">{vehicleTitle(vehicle)}</p>
-            </div>
-            <VehicleStatusBadge status={vehicle.status} />
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs tabular-nums">{vehicle.stockNumber}</p>
+            <p className="truncate text-base font-semibold tracking-tight">
+              {vehicleTitle(vehicle)}
+            </p>
           </div>
           <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <span className="tabular-nums">
@@ -60,7 +62,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               <span className="truncate">{place || t("inventory.fields.notSet")}</span>
             </span>
             {showPrice ? (
-              <span className="font-medium tabular-nums">
+              <span className="text-base font-semibold tabular-nums">
                 {formatCurrency(vehicle.currentSellingPrice as number, locale)}
               </span>
             ) : null}

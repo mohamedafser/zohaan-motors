@@ -56,14 +56,14 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
       <Button
         type="button"
         variant="outline"
-        className="text-muted-foreground h-9 w-9 justify-center px-0 sm:w-56 sm:justify-start sm:px-3"
+        className="text-muted-foreground bg-muted/60 hover:bg-muted h-9 w-9 justify-center border-transparent px-0 shadow-none sm:w-64 sm:justify-start sm:px-3"
         onClick={() => onOpenChange(true)}
       >
         <SearchIcon />
         <span className="hidden truncate sm:inline">{t("search.placeholder")}</span>
         <kbd
           dir="ltr"
-          className="bg-muted text-muted-foreground ms-auto hidden rounded px-1.5 py-0.5 text-[0.65rem] lg:inline"
+          className="bg-background text-muted-foreground ms-auto hidden rounded border px-1.5 py-0.5 font-sans text-[0.65rem] font-medium lg:inline"
         >
           ⌘K
         </kbd>

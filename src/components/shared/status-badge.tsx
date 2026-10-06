@@ -59,10 +59,11 @@ export function StatusBadge({ status, label }: { status: string; label: string }
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-current/10 ring-inset",
         statusStyles[status] ?? "bg-muted text-foreground",
       )}
     >
+      <span className="size-1.5 shrink-0 rounded-full bg-current opacity-70" aria-hidden />
       {label}
     </span>
   );

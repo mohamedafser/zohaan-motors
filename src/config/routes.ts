@@ -1,3 +1,5 @@
+import { CarIcon, ClipboardCheckIcon, HandshakeIcon, UserPlusIcon } from "lucide-react";
+
 export const protectedPrefixes = [
   "/dashboard",
   "/inventory",
@@ -86,8 +88,13 @@ export const searchGroups = [
 ] as const;
 
 export const quickActions = [
-  { href: "/inventory/new", labelKey: "quick.vehicle", permission: "vehicle.create" },
-  { href: "/inspections/new", labelKey: "quick.inspection", permission: "inspection.create" },
-  { href: "/customers/new", labelKey: "quick.customer", permission: "customer.create" },
-  { href: "/sales/new", labelKey: "quick.sale", permission: "sale.create" },
+  { href: "/inventory/new", labelKey: "quick.vehicle", permission: "vehicle.create", icon: CarIcon },
+  {
+    href: "/inspections/new",
+    labelKey: "quick.inspection",
+    permission: "inspection.create",
+    icon: ClipboardCheckIcon,
+  },
+  { href: "/customers/new", labelKey: "quick.customer", permission: "customer.create", icon: UserPlusIcon },
+  { href: "/sales/new", labelKey: "quick.sale", permission: "sale.create", icon: HandshakeIcon },
 ] as const;

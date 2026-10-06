@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon } from "lucide-react";
+import { ChevronRightIcon, ImageIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
@@ -39,7 +39,7 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
         header: t("inventory.table.vehicle"),
         cell: (row) => (
           <div className="flex min-w-0 items-center gap-3">
-            <div className="bg-muted relative size-11 shrink-0 overflow-hidden rounded-lg border">
+            <div className="bg-muted relative h-11 w-16 shrink-0 overflow-hidden rounded-lg border">
               {row.primaryPhotoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
                 <img
@@ -106,9 +106,10 @@ export function VehicleTable({ vehicles }: { vehicles: VehicleListItem[] }) {
       cell: (row) => (
         <Link
           href={`/inventory/${row.id}`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
         >
           {t("inventory.table.view")}
+          <ChevronRightIcon data-icon="inline-end" className="rtl:rotate-180" />
         </Link>
       ),
     });
