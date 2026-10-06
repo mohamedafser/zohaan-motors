@@ -5,6 +5,7 @@ import {
   Car,
   ChartColumn,
   ClipboardCheck,
+  Library,
   FolderOpen,
   Handshake,
   LayoutDashboard,
@@ -92,6 +93,12 @@ export const navigation: NavGroup[] = [
     items: [
       { href: "/branches", labelKey: "nav.branches", icon: Building2, permission: "branch.view" },
       { href: "/users", labelKey: "nav.users", icon: UserCog, permission: "user.manage" },
+      {
+        href: "/vehicle-catalog",
+        labelKey: "nav.vehicleCatalog",
+        icon: Library,
+        permission: "settings.manage",
+      },
     ],
   },
   {

@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { LanguageSwitcher } from "@/components/navigation/language-switcher";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
-import { VehicleCatalogAdmin } from "@/components/settings/vehicle-catalog-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePagePermission } from "@/lib/auth/authorize";
 
@@ -54,7 +53,6 @@ export default async function SettingsPage() {
             <CardDescription>{t("settings.preferencesHint")}</CardDescription>
           </CardHeader>
         </Card>
-        <VehicleCatalogAdmin />
       </div>
     </div>
   );

@@ -42,7 +42,8 @@
     "home": "الرئيسية",
     "cars": "السيارات",
     "workshopJobs": "المهام",
-    "myWorkshopJobs": "مهامي"
+    "myWorkshopJobs": "مهامي",
+    "vehicleCatalog": "كتالوج المركبات"
   },
   "common": {
     "search": "بحث",
@@ -543,7 +544,11 @@
       "selectModel": "اختر طرازًا",
       "selectYear": "اختر سنة",
       "empty": "لا يوجد شيء هنا بعد.",
-      "manageHint": "يتطلب صلاحية إدارة الإعدادات."
+      "manageHint": "يتطلب صلاحية إدارة الإعدادات.",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "deleteConfirm": "حذف «{name}»؟"
     }
   },
   "media": {
