@@ -1,5 +1,9 @@
 # Zohaan Motors — Database Architecture (Phase 3)
 
+> This is the historical Phase 3 design; subsequent migrations change it, including
+> Workshop removal. For current definitions use `src/lib/db/schema/`, the
+> [Drizzle workflow](database-workflow.md), and the [current ERD](database-erd.md).
+
 This document describes the Supabase PostgreSQL schema created in Phase 3. Business UI modules and full RBAC/RLS policies are intentionally deferred to later phases.
 
 ## Goals

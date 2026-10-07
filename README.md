@@ -32,9 +32,24 @@ npm run dev
 
 Fill `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local`. Do not put the Supabase service-role key in any frontend variable.
 
-## Database (Phase 3)
+## Database and Drizzle ORM
 
-Schema, migrations, and seed live under `supabase/`. Architecture notes: [`docs/database.md`](docs/database.md).
+TypeScript entities and relations live under `src/lib/db/`. Supabase deploys SQL
+migrations and seeds from `supabase/`. See the [Drizzle workflow](docs/database-workflow.md),
+[current ERD](docs/database-erd.md), and [historical architecture](docs/database.md).
+
+```bash
+npm run db:erd
+npm run db:studio
+npm run db:generate -- --name=describe_schema_change
+npm run db:sync
+npm run db:check
+npm run db:test:drizzle
+```
+
+Configure server-only `DATABASE_URL` in `.env.local` to enable the integrated
+Drizzle catalog query. It must target the same Supabase project as the app's HTTP
+credentials. No baseline adoption is needed; Supabase retains migration ownership.
 
 ```bash
 # Local (requires Docker + Supabase CLI)
