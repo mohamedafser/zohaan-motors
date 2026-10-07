@@ -205,24 +205,24 @@ template_id as (
   select id from existing
   limit 1
 )
-insert into public.inspection_template_items (template_id, name, category, description, sort_order, is_required)
-select t.id, item.name, item.category, item.description, item.sort_order, true
+insert into public.inspection_template_items (template_id, section_key, name, category, description, sort_order, is_required)
+select t.id, item.section_key, item.name, item.category, item.description, item.sort_order, true
 from template_id t
 cross join (
   values
-    ('Body panels', 'Exterior', 'Check dents, scratches, and panel gaps', 10),
-    ('Paint condition', 'Exterior', 'Check paint consistency and repairs', 20),
-    ('Lights and indicators', 'Exterior', 'Check all exterior lights', 30),
-    ('Seats and cabin trim', 'Interior', 'Check wear, stains, and function', 40),
-    ('Controls and switches', 'Interior', 'Check cabin controls', 50),
-    ('Engine start and idle', 'Mechanical', 'Check cold/hot start and idle quality', 60),
-    ('Transmission operation', 'Mechanical', 'Check gear engagement', 70),
-    ('Battery and charging', 'Electrical', 'Check battery health and charging system', 80),
-    ('Infotainment and sensors', 'Electrical', 'Check electronics and warning lights', 90),
-    ('Tyre tread and condition', 'Tyres', 'Check tread depth and sidewall damage', 100),
-    ('Brakes and ABS', 'Safety', 'Check braking performance and ABS lights', 110),
-    ('Airbags and belts', 'Safety', 'Check restraint systems', 120)
-) as item(name, category, description, sort_order)
+    ('exterior', 'Body panels', 'Exterior', 'Check dents, scratches, and panel gaps', 10),
+    ('exterior', 'Paint condition', 'Exterior', 'Check paint consistency and repairs', 20),
+    ('exterior', 'Lights and indicators', 'Exterior', 'Check all exterior lights', 30),
+    ('interior', 'Seats and cabin trim', 'Interior', 'Check wear, stains, and function', 40),
+    ('interior', 'Controls and switches', 'Interior', 'Check cabin controls', 50),
+    ('engine', 'Engine start and idle', 'Mechanical', 'Check cold/hot start and idle quality', 60),
+    ('transmission', 'Transmission operation', 'Mechanical', 'Check gear engagement', 70),
+    ('electrical', 'Battery and charging', 'Electrical', 'Check battery health and charging system', 80),
+    ('electrical', 'Infotainment and sensors', 'Electrical', 'Check electronics and warning lights', 90),
+    ('tyres_wheels', 'Tyre tread and condition', 'Tyres', 'Check tread depth and sidewall damage', 100),
+    ('brakes', 'Brakes and ABS', 'Safety', 'Check braking performance and ABS lights', 110),
+    ('safety', 'Airbags and belts', 'Safety', 'Check restraint systems', 120)
+) as item(section_key, name, category, description, sort_order)
 where not exists (
   select 1
   from public.inspection_template_items i
