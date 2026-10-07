@@ -1,4 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
+import { isDrizzleConfigured, withUserDatabase } from "@/lib/db/client";
+import { vehicleMakes } from "@/lib/db/schema";
 import type {
   CatalogMake,
   CatalogModel,
@@ -116,6 +119,35 @@ export async function listCatalogMakes(options?: {
   includeInactive?: boolean;
   q?: string;
 }): Promise<ServiceResult<CatalogMake[]>> {
+  if (isDrizzleConfigured()) {
+    try {
+      const term = options?.q?.trim();
+      const data = await withUserDatabase((tx) =>
+        tx
+          .select({
+            id: vehicleMakes.id,
+            name: vehicleMakes.name,
+            nameAr: vehicleMakes.nameAr,
+            slug: vehicleMakes.slug,
+            isActive: vehicleMakes.isActive,
+            sortOrder: vehicleMakes.sortOrder,
+          })
+          .from(vehicleMakes)
+          .where(
+            and(
+              options?.includeInactive ? undefined : eq(vehicleMakes.isActive, true),
+              term
+                ? or(ilike(vehicleMakes.name, `%${term}%`), ilike(vehicleMakes.nameAr, `%${term}%`))
+                : undefined,
+            ),
+          )
+          .orderBy(asc(vehicleMakes.sortOrder), asc(vehicleMakes.name)),
+      );
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error: mapDbError(error instanceof Error ? error : {}) };
+    }
+  }
   const supabase = await createClient();
   let q = supabase
     .from("vehicle_makes")
@@ -385,9 +417,7 @@ export async function upsertCatalogYear(input: {
     ? supabase.from("vehicle_model_years").update(payload).eq("id", input.id)
     : supabase.from("vehicle_model_years").insert(payload);
 
-  const { data, error } = await query
-    .select("id, model_id, year, market, is_active")
-    .single();
+  const { data, error } = await query.select("id, model_id, year, market, is_active").single();
 
   if (error) return { data: null, error: mapDbError(error) };
   return { data: mapYear(data as Parameters<typeof mapYear>[0]), error: null };
@@ -452,10 +482,7 @@ export async function setCatalogActive(
 }
 
 export type CatalogTable =
-  | "vehicle_makes"
-  | "vehicle_models"
-  | "vehicle_model_years"
-  | "vehicle_variants";
+  "vehicle_makes" | "vehicle_models" | "vehicle_model_years" | "vehicle_variants";
 
 // Only renames (or changes the year); leaves active state, ordering and specs untouched.
 export async function updateCatalogItem(
@@ -466,7 +493,8 @@ export async function updateCatalogItem(
   const supabase = await createClient();
   let patch: Record<string, unknown>;
   if (table === "vehicle_model_years") {
-    if (!values.year) return { data: null, error: { code: "validation", message: "Year is required." } };
+    if (!values.year)
+      return { data: null, error: { code: "validation", message: "Year is required." } };
     patch = { year: values.year };
   } else {
     const name = values.name?.trim();
@@ -482,7 +510,9 @@ export async function updateCatalogItem(
   return { data: true, error: null };
 }
 
-const childOf: Partial<Record<CatalogTable, { table: CatalogTable; column: string; label: string }>> = {
+const childOf: Partial<
+  Record<CatalogTable, { table: CatalogTable; column: string; label: string }>
+> = {
   vehicle_makes: { table: "vehicle_models", column: "make_id", label: "model" },
   vehicle_models: { table: "vehicle_model_years", column: "model_id", label: "year" },
   vehicle_model_years: { table: "vehicle_variants", column: "model_year_id", label: "variant" },
@@ -518,7 +548,10 @@ export async function deleteCatalogItem(
     if (error.message?.includes("referenced by inventory") || error.code === "23503") {
       return {
         data: null,
-        error: { code: "in_use", message: "This is used by vehicles in inventory. Deactivate it instead." },
+        error: {
+          code: "in_use",
+          message: "This is used by vehicles in inventory. Deactivate it instead.",
+        },
       };
     }
     return { data: null, error: mapDbError(error) };
