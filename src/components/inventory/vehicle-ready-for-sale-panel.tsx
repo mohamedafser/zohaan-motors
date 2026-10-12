@@ -24,12 +24,6 @@ function actionHref(
   eligibility: ReadyForSaleEligibility,
 ): string | null {
   switch (action) {
-    case "view_inspection":
-      return eligibility.inspection?.id
-        ? `/inspections/${eligibility.inspection.id}`
-        : `/inventory/${vehicleId}?tab=inspection`;
-    case "create_inspection":
-      return `/inspections/new?vehicleId=${vehicleId}`;
     case "view_documents":
       return `/inventory/${vehicleId}?tab=documents`;
     default:
@@ -50,10 +44,6 @@ function actionAllowed(
   can: (permission: Parameters<ReturnType<typeof usePermission>["can"]>[0]) => boolean,
 ) {
   switch (action) {
-    case "view_inspection":
-      return can("inspection.view");
-    case "create_inspection":
-      return can("inspection.create");
     case "view_documents":
       return can("document.view") || can("vehicle.view");
     default:
@@ -70,7 +60,15 @@ const READY_CHECK_KEYS = new Set([
   "status",
 ]);
 
-const HIDDEN_CHECK_KEYS = new Set(["workshop", "quality_check"]);
+// Inspections are no longer part of the app; the DB treats them as optional.
+const HIDDEN_CHECK_KEYS = new Set([
+  "workshop",
+  "quality_check",
+  "inspection_completed",
+  "inspection_result",
+  "critical_findings",
+  "repairs",
+]);
 
 function checkLabel(
   check: { key: string; label: string },

@@ -13,6 +13,10 @@ export const VEHICLE_STATUSES = [
 
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number];
 
+/** Statuses the business uses. acquired = "In transit", reserved = "Booked" (labels only). */
+export const INVENTORY_STATUSES = ["acquired", "ready_for_sale", "reserved", "sold"] as const;
+export type InventoryStatus = (typeof INVENTORY_STATUSES)[number];
+
 /** New vs used — separate from cosmetic `condition` (excellent/good/…). */
 export const VEHICLE_MARKET_TYPES = ["new", "used"] as const;
 export type VehicleMarketType = (typeof VEHICLE_MARKET_TYPES)[number];
@@ -90,6 +94,8 @@ export type VehicleListItem = {
   mileage: number;
   mileageUnit: MileageUnit;
   marketType: VehicleMarketType;
+  /** For In transit cars: whether non-Super-Admin roles can see it. */
+  visibleToStaff: boolean;
   status: VehicleStatus;
   branchId: string;
   branchName: string | null;
@@ -172,6 +178,7 @@ export type VehicleActivityItem = {
 
 export type InventorySummary = {
   total: number;
+  inTransit: number;
   readyForSale: number;
   underInspection: number;
   underRepair: number;

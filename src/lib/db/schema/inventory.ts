@@ -328,6 +328,7 @@ export const vehicles = pgTable(
     makeId: uuid("make_id"),
     modelId: uuid("model_id"),
     marketType: vehicleMarketType("market_type").default("used").notNull(),
+    visibleToStaff: boolean("visible_to_staff").default(true).notNull(),
     modelYearId: uuid("model_year_id"),
     variantId: uuid("variant_id"),
     customVariant: text("custom_variant"),

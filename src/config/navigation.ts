@@ -1,18 +1,13 @@
 import {
-  Banknote,
   Bell,
   Building2,
+  CalendarCheck,
   Car,
-  ChartColumn,
-  ClipboardCheck,
   Library,
   FolderOpen,
-  Handshake,
   LayoutDashboard,
-  Receipt,
   Settings,
   UserCog,
-  UserPlus,
   Users,
 } from "lucide-react";
 
@@ -44,10 +39,11 @@ export const navigation: NavGroup[] = [
         permission: "vehicle.view",
       },
       {
-        href: "/inspections",
-        labelKey: "nav.inspections",
-        icon: ClipboardCheck,
-        permission: "inspection.view",
+        href: "/bookings",
+        labelKey: "nav.bookings",
+        icon: CalendarCheck,
+        mobile: "bookings",
+        permission: "reservation.view",
       },
     ],
   },
@@ -56,22 +52,6 @@ export const navigation: NavGroup[] = [
     labelKey: "nav.groups.crm",
     items: [
       { href: "/customers", labelKey: "nav.customers", icon: Users, permission: "customer.view" },
-      {
-        href: "/leads",
-        labelKey: "nav.leads",
-        icon: UserPlus,
-        mobile: "leads",
-        permission: "lead.view",
-      },
-    ],
-  },
-  {
-    id: "finance",
-    labelKey: "nav.groups.finance",
-    items: [
-      { href: "/sales", labelKey: "nav.sales", icon: Handshake, permission: "sale.view" },
-      { href: "/payments", labelKey: "nav.payments", icon: Banknote, permission: "payment.view" },
-      { href: "/invoices", labelKey: "nav.invoices", icon: Receipt, permission: "invoice.view" },
     ],
   },
   {
@@ -84,7 +64,6 @@ export const navigation: NavGroup[] = [
         icon: FolderOpen,
         permission: "document.view",
       },
-      { href: "/reports", labelKey: "nav.reports", icon: ChartColumn, permission: "report.view" },
     ],
   },
   {

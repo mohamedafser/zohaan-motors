@@ -21,7 +21,6 @@ import {
   TRANSMISSION_ICONS,
   bodyTypeIcon,
 } from "@/components/inventory/vehicle-select-icons";
-import { VEHICLE_INSPECTION_ICONS } from "@/components/inventory/vehicle-inspection-badge";
 import { DebouncedFilterInput, FilterGroup } from "@/components/shared/filter-controls";
 import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,14 +32,12 @@ import {
   FUEL_TYPES,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
-  VEHICLE_INSPECTION_FILTERS,
   VEHICLE_MARKET_TYPES,
   VEHICLE_SORT_FIELDS,
-  VEHICLE_STATUSES,
+  INVENTORY_STATUSES,
 } from "@/types/vehicle";
 
 const ADVANCED_KEYS = [
-  "inspection",
   "branchId",
   "locationId",
   "make",
@@ -126,16 +123,6 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
         label: t("inventory.filters.marketType"),
         value: t(`inventory.enums.marketType.${marketType}`),
         onRemove: () => update({ marketType: null }),
-      });
-    }
-
-    const inspection = searchParams.get("inspection");
-    if (inspection) {
-      items.push({
-        key: "inspection",
-        label: t("inventory.filters.inspection"),
-        value: t(`inventory.inspectionFilter.${inspection}`),
-        onRemove: () => update({ inspection: null }),
       });
     }
 
@@ -275,7 +262,7 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
             onValueChange={(value) => update({ status: value })}
             optional
             placeholder={t("inventory.filters.allStatuses")}
-            options={VEHICLE_STATUSES.map((status) => ({
+            options={INVENTORY_STATUSES.map((status) => ({
               value: status,
               label: t(`inventory.status.${status}`),
               icon: STATUS_ICONS[status],
@@ -303,29 +290,11 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
             collapsible
             defaultOpen
             activeCount={
-              ["inspection", "branchId", "locationId", "make", "model", "bodyType"].filter((key) =>
+              ["branchId", "locationId", "make", "model", "bodyType"].filter((key) =>
                 Boolean(searchParams.get(key)),
               ).length
             }
           >
-            <FormField label={t("inventory.filters.inspection")} htmlFor="filter-inspection">
-              <SearchableSelect
-                id="filter-inspection"
-                value={searchParams.get("inspection") ?? ""}
-                onValueChange={(value) => update({ inspection: value })}
-                optional
-                searchable={false}
-                placeholder={t("inventory.filters.allInspections")}
-                options={VEHICLE_INSPECTION_FILTERS.map((value) => {
-                  const Icon = VEHICLE_INSPECTION_ICONS[value];
-                  return {
-                    value,
-                    label: t(`inventory.inspectionFilter.${value}`),
-                    icon: <Icon />,
-                  };
-                })}
-              />
-            </FormField>
             <FormField label={t("inventory.filters.branch")} htmlFor="filter-branch">
               <SearchableSelect
                 id="filter-branch"

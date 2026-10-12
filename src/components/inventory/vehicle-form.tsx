@@ -30,6 +30,7 @@ import {
   SearchableSelect,
   type SearchableSelectOption,
 } from "@/components/ui/searchable-select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/use-permission";
@@ -89,6 +90,8 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
       mileage: 0,
       mileageUnit: "km",
       marketType: "used",
+      initialStatus: "ready_for_sale",
+      visibleToStaff: true,
       bodyType: "",
       transmission: null,
       fuelType: null,
@@ -123,6 +126,7 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
     mileage: vehicle.mileage,
     mileageUnit: vehicle.mileageUnit,
     marketType: vehicle.marketType ?? "used",
+    visibleToStaff: vehicle.visibleToStaff,
     bodyType: vehicle.bodyType ?? "",
     transmission: vehicle.transmission,
     fuelType: vehicle.fuelType,
@@ -192,6 +196,10 @@ function VehicleFormBody({
   const { errors, isDirty } = form.formState;
 
   const branchId = useWatch({ control: form.control, name: "branchId" });
+  const initialStatus = useWatch({ control: form.control, name: "initialStatus" });
+  const showStaffVisibility =
+    (user?.roles.includes("super_admin") ?? false) &&
+    (mode === "create" ? initialStatus === "acquired" : vehicle?.status === "acquired");
 
   // Resolve catalog ids from legacy text snapshots when FKs are missing.
   useEffect(() => {
@@ -381,6 +389,40 @@ function VehicleFormBody({
           errors={errors}
           initialCustomVariant={Boolean(vehicle?.customVariant) && !vehicle?.variantId}
         />
+        {mode === "create"
+          ? selectField(
+              "initialStatus",
+              t("inventory.fields.status"),
+              (["acquired", "ready_for_sale"] as const).map((status) => ({
+                value: status,
+                label: t(`inventory.status.${status}`),
+              })),
+              { required: true, optional: false },
+            )
+          : null}
+        {showStaffVisibility ? (
+          <FormField label={t("inventory.fields.visibleToStaff")} htmlFor="visibleToStaff">
+            <Controller
+              control={form.control}
+              name="visibleToStaff"
+              render={({ field }) => (
+                <RadioGroup
+                  id="visibleToStaff"
+                  value={field.value === false ? "no" : "yes"}
+                  onValueChange={(value) => field.onChange(value === "yes")}
+                  className="flex h-9 items-center gap-5"
+                >
+                  {(["yes", "no"] as const).map((option) => (
+                    <label key={option} className="flex items-center gap-2 text-sm">
+                      <RadioGroupItem value={option} />
+                      {t(`inventory.fields.visibleToStaff_${option}`)}
+                    </label>
+                  ))}
+                </RadioGroup>
+              )}
+            />
+          </FormField>
+        ) : null}
         {selectField(
           "marketType",
           t("inventory.fields.marketType"),

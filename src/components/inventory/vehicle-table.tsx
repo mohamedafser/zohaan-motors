@@ -1,13 +1,12 @@
 "use client";
 
-import { ClipboardCheckIcon, ImageIcon, PencilIcon } from "lucide-react";
+import { CalendarCheckIcon, ImageIcon, PencilIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
 import { VehicleCard } from "@/components/inventory/vehicle-card";
-import { VehicleInspectionBadge } from "@/components/inventory/vehicle-inspection-badge";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
@@ -97,13 +96,6 @@ export function VehicleTable({
         cell: (row) => <VehicleStatusBadge status={row.status} />,
       },
       {
-        key: "inspection",
-        header: t("inventory.table.inspection"),
-        cell: (row) => (
-          <VehicleInspectionBadge value={row.inspection?.label ?? "not_inspected"} />
-        ),
-      },
-      {
         key: "branch",
         header: t("inventory.table.branch"),
         cell: (row) => (
@@ -144,17 +136,15 @@ export function VehicleTable({
               <span className="sr-only sm:not-sr-only">{t("inventory.actions.edit")}</span>
             </Link>
           ) : null}
-          {can("inspection.create") ? (
+          {can("reservation.create") && row.status === "ready_for_sale" ? (
             <Link
-              href={`/inspections/new?vehicleId=${row.id}`}
+              href={`/bookings?vehicleId=${row.id}`}
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-              aria-label={t("inventory.inspectionCard.inspectVehicle")}
+              aria-label={t("bookings.book")}
               onClick={(event) => event.stopPropagation()}
             >
-              <ClipboardCheckIcon className="size-4" aria-hidden />
-              <span className="sr-only sm:not-sr-only">
-                {t("inventory.inspectionCard.inspectVehicle")}
-              </span>
+              <CalendarCheckIcon className="size-4" aria-hidden />
+              <span className="sr-only sm:not-sr-only">{t("bookings.book")}</span>
             </Link>
           ) : null}
         </div>

@@ -12,12 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
 const VEHICLE_TABS = new Set([
   "overview",
   "acquisition",
-  "inspection",
   "pricing",
   "photos",
   "documents",
   "history",
-  "sales",
 ]);
 
 export default async function VehicleDetailPage({

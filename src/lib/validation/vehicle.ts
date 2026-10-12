@@ -72,6 +72,10 @@ export const vehicleFormSchema = z.object({
     .min(0, { error: messages.number }),
   mileageUnit: z.enum(MILEAGE_UNITS),
   marketType: z.enum(VEHICLE_MARKET_TYPES),
+  /** Create only: new vehicles start In transit (acquired) or Ready for sale. */
+  initialStatus: z.enum(["acquired", "ready_for_sale"]).optional(),
+  /** In transit only: visible to non-Super-Admin roles. */
+  visibleToStaff: z.boolean().optional(),
   bodyType: optionalText,
   transmission: z.preprocess(
     (value) => (value === "" || value == null ? null : value),

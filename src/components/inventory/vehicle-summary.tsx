@@ -2,10 +2,10 @@
 
 import {
   BadgeCheckIcon,
+  CalendarCheckIcon,
   CarIcon,
-  ClipboardCheckIcon,
   HandCoinsIcon,
-  WrenchIcon,
+  TruckIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -17,17 +17,17 @@ import type { InventorySummary } from "@/types/vehicle";
 
 const summaryKeys = [
   "total",
+  "inTransit",
   "readyForSale",
-  "underInspection",
-  "underRepair",
+  "reserved",
   "sold",
 ] as const satisfies readonly (keyof InventorySummary)[];
 
 const summaryVisuals = {
   total: { icon: CarIcon, tone: "neutral" },
+  inTransit: { icon: TruckIcon, tone: "info" },
   readyForSale: { icon: BadgeCheckIcon, tone: "success" },
-  underInspection: { icon: ClipboardCheckIcon, tone: "info" },
-  underRepair: { icon: WrenchIcon, tone: "warning" },
+  reserved: { icon: CalendarCheckIcon, tone: "warning" },
   sold: { icon: HandCoinsIcon, tone: "violet" },
 } satisfies Record<(typeof summaryKeys)[number], { icon: typeof CarIcon; tone: KpiTone }>;
 

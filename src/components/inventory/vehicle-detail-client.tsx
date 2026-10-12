@@ -4,14 +4,12 @@ import {
   ArchiveIcon,
   ArrowLeftRightIcon,
   CameraIcon,
-  ClipboardCheckIcon,
   FileTextIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   MoreHorizontalIcon,
   PackageIcon,
   PencilIcon,
-  ReceiptIcon,
   RefreshCwIcon,
   TagsIcon,
 } from "lucide-react";
@@ -20,7 +18,6 @@ import { useMemo, useState } from "react";
 
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { VehicleInspectionsPanel } from "@/components/inspections/vehicle-inspections-panel";
 import {
   bodyTypeLabel,
   enumLabel,
@@ -61,12 +58,10 @@ import type { VehicleDetail } from "@/types/vehicle";
 const DETAIL_TABS = [
   "overview",
   "acquisition",
-  "inspection",
   "pricing",
   "photos",
   "documents",
   "history",
-  "sales",
 ] as const;
 
 type DetailTab = (typeof DETAIL_TABS)[number];
@@ -420,16 +415,10 @@ export function VehicleDetailClient({
       [
         { id: "overview" as const, label: t("inventory.tabs.overview"), icon: LayoutDashboardIcon },
         { id: "acquisition" as const, label: t("inventory.tabs.acquisition"), icon: PackageIcon },
-        {
-          id: "inspection" as const,
-          label: t("inventory.tabs.inspection"),
-          icon: ClipboardCheckIcon,
-        },
         { id: "pricing" as const, label: t("inventory.tabs.pricing"), icon: TagsIcon },
         { id: "photos" as const, label: t("inventory.tabs.photos"), icon: CameraIcon },
         { id: "documents" as const, label: t("inventory.tabs.documents"), icon: FileTextIcon },
         { id: "history" as const, label: t("inventory.tabs.history"), icon: HistoryIcon },
-        { id: "sales" as const, label: t("inventory.tabs.sales"), icon: ReceiptIcon },
       ] as const,
     [t],
   );
@@ -582,9 +571,6 @@ export function VehicleDetailClient({
           <AcquisitionPanel vehicle={vehicle} />
         </TabsContent>
 
-        <TabsContent value="inspection" className="outline-none">
-          <VehicleInspectionsPanel vehicleId={vehicle.id} />
-        </TabsContent>
 
         <TabsContent value="pricing" className="outline-none">
           <VehiclePricingPanel vehicleId={vehicle.id} />
@@ -602,13 +588,6 @@ export function VehicleDetailClient({
           <VehicleHistory vehicleId={vehicle.id} />
         </TabsContent>
 
-        <TabsContent value="sales" className="outline-none">
-          <EmptyState
-            icon={ReceiptIcon}
-            title={t("inventory.tabEmpty.sales.title")}
-            description={t("inventory.tabEmpty.sales.description")}
-          />
-        </TabsContent>
       </Tabs>
 
       <VehicleStatusDialog vehicle={vehicle} open={statusOpen} onOpenChange={setStatusOpen} />

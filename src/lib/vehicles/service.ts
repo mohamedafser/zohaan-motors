@@ -77,6 +77,7 @@ type VehicleRow = {
   country_of_origin: string | null;
   condition: string | null;
   market_type: VehicleMarketType | null;
+  visible_to_staff: boolean | null;
   branch_id: string;
   location_id: string | null;
   source: string;
@@ -179,6 +180,7 @@ function mapListItem(row: VehicleRow): VehicleListItem {
     mileage: row.mileage,
     mileageUnit: row.mileage_unit,
     marketType: row.market_type === "new" ? "new" : "used",
+    visibleToStaff: row.visible_to_staff !== false,
     status: row.status,
     branchId: row.branch_id,
     branchName: branch?.name ?? null,
@@ -292,7 +294,8 @@ function formToInsert(values: CreateVehicleValues, userId: string) {
     variant_id: values.variantId,
     custom_variant: values.customVariant,
     market_type: values.marketType,
-    status: "ready_for_sale" as const,
+    visible_to_staff: values.visibleToStaff ?? true,
+    status: values.initialStatus ?? ("ready_for_sale" as const),
     source: "other" as const,
     created_by: userId,
     updated_by: userId,
@@ -302,7 +305,7 @@ function formToInsert(values: CreateVehicleValues, userId: string) {
 const LIST_SELECT = `
   id, stock_number, vin, chassis_number, make, model, variant, year, mileage, mileage_unit,
   exterior_color, interior_color, body_type, transmission, fuel_type, engine_size, engine_cylinders,
-  seats, doors, drive_type, origin_type, country_of_origin, condition, market_type, branch_id, location_id,
+  seats, doors, drive_type, origin_type, country_of_origin, condition, market_type, visible_to_staff, branch_id, location_id,
   source, status, purchase_date, registration_date, registration_expiry, description,
   current_selling_price, make_id, model_id, model_year_id, variant_id, custom_variant,
   archived_at, created_by, updated_by, created_at, updated_at, deleted_at,
@@ -334,12 +337,16 @@ function applyVehicleListFilters<T extends { eq: Function; neq: Function; ilike:
       | "purchaseDateTo"
       | "q"
     >
-  >,
+  > & { hideInTransit?: boolean },
 ): T {
   let next = builder;
 
   if (!query.includeArchived) {
     next = next.neq("status", "archived") as T;
+  }
+  if (query.hideInTransit) {
+    // Staff only see In transit cars that a Super Admin marked visible.
+    next = next.or("status.neq.acquired,visible_to_staff.is.true") as T;
   }
 
   if (query.status) next = next.eq("status", query.status) as T;
@@ -388,6 +395,7 @@ function buildInventorySummary(
 ): InventorySummary {
   const summary: InventorySummary = {
     total: rows.length,
+    inTransit: 0,
     readyForSale: 0,
     underInspection: 0,
     underRepair: 0,
@@ -396,6 +404,7 @@ function buildInventorySummary(
   };
 
   for (const row of rows) {
+    if (row.status === "acquired") summary.inTransit += 1;
     if (row.status === "ready_for_sale") summary.readyForSale += 1;
     if (row.status === "under_inspection") summary.underInspection += 1;
     if (row.status === "under_repair") summary.underRepair += 1;
@@ -407,7 +416,7 @@ function buildInventorySummary(
 }
 
 export async function listVehicles(
-  query: VehicleListQuery,
+  query: VehicleListQuery & { hideInTransit?: boolean },
 ): Promise<ServiceResult<VehicleListResult>> {
   const supabase = await createClient();
 
@@ -460,6 +469,7 @@ export async function listVehicles(
       total: query.inspection ? withMeta.length : (count ?? 0),
       summary: summary.data ?? {
         total: 0,
+        inTransit: 0,
         readyForSale: 0,
         underInspection: 0,
         underRepair: 0,
@@ -472,7 +482,7 @@ export async function listVehicles(
 }
 
 export async function getInventorySummary(
-  query: Partial<VehicleListQuery> = {},
+  query: Partial<VehicleListQuery> & { hideInTransit?: boolean } = {},
 ): Promise<ServiceResult<InventorySummary>> {
   const supabase = await createClient();
   let builder = supabase
@@ -482,6 +492,7 @@ export async function getInventorySummary(
 
   builder = applyVehicleListFilters(builder, {
     includeArchived: query.includeArchived ?? false,
+    hideInTransit: query.hideInTransit,
     status: query.status,
     marketType: query.marketType,
     branchId: query.branchId,
@@ -574,6 +585,9 @@ export async function getVehicle(
   if (!data) return { data: null, error: { code: "not_found", message: "Vehicle not found." } };
 
   const row = data as unknown as VehicleRow;
+  if (row.status === "acquired" && row.visible_to_staff === false && !context.roles.includes("super_admin")) {
+    return { data: null, error: { code: "not_found", message: "Vehicle not found." } };
+  }
   const base = mapListItem(row);
 
   let createdByName: string | null = null;
@@ -845,6 +859,7 @@ export async function updateVehicle(
       variant_id: values.variantId,
       custom_variant: values.customVariant,
       market_type: values.marketType,
+      ...(values.visibleToStaff !== undefined ? { visible_to_staff: values.visibleToStaff } : {}),
       updated_by: context.userId,
     } as never)
     .eq("id", id)

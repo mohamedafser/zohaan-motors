@@ -3,7 +3,7 @@ import {
   CalendarClockIcon,
   CarIcon,
   ChevronRightIcon,
-  ClipboardCheckIcon,
+  CalendarCheckIcon,
   TagIcon,
   TrendingUpIcon,
   WalletIcon,
@@ -15,14 +15,12 @@ import { KpiCard } from "@/components/cards/kpi-card";
 import { DashboardRecentVehicles } from "@/components/dashboard/dashboard-recent-vehicles";
 import { SampleNotice } from "@/components/feedback/sample-notice";
 import { PageHeader } from "@/components/layout/page-header";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { appConfig, isAppLocale, type AppLocale } from "@/config/app";
 import { Link } from "@/lib/i18n/navigation";
 import { dashboardSample } from "@/lib/mock/dashboard";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/currency";
-import { formatRelativeTime } from "@/lib/utils/date";
 
 const mixColors = {
   available: "bg-chart-3",
@@ -33,7 +31,7 @@ const mixColors = {
 const agingColors = ["bg-chart-3", "bg-chart-1", "bg-chart-4", "bg-destructive"];
 
 const actionIcons: Record<string, typeof TagIcon> = {
-  "/inspections": ClipboardCheckIcon,
+  "/bookings": CalendarCheckIcon,
 };
 
 export async function DashboardView() {
@@ -204,61 +202,6 @@ export async function DashboardView() {
         </CardContent>
       </Card>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.recentLeads")}</CardTitle>
-            <CardAction>
-              <ViewAll href="/leads" label={t("dashboard.viewAll")} />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <ul className="divide-y">
-              {dashboardSample.leads.map((lead) => (
-                <li key={lead.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <Initials name={lead.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{lead.name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {lead.source} · {formatRelativeTime(lead.createdAt, locale)}
-                    </p>
-                  </div>
-                  <StatusBadge status={lead.status} label={t(`dashboard.status.${lead.status}`)} />
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("dashboard.recentSales")}</CardTitle>
-            <CardAction>
-              <ViewAll href="/sales" label={t("dashboard.viewAll")} />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <ul className="divide-y">
-              {dashboardSample.sales.map((sale) => (
-                <li key={sale.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <Initials name={sale.customer} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{sale.reference}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {sale.customer} · {formatRelativeTime(sale.createdAt, locale)}
-                    </p>
-                  </div>
-                  <div className="grid justify-items-end gap-1">
-                    <p className="text-sm font-medium tabular-nums">
-                      {formatCurrency(sale.amountAed, locale)}
-                    </p>
-                    <StatusBadge status={sale.status} label={t(`dashboard.status.${sale.status}`)} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </section>
     </div>
   );
 }
@@ -272,18 +215,3 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-function Initials({ name }: { name: string }) {
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-  return (
-    <span
-      className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-      aria-hidden
-    >
-      {initials}
-    </span>
-  );
-}

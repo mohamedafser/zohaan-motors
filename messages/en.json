@@ -43,7 +43,8 @@
     "cars": "Cars",
     "workshopJobs": "Jobs",
     "myWorkshopJobs": "My jobs",
-    "vehicleCatalog": "Vehicle catalog"
+    "vehicleCatalog": "Vehicle catalog",
+    "bookings": "Bookings"
   },
   "common": {
     "search": "Search",
@@ -94,7 +95,8 @@
     "reservation": "New reservation",
     "sale": "New sale",
     "workshop": "New workshop order",
-    "description": "Start a new record"
+    "description": "Start a new record",
+    "booking": "New booking"
   },
   "auth": {
     "login": {
@@ -292,7 +294,7 @@
     "kpis": {
       "stock": "Vehicles in stock",
       "available": "Available",
-      "reserved": "Reserved",
+      "reserved": "Booked",
       "sales": "Sales this month"
     },
     "salesChart": "Sales",
@@ -317,7 +319,7 @@
     },
     "status": {
       "available": "Available",
-      "reserved": "Reserved",
+      "reserved": "Booked",
       "workshop": "Workshop",
       "sold": "Sold",
       "new": "New",
@@ -335,7 +337,8 @@
     "actions": {
       "inspection": "Inspection waiting",
       "reservation": "Reservation to confirm",
-      "pricing": "Pricing to set"
+      "pricing": "Pricing to set",
+      "bookings": "Bookings to follow up"
     },
     "viewAll": "View all"
   },
@@ -490,7 +493,9 @@
       },
       "roleNames": {
         "super_admin": "Super Admin",
-        "viewer": "Employee"
+        "accountant": "Accountant",
+        "sales_executive": "Sales Executive",
+        "logistics": "Logistics"
       }
     },
     "roles": {
@@ -566,17 +571,18 @@
       "readyForSale": "Ready for sale",
       "underInspection": "Under inspection",
       "underRepair": "Under repair",
-      "reserved": "Reserved",
+      "reserved": "Booked",
       "sold": "Sold",
-      "available": "Ready for sale"
+      "available": "Ready for sale",
+      "inTransit": "In transit"
     },
     "status": {
-      "acquired": "Acquired",
+      "acquired": "In transit",
       "under_inspection": "Under inspection",
       "inspection_failed": "Inspection failed",
       "under_repair": "Under repair",
       "ready_for_sale": "Ready for sale",
-      "reserved": "Reserved",
+      "reserved": "Booked",
       "sold": "Sold",
       "delivered": "Delivered",
       "returned": "Returned",
@@ -643,7 +649,10 @@
       "acquisitionStatus": "Acquisition status",
       "acquisitionType": "Acquisition type",
       "purchasePrice": "Purchase price",
-      "brand": "Brand"
+      "brand": "Brand",
+      "visibleToStaff": "Visible to other roles",
+      "visibleToStaff_yes": "Yes",
+      "visibleToStaff_no": "No, Super Admin only"
     },
     "enums": {
       "transmission": {
@@ -2495,5 +2504,64 @@
       "minExceedsTarget": "Minimum price cannot exceed target price.",
       "currentExceedsAdvertised": "Current price cannot exceed advertised price."
     }
+  },
+  "bookings": {
+    "title": "Bookings",
+    "description": "Cars held for customers with a deposit. Booking a car marks it Booked; cancelling returns it to Ready for sale.",
+    "new": "New booking",
+    "book": "Book",
+    "newTitle": "New booking",
+    "newDescription": "Hold a Ready-for-sale car for a customer.",
+    "create": "Create booking",
+    "created": "Booking created.",
+    "cancelled": "Booking cancelled.",
+    "markedSold": "Car marked as sold.",
+    "vehicle": "Vehicle",
+    "selectVehicle": "Select a ready-for-sale car",
+    "noVehicles": "No cars are ready for sale",
+    "customer": "Customer",
+    "existingCustomer": "Existing",
+    "newCustomer": "New customer",
+    "selectCustomer": "Select a customer",
+    "noCustomers": "No customers yet",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "deposit": "Deposit (AED)",
+    "expiresOn": "Hold until",
+    "notes": "Notes",
+    "number": "Booking #",
+    "status": "Status",
+    "filterActive": "Active",
+    "filterAll": "All",
+    "empty": "No bookings here yet.",
+    "markSold": "Mark sold",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel this booking?",
+    "confirmSold": "Mark this car as sold?",
+    "yes": "Yes",
+    "no": "No",
+    "statuses": {
+      "active": "Active",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "converted": "Sold"
+    },
+    "errors": {
+      "createFailed": "Could not create the booking.",
+      "actionFailed": "That action failed. Try again.",
+      "expiryPast": "Pick a date from today onwards.",
+      "vehicleNotFound": "That car no longer exists.",
+      "notAvailable": "That car is no longer ready for sale.",
+      "alreadyBooked": "That car already has an active booking.",
+      "customerExists": "A customer with this phone number already exists. Select them as an existing customer.",
+      "salespersonRequired": "Choose the sales executive for this customer."
+    },
+    "salesperson": "Sales executive",
+    "selectSalesperson": "Select the sales executive",
+    "noSalespeople": "No sales executives yet",
+    "salespersonLinked": "This customer always stays with their sales executive.",
+    "salespersonSelf": "New customers you add are linked to you.",
+    "useExisting": "Use {name} instead"
   }
 }

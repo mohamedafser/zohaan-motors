@@ -1,5 +1,5 @@
-// Roles with a translated label; everything else shows the name stored in the roles table.
-const translatedRoleKeys = ["super_admin", "viewer"];
+// The four business roles have translated labels; anything else shows the name stored in the roles table.
+const translatedRoleKeys = ["super_admin", "accountant", "sales_executive", "logistics"];
 
 export function roleLabel(
   role: { key: string; name: string },

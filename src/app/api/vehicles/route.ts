@@ -19,7 +19,8 @@ export async function GET(request: Request) {
     });
   }
 
-  const result = await listVehicles(parsed.data);
+  const hideInTransit = !auth.context.roles.includes("super_admin");
+  const result = await listVehicles({ ...parsed.data, hideInTransit });
   if (result.error) {
     return jsonError(result.error.code, result.error.message, 400);
   }
