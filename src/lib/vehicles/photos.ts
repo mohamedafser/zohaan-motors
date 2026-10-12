@@ -1,6 +1,7 @@
 import type { UserContext } from "@/types/auth";
 import type { Json } from "@/types/database";
 import type { VehiclePhoto, VehiclePhotoCategory } from "@/types/vehicle-photo";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { createSignedStorageUrl } from "@/lib/storage/signed-url";
 import { hasPermission } from "@/lib/permissions";
@@ -147,6 +148,20 @@ async function assertVehicleAccess(
   if (error) return { data: null, error: mapDbError(error) };
   if (!data) return { data: null, error: { code: "not_found", message: "Vehicle not found." } };
   return { data: { id: (data as { id: string }).id }, error: null };
+}
+
+/**
+ * Split inventory records share photo files (see split_vehicle_units), so a storage
+ * object is only removed once no photo row references it any more.
+ */
+async function removePhotoFileIfUnused(path: string) {
+  const admin = createServiceRoleClient();
+  const { count } = await admin
+    .from("vehicle_photos")
+    .select("id", { count: "exact", head: true })
+    .eq("storage_path", path);
+  if ((count ?? 0) > 0) return { error: null };
+  return admin.storage.from("vehicle-photos").remove([path]);
 }
 
 export async function listVehiclePhotos(
@@ -355,7 +370,7 @@ export async function updateVehiclePhoto(
   if (error) return { data: null, error: mapDbError(error) };
 
   if (replacing) {
-    await supabase.storage.from("vehicle-photos").remove([old.storage_path]);
+    await removePhotoFileIfUnused(old.storage_path);
     await writeAudit(supabase, "VEHICLE_IMAGE_REPLACED", vehicleId, {
       photo_id: photoId,
       storage_path: old.storage_path,
@@ -426,9 +441,7 @@ export async function deleteVehiclePhoto(
 
   if (deleteError) return { data: null, error: mapDbError(deleteError) };
 
-  const { error: storageError } = await supabase.storage
-    .from("vehicle-photos")
-    .remove([row.storage_path]);
+  const { error: storageError } = await removePhotoFileIfUnused(row.storage_path);
 
   if (storageError) {
     return {

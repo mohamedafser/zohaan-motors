@@ -3,9 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { BadgeCheckIcon, CalendarCheckIcon, PlusIcon, XIcon } from "lucide-react";
+import { BadgeCheckIcon, CalendarCheckIcon, PencilIcon, PlusIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { EditBookingDialog } from "@/components/bookings/edit-booking-dialog";
 import { NewBookingDialog } from "@/components/bookings/new-booking-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -14,22 +15,21 @@ import type { AppLocale } from "@/config/app";
 import type { BookingListItem } from "@/lib/bookings/service";
 import { Link } from "@/lib/i18n/navigation";
 import { formatCurrency } from "@/lib/utils/currency";
-import { formatDate } from "@/lib/utils/date";
+import { vehicleHref } from "@/lib/vehicles/routes";
 
 type Filter = "active" | "all";
 
 export function BookingsPageClient({
   initialBookings,
   canCreate,
-  canCancel,
-  canSell,
   canCreateCustomer,
+  ownOnly = false,
 }: {
   initialBookings: BookingListItem[];
   canCreate: boolean;
-  canCancel: boolean;
-  canSell: boolean;
   canCreateCustomer: boolean;
+  /** Everyone but Super Admins and Accountants sees only their own bookings ("My bookings"). */
+  ownOnly?: boolean;
 }) {
   const t = useTranslations("bookings");
   const locale = useLocale() as AppLocale;
@@ -48,6 +48,8 @@ export function BookingsPageClient({
     setDialogOpen(true);
   };
   const [confirm, setConfirm] = useState<{ id: string; action: "cancel" | "sold" } | null>(null);
+  const [editing, setEditing] = useState<BookingListItem | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -84,8 +86,8 @@ export function BookingsPageClient({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={t("title")}
-        description={t("description")}
+        title={t(ownOnly ? "myTitle" : "title")}
+        description={t(ownOnly ? "myDescription" : "description")}
         actions={
           canCreate ? (
             <Button onClick={openDialog}>
@@ -130,7 +132,7 @@ export function BookingsPageClient({
                 <th className="px-4 py-3 text-start font-medium">{t("customer")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("salesperson")}</th>
                 <th className="px-4 py-3 text-end font-medium">{t("deposit")}</th>
-                <th className="px-4 py-3 text-start font-medium">{t("expiresOn")}</th>
+                <th className="px-4 py-3 text-end font-medium">{t("sellingPrice")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("status")}</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -141,7 +143,7 @@ export function BookingsPageClient({
                   <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{b.number}</td>
                   <td className="px-4 py-3">
                     {b.vehicle ? (
-                      <Link href={`/inventory/${b.vehicle.id}`} className="hover:underline">
+                      <Link href={b.vehicle.stockNumber ? vehicleHref(b.vehicle.stockNumber) : `/inventory/${b.vehicle.id}`} className="hover:underline">
                         <span className="font-medium">{b.vehicle.title}</span>
                         {b.vehicle.stockNumber ? (
                           <span className="text-muted-foreground block text-xs">{b.vehicle.stockNumber}</span>
@@ -167,12 +169,14 @@ export function BookingsPageClient({
                   <td className="px-4 py-3 text-end tabular-nums whitespace-nowrap">
                     {formatCurrency(b.deposit, locale, b.currency)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">{formatDate(b.expiresAt, locale, "short")}</td>
+                  <td className="px-4 py-3 text-end tabular-nums whitespace-nowrap">
+                    {b.sellingPrice == null ? "—" : formatCurrency(b.sellingPrice, locale, b.currency)}
+                  </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={`booking_${b.status}`} label={t(`statuses.${b.status}`)} />
                   </td>
                   <td className="px-4 py-3">
-                    {b.status === "active" && (canSell || canCancel) ? (
+                    {b.can.edit || b.can.sell || b.can.cancel ? (
                       confirm?.id === b.id ? (
                         <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                           <span className="text-xs font-medium">
@@ -192,13 +196,26 @@ export function BookingsPageClient({
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-1">
-                          {canSell ? (
+                          {b.can.edit ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditing(b);
+                                setEditOpen(true);
+                              }}
+                            >
+                              <PencilIcon />
+                              {t("edit")}
+                            </Button>
+                          ) : null}
+                          {b.can.sell ? (
                             <Button size="sm" variant="outline" onClick={() => setConfirm({ id: b.id, action: "sold" })}>
                               <BadgeCheckIcon />
                               {t("markSold")}
                             </Button>
                           ) : null}
-                          {canCancel ? (
+                          {b.can.cancel ? (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -219,6 +236,8 @@ export function BookingsPageClient({
           </table>
         </div>
       )}
+
+      <EditBookingDialog booking={editing} open={editOpen} onOpenChange={setEditOpen} onSaved={refresh} />
 
       {canCreate ? (
         <NewBookingDialog

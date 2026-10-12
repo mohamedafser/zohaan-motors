@@ -6,7 +6,7 @@ import { createBookingSchema } from "@/lib/validation/booking";
 export async function GET() {
   const auth = await requireApiUser("reservation.view");
   if ("response" in auth) return auth.response;
-  const result = await listBookings();
+  const result = await listBookings(auth.context);
   if (result.error) return jsonError(result.error.code, result.error.message, 400);
   return jsonOk(result.data);
 }

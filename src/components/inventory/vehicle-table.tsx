@@ -1,21 +1,24 @@
 "use client";
 
-import { CalendarCheckIcon, ImageIcon, PencilIcon } from "lucide-react";
+import { ImageIcon, PencilIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
+import { BookVehicleButton } from "@/components/inventory/book-vehicle-button";
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
 import { VehicleCard } from "@/components/inventory/vehicle-card";
-import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
+import { VehiclePrice } from "@/components/inventory/vehicle-price";
+import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
 import { usePermission } from "@/hooks/use-permission";
 import type { ListViewMode } from "@/hooks/use-list-view-mode";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatNumber } from "@/lib/utils/currency";
+import { formatNumber } from "@/lib/utils/currency";
 import type { VehicleListItem } from "@/types/vehicle";
+import { vehicleHref } from "@/lib/vehicles/routes";
 
 export function VehicleTable({
   vehicles,
@@ -91,9 +94,15 @@ export function VehicleTable({
           `${formatNumber(row.mileage, locale)} ${t(`inventory.enums.mileageUnit.${row.mileageUnit}`)}`,
       },
       {
+        key: "quantity",
+        header: t("inventory.table.quantity"),
+        className: "tabular-nums text-end",
+        cell: (row) => formatNumber(row.quantity, locale),
+      },
+      {
         key: "status",
         header: t("inventory.table.status"),
-        cell: (row) => <VehicleStatusBadge status={row.status} />,
+        cell: (row) => <VehicleStatusTrigger vehicle={row} variant="badge" />,
       },
       {
         key: "branch",
@@ -114,8 +123,7 @@ export function VehicleTable({
         key: "price",
         header: t("inventory.table.price"),
         className: "tabular-nums text-end",
-        cell: (row) =>
-          row.currentSellingPrice != null ? formatCurrency(row.currentSellingPrice, locale) : "—",
+        cell: (row) => <VehiclePrice vehicle={row} />,
       });
     }
 
@@ -127,7 +135,7 @@ export function VehicleTable({
         <div className="flex items-center justify-end gap-1" data-row-stop>
           {can("vehicle.edit") ? (
             <Link
-              href={`/inventory/${row.id}/edit`}
+              href={vehicleHref(row.stockNumber, "/edit")}
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
               aria-label={t("inventory.actions.edit")}
               onClick={(event) => event.stopPropagation()}
@@ -136,17 +144,7 @@ export function VehicleTable({
               <span className="sr-only sm:not-sr-only">{t("inventory.actions.edit")}</span>
             </Link>
           ) : null}
-          {can("reservation.create") && row.status === "ready_for_sale" ? (
-            <Link
-              href={`/bookings?vehicleId=${row.id}`}
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-              aria-label={t("bookings.book")}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <CalendarCheckIcon className="size-4" aria-hidden />
-              <span className="sr-only sm:not-sr-only">{t("bookings.book")}</span>
-            </Link>
-          ) : null}
+          <BookVehicleButton vehicle={row} variant="ghost" compact />
         </div>
       ),
     });
@@ -159,7 +157,7 @@ export function VehicleTable({
       columns={columns}
       rows={vehicles}
       viewMode={viewMode}
-      hrefForRow={(vehicle) => `/inventory/${vehicle.id}`}
+      hrefForRow={(vehicle) => vehicleHref(vehicle.stockNumber)}
       renderCard={(vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} />}
     />
   );

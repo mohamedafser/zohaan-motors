@@ -17,7 +17,6 @@ import { FormField } from "@/components/forms/form-field";
 import { toDateInputValue } from "@/components/inventory/inventory-utils";
 import {
   ACQUISITION_DOCUMENT_ICONS,
-  ACQUISITION_PAYMENT_ICONS,
   ACQUISITION_REGISTRATION_ICONS,
   ACQUISITION_SOURCE_ICONS,
   BRANCH_ICON,
@@ -43,6 +42,7 @@ import { useVehicle } from "@/hooks/use-vehicles";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { countrySelectOptions } from "@/lib/vehicles/countries";
+import { toPrice } from "@/lib/vehicles/quantity";
 import {
   acquisitionEmbeddedFormSchema,
   acquisitionFormSchema,
@@ -50,7 +50,6 @@ import {
 } from "@/lib/validation/acquisition";
 import {
   ACQUISITION_DOCUMENT_STATUSES,
-  ACQUISITION_PAYMENT_STATUSES,
   ACQUISITION_REGISTRATION_STATUSES,
   ACQUISITION_SOURCE_TYPES,
   type AcquisitionDetail,
@@ -79,6 +78,12 @@ export type AcquisitionFormProps = {
   cancelHref?: string;
   /** Prefill create form by linking an inventory vehicle. */
   initialVehicleId?: string;
+  /** Rendered directly after the Purchase section (e.g. the vehicle's selling price). */
+  afterPurchase?: ReactNode;
+  /** Units on the linked inventory record; price labels say "per unit" when above 1. */
+  unitCount?: number;
+  /** Live purchase price (per unit) and currency, for quantity totals. */
+  onPurchaseChange?: (values: { purchasePrice: number | null; currency: string }) => void;
   /** Optional sections rendered after purchase fields (e.g. documents). */
   extraSections?: ReactNode;
   onSubmit?: (values: AcquisitionFormValues) => Promise<void> | void;
@@ -193,6 +198,9 @@ function AcquisitionFormBody({
   formError,
   cancelHref,
   initialVehicleId,
+  afterPurchase,
+  unitCount = 1,
+  onPurchaseChange,
   extraSections,
   onSubmit,
   embedded = false,
@@ -231,6 +239,15 @@ function AcquisitionFormBody({
   const sourceType = useWatch({ control: form.control, name: "sourceType" });
   const makeValue = useWatch({ control: form.control, name: "vehicle.make" });
   const linkedVehicleId = useWatch({ control: form.control, name: "vehicle.vehicleId" });
+  const purchasePrice = toPrice(useWatch({ control: form.control, name: "purchasePrice" }));
+  const currency = useWatch({ control: form.control, name: "currency" }) ?? "AED";
+
+  useEffect(() => {
+    onPurchaseChange?.({ purchasePrice, currency });
+  }, [onPurchaseChange, purchasePrice, currency]);
+
+  const perUnit = (label: string) =>
+    unitCount > 1 ? t("inventory.quantity.perUnitLabel", { label }) : label;
 
   const prefillVehicle = useVehicle(
     mode === "create" && initialVehicleId ? initialVehicleId : "",
@@ -799,7 +816,7 @@ function AcquisitionFormBody({
 
       <Section title={t("acquisitions.sections.purchase")}>
         <FormField
-          label={t("acquisitions.fields.askingPrice")}
+          label={perUnit(t("acquisitions.fields.askingPrice"))}
           htmlFor="askingPrice"
           error={fieldError("askingPrice")}
         >
@@ -814,7 +831,7 @@ function AcquisitionFormBody({
           />
         </FormField>
         <FormField
-          label={t("acquisitions.fields.purchasePrice")}
+          label={perUnit(t("acquisitions.fields.purchasePrice"))}
           htmlFor="purchasePrice"
           error={fieldError("purchasePrice")}
           required
@@ -877,16 +894,6 @@ function AcquisitionFormBody({
           />
         </FormField>
         {selectField(
-          "paymentStatus",
-          t("acquisitions.fields.paymentStatus"),
-          ACQUISITION_PAYMENT_STATUSES.map((status) => ({
-            value: status,
-            label: t(`acquisitions.enums.paymentStatus.${status}`),
-            icon: ACQUISITION_PAYMENT_ICONS[status],
-          })),
-          { searchable: false, optional: false },
-        )}
-        {selectField(
           "documentStatus",
           t("acquisitions.fields.documentStatus"),
           ACQUISITION_DOCUMENT_STATUSES.map((status) => ({
@@ -916,6 +923,8 @@ function AcquisitionFormBody({
           </FormField>
         </div>
       </Section>
+
+      {afterPurchase}
 
       {extraSections}
 

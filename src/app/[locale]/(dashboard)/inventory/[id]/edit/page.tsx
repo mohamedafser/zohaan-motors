@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import { VehicleFormPage } from "@/components/inventory/vehicle-form-page";
 import { requirePagePermission } from "@/lib/auth/authorize";
+import { isUuid, vehicleHref } from "@/lib/vehicles/routes";
+import { resolveVehicleRef } from "@/lib/vehicles/service";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
@@ -17,5 +20,8 @@ export default async function EditVehiclePage({
   await requirePagePermission("vehicle.edit");
   const { id } = await params;
 
-  return <VehicleFormPage mode="edit" vehicleId={id} />;
+  const vehicle = await resolveVehicleRef(id);
+  if (vehicle && isUuid(id)) redirect(vehicleHref(vehicle.stockNumber, "/edit"));
+
+  return <VehicleFormPage mode="edit" vehicleId={vehicle?.id ?? id} />;
 }

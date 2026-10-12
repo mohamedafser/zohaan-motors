@@ -143,43 +143,6 @@ export type {
   AcquisitionExpenseValues,
   AcquisitionListQuery,
 } from "@/lib/validation/acquisition";
-
-export {
-  createInspectionSchema,
-  updateInspectionSchema,
-  saveInspectionDraftSchema,
-  assignInspectionSchema,
-  changeInspectionStatusSchema,
-  submitInspectionSchema,
-  approveInspectionSchema,
-  rejectInspectionSchema,
-  cancelInspectionSchema,
-  reinspectSchema,
-  updateInspectionOutcomeSchema,
-  inspectionFindingSchema,
-  updateInspectionFindingSchema,
-  inspectionPhotoSchema,
-  inspectionListQuerySchema,
-} from "@/lib/validation/inspection";
-
-export type {
-  CreateInspectionValues,
-  UpdateInspectionValues,
-  SaveInspectionDraftValues,
-  AssignInspectionValues,
-  ChangeInspectionStatusValues,
-  SubmitInspectionValues,
-  ApproveInspectionValues,
-  RejectInspectionValues,
-  CancelInspectionValues,
-  ReinspectValues,
-  UpdateInspectionOutcomeValues,
-  InspectionFindingValues,
-  UpdateInspectionFindingValues,
-  InspectionPhotoValues,
-  InspectionListQuery,
-} from "@/lib/validation/inspection";
-
 export function firstFieldErrors(error: z.ZodError) {
   const fieldErrors: Record<string, string> = {};
   for (const issue of error.issues) {

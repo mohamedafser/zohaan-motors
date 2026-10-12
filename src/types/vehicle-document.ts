@@ -1,7 +1,6 @@
 export const VEHICLE_DOCUMENT_SOURCES = [
   "general",
   "acquisition",
-  "inspection",
   "reconditioning",
   "pricing",
 ] as const;

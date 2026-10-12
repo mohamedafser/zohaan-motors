@@ -332,6 +332,12 @@ export const vehicles = pgTable(
     modelYearId: uuid("model_year_id"),
     variantId: uuid("variant_id"),
     customVariant: text("custom_variant"),
+    quantity: integer().default(1).notNull(),
+    portLocation: text("port_location"),
+    splitFromId: uuid("split_from_id"),
+    hasMinimumPrice: boolean("has_minimum_price").generatedAlwaysAs(
+      sql`(COALESCE(minimum_selling_price, (0)::numeric) > (0)::numeric)`,
+    ),
   },
   (table): PgTableExtraConfigValue[] => [
     index("vehicles_acquisition_date_idx").using(
@@ -417,6 +423,15 @@ export const vehicles = pgTable(
       name: "vehicles_location_id_fkey",
     }).onDelete("set null"),
     foreignKey({
+      columns: [table.splitFromId],
+      foreignColumns: [table.id],
+      name: "vehicles_split_from_id_fkey",
+    }).onDelete("set null"),
+    index("vehicles_split_from_id_idx").using(
+      "btree",
+      table.splitFromId.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
       columns: [table.makeId],
       foreignColumns: [vehicleMakes.id],
       name: "vehicles_make_id_fkey",
@@ -489,6 +504,11 @@ export const vehicles = pgTable(
     ),
     check("vehicles_model_not_blank", sql`length(TRIM(BOTH FROM model)) > 0`),
     check("vehicles_seats_positive", sql`(seats IS NULL) OR (seats > 0)`),
+    check("vehicles_quantity_positive", sql`quantity > 0`),
+    check(
+      "vehicles_port_location_not_blank",
+      sql`(port_location IS NULL) OR (length(TRIM(BOTH FROM port_location)) > 0)`,
+    ),
     check(
       "vehicles_selling_price_non_negative",
       sql`(current_selling_price IS NULL) OR (current_selling_price >= (0)::numeric)`,

@@ -11,10 +11,7 @@ export function PageHeader({
 }) {
   return (
     <header className="flex flex-col gap-3">
-      {/* On desktop the breadcrumb trail lives in the top bar. */}
-      <div className="md:hidden">
-        <AppBreadcrumbs />
-      </div>
+      <AppBreadcrumbs />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[1.75rem]">

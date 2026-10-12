@@ -30,12 +30,14 @@ import { VehicleDocumentsPanel } from "@/components/inventory/vehicle-documents-
 import { VehicleHistory } from "@/components/inventory/vehicle-history";
 import { VehicleImageManager } from "@/components/inventory/vehicle-image-manager";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { VehicleReadyForSalePanel } from "@/components/inventory/vehicle-ready-for-sale-panel";
+import { QuantityBadge } from "@/components/inventory/quantity-badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
-import { VehicleStatusDialog } from "@/components/inventory/vehicle-status-dialog";
+import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
 import { VehicleTransferDialog } from "@/components/inventory/vehicle-transfer-dialog";
 import { VehiclePricingPanel } from "@/components/pricing/vehicle-pricing-panel";
 import { PageHeader } from "@/components/layout/page-header";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -52,8 +54,10 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatNumber } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { countryFlag, findCountryByName } from "@/lib/vehicles/countries";
-import { canArchiveStatus, getGenericStatusChangeOptions } from "@/lib/vehicles/status-transitions";
+import { canArchiveStatus } from "@/lib/vehicles/status-transitions";
 import type { VehicleDetail } from "@/types/vehicle";
+import { vehicleHref } from "@/lib/vehicles/routes";
+import { quantityTotal } from "@/lib/vehicles/quantity";
 
 const DETAIL_TABS = [
   "overview",
@@ -107,6 +111,9 @@ function Overview({ vehicle }: { vehicle: VehicleDetail }) {
   const money = (value: number | null | undefined) =>
     value == null ? null : formatCurrency(value, locale);
 
+  const perUnit = (label: string) =>
+    vehicle.quantity > 1 ? t("inventory.quantity.perUnitLabel", { label }) : label;
+
   const hasPrivate =
     vehicle.totalAcquisitionCost !== undefined ||
     vehicle.minimumSellingPrice !== undefined ||
@@ -157,6 +164,20 @@ function Overview({ vehicle }: { vehicle: VehicleDetail }) {
             unit: t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`),
           })}
         />
+        <DetailItem label={t("inventory.fields.quantity")} value={formatNumber(vehicle.quantity, locale)} />
+        {vehicle.splitFrom ? (
+          <DetailItem
+            label={t("inventory.fields.splitFrom")}
+            value={
+              <Link href={vehicleHref(vehicle.splitFrom.stockNumber)} className="underline underline-offset-4">
+                {vehicle.splitFrom.stockNumber}
+              </Link>
+            }
+          />
+        ) : null}
+        {vehicle.status === "acquired" ? (
+          <DetailItem label={t("inventory.fields.portLocation")} value={vehicle.portLocation} />
+        ) : null}
       </DetailCard>
 
       <DetailCard title={t("inventory.detail.specs")}>
@@ -229,15 +250,78 @@ function Overview({ vehicle }: { vehicle: VehicleDetail }) {
           ) : null}
           {vehicle.currentSellingPrice != null ? (
             <DetailItem
-              label={t("inventory.fields.sellingPrice")}
+              label={perUnit(t("inventory.fields.sellingPrice"))}
               value={money(vehicle.currentSellingPrice)}
+            />
+          ) : null}
+          {vehicle.currentSellingPrice != null && vehicle.quantity > 1 ? (
+            <DetailItem
+              label={t("inventory.totals.totalSelling", { count: vehicle.quantity })}
+              value={money(quantityTotal(vehicle.currentSellingPrice, vehicle.quantity))}
             />
           ) : null}
           {vehicle.minimumSellingPrice !== undefined ? (
             <DetailItem
-              label={t("inventory.fields.minimumPrice")}
+              label={perUnit(t("inventory.fields.minimumPrice"))}
               value={money(vehicle.minimumSellingPrice)}
             />
+          ) : null}
+          {vehicle.minimumSellingPrice != null && vehicle.quantity > 1 ? (
+            <DetailItem
+              label={t("inventory.totals.totalMinimum", { count: vehicle.quantity })}
+              value={money(quantityTotal(vehicle.minimumSellingPrice, vehicle.quantity))}
+            />
+          ) : null}
+        </DetailCard>
+      ) : null}
+
+      {vehicle.booking ? (
+        <DetailCard title={t("inventory.booking.title")}>
+          <DetailItem label={t("bookings.number")} value={<span className="font-mono">{vehicle.booking.number}</span>} />
+          <DetailItem
+            label={t("bookings.status")}
+            value={
+              <StatusBadge
+                status={`booking_${vehicle.booking.status}`}
+                label={t(`bookings.statuses.${vehicle.booking.status}`)}
+              />
+            }
+          />
+          <DetailItem
+            label={t("bookings.customer")}
+            value={
+              vehicle.booking.customer ? (
+                <span>
+                  {vehicle.booking.customer.name}
+                  <span className="text-muted-foreground block text-xs" dir="ltr">
+                    {vehicle.booking.customer.phone}
+                  </span>
+                </span>
+              ) : null
+            }
+          />
+          <DetailItem label={t("bookings.salesperson")} value={vehicle.booking.salesperson} />
+          <DetailItem label={t("inventory.booking.bookedBy")} value={vehicle.booking.bookedBy} />
+          <DetailItem label={t("inventory.booking.bookedOn")} value={dateTime(vehicle.booking.reservedAt)} />
+          <DetailItem
+            label={t("bookings.deposit")}
+            value={formatCurrency(vehicle.booking.deposit, locale, vehicle.booking.currency)}
+          />
+          <DetailItem
+            label={t("bookings.sellingPrice")}
+            value={
+              vehicle.booking.sellingPrice == null
+                ? null
+                : formatCurrency(vehicle.booking.sellingPrice, locale, vehicle.booking.currency)
+            }
+          />
+          {vehicle.booking.notes ? (
+            <div className="sm:col-span-2">
+              <DetailItem
+                label={t("bookings.notes")}
+                value={<span className="whitespace-pre-wrap">{vehicle.booking.notes}</span>}
+              />
+            </div>
           ) : null}
         </DetailCard>
       ) : null}
@@ -254,7 +338,7 @@ function Overview({ vehicle }: { vehicle: VehicleDetail }) {
           />
           <div className="sm:col-span-2">
             <Link
-              href={`/inventory/${vehicle.id}?tab=acquisition`}
+              href={vehicleHref(vehicle.stockNumber, "", "acquisition")}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {t("inventory.actions.viewAcquisition")}
@@ -324,7 +408,7 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
           description={t("inventory.acquisition.emptyHint")}
           action={
             <PermissionGate permission="acquisition.create">
-              <Link href={`/inventory/${vehicle.id}/edit`} className={cn(buttonVariants())}>
+              <Link href={vehicleHref(vehicle.stockNumber, "/edit")} className={cn(buttonVariants())}>
                 {t("inventory.actions.addAcquisition")}
               </Link>
             </PermissionGate>
@@ -343,7 +427,7 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
         <div className="flex flex-wrap gap-2">
           <PermissionGate permission="vehicle.edit">
             <Link
-              href={`/inventory/${vehicle.id}/edit`}
+              href={vehicleHref(vehicle.stockNumber, "/edit")}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {t("inventory.actions.edit")}
@@ -351,7 +435,24 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
           </PermissionGate>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="grid gap-4">
+        {vehicle.acquisitionSharedFrom ? (
+          <Alert>
+            <AlertDescription>
+              {t.rich("inventory.acquisition.sharedFrom", {
+                stock: vehicle.acquisitionSharedFrom.stockNumber,
+                link: (chunks) => (
+                  <Link
+                    href={vehicleHref(vehicle.acquisitionSharedFrom!.stockNumber, "", "acquisition")}
+                    className="font-medium underline underline-offset-4"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <DetailItem
             label={t("inventory.fields.acquisitionNumber")}
@@ -374,11 +475,25 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
             value={date(acquisition.purchaseDate)}
           />
           <DetailItem
-            label={t("inventory.fields.purchasePrice")}
+            label={
+              vehicle.quantity > 1
+                ? t("inventory.quantity.perUnitLabel", { label: t("inventory.fields.purchasePrice") })
+                : t("inventory.fields.purchasePrice")
+            }
             value={money(acquisition.purchasePrice)}
           />
+          {acquisition.purchasePrice != null && vehicle.quantity > 1 ? (
+            <DetailItem
+              label={t("inventory.totals.totalPurchase", { count: vehicle.quantity })}
+              value={money(quantityTotal(acquisition.purchasePrice, vehicle.quantity))}
+            />
+          ) : null}
           <DetailItem
-            label={t("inventory.fields.acquisitionCost")}
+            label={
+              vehicle.quantity > 1
+                ? t("inventory.quantity.perUnitLabel", { label: t("inventory.fields.acquisitionCost") })
+                : t("inventory.fields.acquisitionCost")
+            }
             value={
               money(acquisition.totalAcquisitionCost ?? vehicle.totalAcquisitionCost) ??
               (vehicle.totalAcquisitionCost === undefined
@@ -386,6 +501,14 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
                 : null)
             }
           />
+          {vehicle.quantity > 1 && (acquisition.totalAcquisitionCost ?? vehicle.totalAcquisitionCost) != null ? (
+            <DetailItem
+              label={t("inventory.totals.totalAcquisitionCost", { count: vehicle.quantity })}
+              value={money(
+                quantityTotal(acquisition.totalAcquisitionCost ?? vehicle.totalAcquisitionCost, vehicle.quantity),
+              )}
+            />
+          ) : null}
         </dl>
       </CardContent>
     </Card>
@@ -401,7 +524,6 @@ export function VehicleDetailClient({
 }) {
   const t = useTranslations();
   const query = useVehicle(vehicleId);
-  const [statusOpen, setStatusOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
 
@@ -455,7 +577,6 @@ export function VehicleDetailClient({
 
   const vehicle = query.data;
   const isArchived = vehicle.status === "archived";
-  const canChangeStatus = getGenericStatusChangeOptions(vehicle.status).length > 0;
   const meta = [vehicle.stockNumber, vehicle.vin].filter(Boolean).join(" · ");
 
   return (
@@ -468,11 +589,13 @@ export function VehicleDetailClient({
             <div className="flex flex-wrap items-center gap-2">
               <VehicleStatusBadge status={vehicle.status} />
               <MarketTypeBadge value={vehicle.marketType} />
+              <QuantityBadge quantity={vehicle.quantity} />
             </div>
+            <VehicleStatusTrigger vehicle={vehicle} variant="button" className="h-10 md:h-9" />
             {!isArchived ? (
               <PermissionGate permission="vehicle.edit">
                 <Link
-                  href={`/inventory/${vehicle.id}/edit`}
+                  href={vehicleHref(vehicle.stockNumber, "/edit")}
                   className={cn(buttonVariants(), "h-10 md:h-9")}
                 >
                   <PencilIcon aria-hidden />
@@ -480,7 +603,7 @@ export function VehicleDetailClient({
                 </Link>
               </PermissionGate>
             ) : null}
-            {canChangeStatus || !isArchived || canArchiveStatus(vehicle.status) ? (
+            {!isArchived || canArchiveStatus(vehicle.status) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
@@ -495,14 +618,6 @@ export function VehicleDetailClient({
                   <MoreHorizontalIcon aria-hidden />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-44">
-                  {canChangeStatus ? (
-                    <PermissionGate permission="vehicle.status.change">
-                      <DropdownMenuItem onClick={() => setStatusOpen(true)}>
-                        <RefreshCwIcon aria-hidden />
-                        {t("inventory.actions.changeStatus")}
-                      </DropdownMenuItem>
-                    </PermissionGate>
-                  ) : null}
                   {!isArchived ? (
                     <PermissionGate permission="vehicle.branch.transfer">
                       <DropdownMenuItem onClick={() => setTransferOpen(true)}>
@@ -534,7 +649,7 @@ export function VehicleDetailClient({
             "-top-5 -mx-4 px-4 py-2 md:-mx-6 md:px-6 lg:-top-8 lg:-mx-8 lg:px-8",
           )}
         >
-          <div className="bg-muted/40 overflow-x-auto rounded-2xl border p-1.5">
+          <div className="bg-muted/40 rounded-2xl border p-1.5">
             <TabsList
               variant="default"
               className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0"
@@ -561,10 +676,7 @@ export function VehicleDetailClient({
         </div>
 
         <TabsContent value="overview" className="outline-none">
-          <div className="grid gap-4">
-            <VehicleReadyForSalePanel vehicle={vehicle} />
-            <Overview vehicle={vehicle} />
-          </div>
+          <Overview vehicle={vehicle} />
         </TabsContent>
 
         <TabsContent value="acquisition" className="outline-none">
@@ -590,7 +702,6 @@ export function VehicleDetailClient({
 
       </Tabs>
 
-      <VehicleStatusDialog vehicle={vehicle} open={statusOpen} onOpenChange={setStatusOpen} />
       <VehicleTransferDialog vehicle={vehicle} open={transferOpen} onOpenChange={setTransferOpen} />
       <VehicleArchiveDialog vehicle={vehicle} open={archiveOpen} onOpenChange={setArchiveOpen} />
     </div>

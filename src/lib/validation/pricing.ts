@@ -56,6 +56,17 @@ export const upsertPricingSchema = z
       });
     }
     if (
+      value.maximumDiscountAmount != null &&
+      value.targetSellingPrice != null &&
+      value.maximumDiscountAmount > value.targetSellingPrice
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["maximumDiscountAmount"],
+        message: "pricing.validation.discountExceedsTarget",
+      });
+    }
+    if (
       value.overrideMinimum &&
       (!value.overrideReason || value.overrideReason.length === 0)
     ) {
@@ -92,15 +103,24 @@ export function parseMoneyInput(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * Maximum discount as a percentage of the target selling price (2 decimals), or null
+ * when either is missing. The amount is entered; the percentage is always derived.
+ */
+export function maxDiscountPercentFrom(amount: unknown, targetPrice: unknown): number | null {
+  const discount = parseMoneyInput(amount);
+  const target = parseMoneyInput(targetPrice);
+  if (discount == null || target == null || target <= 0) return null;
+  return Math.min(100, Number(((discount / target) * 100).toFixed(2)));
+}
+
 /** Client-side live calculator (server recalculates authoritatively). */
 export function calculatePricingPreview(input: {
   totalVehicleCost: number;
-  advertisedPrice: number | null;
   currentSellingPrice: number | null;
   minimumSellingPrice: number | null;
 }) {
   const sell = parseMoneyInput(input.currentSellingPrice);
-  const advertised = parseMoneyInput(input.advertisedPrice);
   const minimum = parseMoneyInput(input.minimumSellingPrice);
   const profit =
     sell == null ? null : Number((sell - input.totalVehicleCost).toFixed(2));
@@ -108,21 +128,11 @@ export function calculatePricingPreview(input: {
     sell == null || sell <= 0 || profit == null
       ? null
       : Number(((profit / sell) * 100).toFixed(2));
-  const discount =
-    advertised != null && sell != null && advertised > sell
-      ? Number((advertised - sell).toFixed(2))
-      : 0;
-  const discountPercent =
-    advertised != null && advertised > 0 && discount > 0
-      ? Number(((discount / advertised) * 100).toFixed(2))
-      : 0;
   const belowMinimum = sell != null && minimum != null && sell < minimum;
 
   return {
     expectedGrossProfit: profit,
     expectedMarginPercent: margin,
-    discountAmount: discount,
-    discountPercent,
     belowMinimum,
     isLoss: profit != null && profit < 0,
   };

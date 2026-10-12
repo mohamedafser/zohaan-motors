@@ -17,7 +17,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const t = useTranslations();
   const { can } = usePermission();
   const user = useUserContext();
-  const items = useMemo(() => filterNavigation(navigation, can), [can]);
+  const items = useMemo(() => filterNavigation(navigation, can, user.roles), [can, user.roles]);
   const name = user.displayName || user.email || t("common.account");
   const ToggleIcon = collapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon;
   const toggleLabel = collapsed ? t("nav.expand") : t("nav.collapse");

@@ -1,5 +1,5 @@
 import type { VehicleStatus } from "@/types/vehicle";
-import { INVENTORY_STATUSES, VEHICLE_STATUSES } from "@/types/vehicle";
+import { VEHICLE_STATUSES } from "@/types/vehicle";
 
 /**
  * Central vehicle lifecycle map (mirrors PostgreSQL is_valid_vehicle_status_transition).
@@ -19,25 +19,23 @@ export const VEHICLE_STATUS_TRANSITIONS: Record<VehicleStatus, readonly VehicleS
   archived: [],
 };
 
-/** Statuses that may enter Ready for Sale via the controlled Mark Ready for Sale action. */
-export function canMarkReadyForSaleFrom(status: VehicleStatus) {
-  return status === "acquired" || status === "under_inspection" || status === "under_repair";
-}
+/** Business statuses a user can move a vehicle to from the Update status flow. */
+export type StatusUpdateTarget = "ready_for_sale" | "reserved" | "sold";
 
 /**
- * Next statuses offered by the generic Change Status dialog.
- * Ready for Sale goes through Mark Ready for Sale; Booked goes through Bookings.
+ * Next statuses offered by Update status, in the order shown.
+ * In transit → Ready for sale uses mark_vehicle_ready_for_sale; Booked opens the booking
+ * flow; Sold is a direct status change. Booked cars are moved on from the Bookings page.
  */
-export function getGenericStatusChangeOptions(from: VehicleStatus): VehicleStatus[] {
-  // Booked vehicles are managed from the Bookings page so the booking record stays in sync.
-  if (from === "reserved") return [];
-  return getAllowedNextStatuses(from).filter((status) => {
-    if (!(INVENTORY_STATUSES as readonly string[]).includes(status)) return false;
-    if (status === "reserved") return false;
-    if (status === "archived") return false;
-    if (status === "ready_for_sale") return false;
-    return true;
-  });
+export function getStatusUpdateTargets(from: VehicleStatus): StatusUpdateTarget[] {
+  switch (from) {
+    case "acquired":
+      return ["ready_for_sale"];
+    case "ready_for_sale":
+      return ["reserved", "sold"];
+    default:
+      return [];
+  }
 }
 
 /** Statuses that can move to archived via the archive action (not sold/delivered). */

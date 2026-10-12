@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import { VehicleDetailClient } from "@/components/inventory/vehicle-detail-client";
 import { requirePagePermission } from "@/lib/auth/authorize";
+import { isUuid, vehicleHref } from "@/lib/vehicles/routes";
+import { resolveVehicleRef } from "@/lib/vehicles/service";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
@@ -32,5 +35,10 @@ export default async function VehicleDetailPage({
   const tab =
     typeof rawTab === "string" && VEHICLE_TABS.has(rawTab) ? rawTab : undefined;
 
-  return <VehicleDetailClient vehicleId={id} initialTab={tab} />;
+  const vehicle = await resolveVehicleRef(id);
+  // Old UUID links land on the canonical stock-number URL.
+  if (vehicle && isUuid(id)) redirect(vehicleHref(vehicle.stockNumber, "", tab));
+
+  // Unresolved refs fall through so the client shows its not-found state.
+  return <VehicleDetailClient vehicleId={vehicle?.id ?? id} initialTab={tab} />;
 }

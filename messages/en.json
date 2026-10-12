@@ -10,7 +10,6 @@
     "dashboard": "Dashboard",
     "inventory": "Inventory",
     "acquisitions": "Acquisitions",
-    "inspections": "Inspections",
     "workshop": "Workshop",
     "pricing": "Pricing",
     "workshopOrders": "Work orders",
@@ -44,7 +43,8 @@
     "workshopJobs": "Jobs",
     "myWorkshopJobs": "My jobs",
     "vehicleCatalog": "Vehicle catalog",
-    "bookings": "Bookings"
+    "bookings": "Bookings",
+    "myBookings": "My bookings"
   },
   "common": {
     "search": "Search",
@@ -90,7 +90,6 @@
     "title": "Create",
     "vehicle": "New vehicle",
     "acquisition": "New acquisition",
-    "inspection": "New inspection",
     "customer": "New customer",
     "reservation": "New reservation",
     "sale": "New sale",
@@ -221,7 +220,8 @@
     "number": "Enter a valid number.",
     "currency": "Enter an amount of zero or more.",
     "date": "Choose a valid date.",
-    "vin": "Enter a 17-character VIN."
+    "vin": "Enter a 17-character VIN.",
+    "sellingBelowMinimum": "Target selling price cannot be lower than the minimum selling price."
   },
   "empty": {
     "vehicles": "No vehicles found",
@@ -262,7 +262,6 @@
       "payments": "Payments",
       "documents": "Documents",
       "acquisitions": "Acquisitions",
-      "inspections": "Inspections",
       "workshop": "Workshop"
     }
   },
@@ -276,10 +275,6 @@
       "lead": {
         "title": "New lead assigned",
         "body": "A showroom enquiry is waiting for follow-up."
-      },
-      "inspection": {
-        "title": "Inspection due",
-        "body": "A vehicle is waiting for inspection."
       },
       "payment": {
         "title": "Payment recorded",
@@ -335,7 +330,6 @@
       "old": "90+ days"
     },
     "actions": {
-      "inspection": "Inspection waiting",
       "reservation": "Reservation to confirm",
       "pricing": "Pricing to set",
       "bookings": "Bookings to follow up"
@@ -358,14 +352,6 @@
     "acquisitionsNew": {
       "title": "New acquisition",
       "description": "Enter vehicle identity, source details, and purchase terms."
-    },
-    "inspections": {
-      "title": "Inspections",
-      "description": "Condition checks before a car is offered for sale."
-    },
-    "inspectionsNew": {
-      "title": "New inspection",
-      "description": "Select a vehicle, inspection type, and template, then start the checklist."
     },
     "workshop": {
       "title": "Workshop",
@@ -479,8 +465,12 @@
       "statusInvited": "Invited",
       "statusSuspended": "Suspended",
       "statusDisabled": "Disabled",
+      "invitedStatusHint": "Status changes once they accept the invite.",
       "errors": {
         "inviteFailed": "Could not send the invitation. Try again.",
+        "cannotChangeOwnStatus": "You can't change your own status.",
+        "invitedStatusLocked": "Pending invites become active when they verify their email.",
+        "cannotRemoveOwnSuperAdmin": "You can't remove your own Super Admin role.",
         "updateFailed": "Could not update the user.",
         "removeFailed": "Could not remove the user.",
         "alreadyExists": "A user with that email already exists.",
@@ -569,7 +559,6 @@
     "summary": {
       "total": "Total vehicles",
       "readyForSale": "Ready for sale",
-      "underInspection": "Under inspection",
       "underRepair": "Under repair",
       "reserved": "Booked",
       "sold": "Sold",
@@ -652,7 +641,13 @@
       "brand": "Brand",
       "visibleToStaff": "Visible to other roles",
       "visibleToStaff_yes": "Yes",
-      "visibleToStaff_no": "No, Super Admin only"
+      "visibleToStaff_no": "No, Super Admin only",
+      "quantity": "Quantity",
+      "portLocation": "Port location",
+      "portLocationPlaceholder": "e.g. Jebel Ali Port",
+      "minimumSellingPrice": "Minimum selling price",
+      "minimumSellingPriceHint": "Required before the car can be booked.",
+      "splitFrom": "Split from"
     },
     "enums": {
       "transmission": {
@@ -721,7 +716,8 @@
       "identification": "Identification",
       "vehicle": "Vehicle",
       "metadata": "Metadata",
-      "acquisition": "Acquisition"
+      "acquisition": "Acquisition",
+      "sellingPrice": "Selling price"
     },
     "filters": {
       "searchPlaceholder": "Search stock ID, VIN, brand or model",
@@ -730,8 +726,6 @@
       "allStatuses": "All statuses",
       "marketType": "Condition",
       "allMarketTypes": "All conditions",
-      "inspection": "Inspection",
-      "allInspections": "All inspections",
       "branch": "Branch",
       "allBranches": "All branches",
       "location": "Location",
@@ -792,7 +786,6 @@
       "year": "Year",
       "mileage": "Mileage",
       "marketType": "Condition",
-      "inspection": "Inspection",
       "status": "Status",
       "branch": "Branch",
       "location": "Location",
@@ -800,7 +793,8 @@
       "actions": "Actions",
       "view": "View",
       "brand": "Brand",
-      "model": "Model"
+      "model": "Model",
+      "quantity": "Qty"
     },
     "pagination": {
       "summary": "Showing {from}–{to} of {total}",
@@ -832,65 +826,15 @@
       "backToList": "Back to inventory",
       "viewAcquisition": "View acquisition",
       "createAcquisition": "Create acquisition",
-      "markReadyForSale": "Mark Ready for Sale",
       "addAcquisition": "Add acquisition details"
     },
     "readyForSale": {
-      "panelTitle": "Vehicle status",
-      "alreadyReady": "This vehicle is Ready for Sale. Inspection is optional and does not block selling.",
-      "loadFailed": "Could not load Ready for Sale eligibility.",
-      "eligibleTitle": "Ready to mark for sale",
       "blockedTitle": "Not ready for sale",
-      "outstanding": "Outstanding requirements:",
-      "overrideOpen": "Override and mark Ready for Sale",
-      "overrideTitle": "Override eligibility checks",
-      "overrideHint": "Only use when you are authorized to bypass outstanding requirements. An override reason is required and will be audited.",
       "overrideToggle": "Override eligibility checks",
       "overrideReason": "Override reason",
       "overrideReasonPlaceholder": "Why are you overriding the Ready for Sale checks?",
       "reasonOptional": "Note (optional)",
-      "reasonPlaceholder": "Optional note for the status history",
-      "confirm": {
-        "vehicle": "Vehicle",
-        "inspection": "Inspection",
-        "workshop": "Workshop",
-        "hint": "This vehicle will become available for sale."
-      },
-      "actions": {
-        "view_inspection": "View Inspection",
-        "create_inspection": "Create Inspection",
-        "view_workshop": "View Workshop",
-        "create_workshop": "Create Workshop Order",
-        "complete_quality_check": "Complete Quality Check",
-        "view_documents": "View Documents"
-      },
-      "checks": {
-        "inspection_completed": "Inspection completed",
-        "inspection_result": "Inspection result acceptable",
-        "critical_findings": "No unresolved critical findings",
-        "repairs": "No pending repairs",
-        "workshop": "Workshop requirements satisfied",
-        "quality_check": "Quality check requirements satisfied",
-        "documents": "Documents complete",
-        "status": "Current status allows Ready for Sale"
-      },
-      "summary": {
-        "inspection": {
-          "missing": "Missing",
-          "expired": "Expired",
-          "passed": "Passed",
-          "passed_with_advisories": "Passed with advisories",
-          "pass_with_repairs": "Pass with repairs",
-          "failed": "Failed"
-        },
-        "workshop": {
-          "not_required": "Not Required",
-          "required": "Required",
-          "pending": "Pending",
-          "completed": "Completed",
-          "quality_check_pending": "Quality check pending"
-        }
-      }
+      "reasonPlaceholder": "Optional note for the status history"
     },
     "dialogs": {
       "status": {
@@ -918,10 +862,6 @@
         "reason": "Reason",
         "reasonPlaceholder": "Why is this vehicle being archived?",
         "submit": "Archive vehicle"
-      },
-      "readyForSale": {
-        "title": "Mark Vehicle Ready for Sale?",
-        "description": "Confirm Ready for Sale for {stock}."
       }
     },
     "toasts": {
@@ -930,10 +870,10 @@
       "statusChanged": "Vehicle status changed.",
       "transferred": "Vehicle moved successfully.",
       "archived": "Vehicle archived.",
-      "readyForSale": "Vehicle marked Ready for Sale.",
       "error": "Something went wrong. Try again.",
       "duplicateVin": "A vehicle with this VIN already exists.",
-      "duplicateChassis": "A vehicle with this chassis number already exists."
+      "duplicateChassis": "A vehicle with this chassis number already exists.",
+      "pricingNotSaved": "Vehicle saved, but its selling price could not be saved. Set it from the Pricing tab."
     },
     "empty": {
       "title": "Your inventory is empty",
@@ -951,7 +891,6 @@
       "overview": "Overview",
       "acquisition": "Acquisition",
       "photos": "Photos",
-      "inspection": "Inspection",
       "costs": "Costs",
       "pricing": "Pricing",
       "documents": "Documents",
@@ -981,7 +920,9 @@
         "registration": "Registration Cost",
         "inspection": "Acquisition Inspection Cost",
         "other": "Other Acquisition Expenses"
-      }
+      },
+      "sharedFrom": "These units were split from <link>{stock}</link> and share its purchase. Prices and costs are per unit.",
+      "sharedEdit": "This purchase is shared with {stock}. Changes here apply to every unit bought together."
     },
     "stepper": {
       "navLabel": "New vehicle steps",
@@ -1015,16 +956,13 @@
         "acquisitionSkipped": "No acquisition details on this create — you can add them later.",
         "photosCount": "{count} photo(s) ready to upload",
         "photosNone": "No photos added yet."
-      }
+      },
+      "fixPricing": "Enter the minimum selling price to continue."
     },
     "tabEmpty": {
       "photos": {
         "title": "No photos yet",
         "description": "Add photos when creating or editing this vehicle."
-      },
-      "inspection": {
-        "title": "Not inspected",
-        "description": "Inspection is optional. Start an inspection when you need a condition report."
       },
       "costs": {
         "title": "No costs recorded",
@@ -1072,14 +1010,12 @@
         "all": "All",
         "general": "General",
         "acquisition": "Acquisition",
-        "inspection": "Inspection",
         "reconditioning": "Reconditioning",
         "pricing": "Pricing"
       },
       "sources": {
         "general": "General",
         "acquisition": "Acquisition",
-        "inspection": "Inspection",
         "reconditioning": "Reconditioning",
         "pricing": "Pricing"
       }
@@ -1187,8 +1123,6 @@
     "placeholders": {
       "photosTitle": "No photos yet",
       "photosHint": "Add photos from the Photos tab or when editing this vehicle.",
-      "inspectionTitle": "Inspection has not been started",
-      "inspectionHint": "Start an inspection from the Inspection tab.",
       "costsTitle": "Costs unavailable",
       "restricted": "You do not have permission to view this information.",
       "pricingHint": "Open the Pricing tab to manage selling prices.",
@@ -1267,23 +1201,52 @@
         "unavailable": "Preview unavailable"
       }
     },
-    "inspectionFilter": {
-      "not_inspected": "Not Inspected",
-      "in_progress": "In Progress",
-      "pass": "Pass",
-      "pass_with_issues": "Pass with Issues",
-      "fail": "Fail",
-      "approved": "Approved"
+    "totals": {
+      "title": "Totals for {count} units",
+      "hint": "Prices are per unit. Totals multiply by the quantity.",
+      "totalPurchase": "Total purchase price ({count} units)",
+      "totalSelling": "Total selling price ({count} units)",
+      "totalMinimum": "Total minimum price ({count} units)",
+      "totalAcquisitionCost": "Total acquisition cost ({count} units)"
     },
-    "inspectionCard": {
-      "title": "Inspection",
-      "notInspected": "Not Inspected",
-      "notInspectedHint": "Inspection is optional. You can inspect this vehicle at any time.",
-      "inspectVehicle": "Inspect Vehicle",
-      "viewInspection": "View Inspection",
-      "failedWarning": "Inspection Failed",
-      "date": "Date",
-      "score": "Score"
+    "quantity": {
+      "units": "{count} units",
+      "perUnitLabel": "{label} (per unit)",
+      "perUnitValue": "{value} / unit",
+      "totalValue": "Total {value}"
+    },
+    "statusUpdate": {
+      "title": "Update status",
+      "triggerLabel": "Status: {status}. Update status",
+      "to": "to",
+      "bookedHint": "Booked cars are sold or released from the Bookings page, so the booking stays in sync.",
+      "openBookings": "Open Bookings",
+      "done": "Status updated to {status}.",
+      "targets": {
+        "ready_for_sale": "Available to customers and can be booked.",
+        "reserved": "Hold the car for a customer with a deposit.",
+        "sold": "The car has been sold."
+      },
+      "confirmHint": {
+        "ready_for_sale": "The car will be listed as available for sale.",
+        "sold": "The car will be marked sold and can no longer be booked."
+      },
+      "confirm": {
+        "ready_for_sale": "Mark ready for sale",
+        "reserved": "Continue to booking",
+        "sold": "Mark as sold"
+      },
+      "units": "Units",
+      "unitsInvalid": "Enter a whole number from 1 to {count}.",
+      "unitsAll": "All {count} units move together.",
+      "unitsSplit": "{moved} move to {target} as a new record; {remaining} stay {current}.",
+      "unitsOf": "{units} of {count} units",
+      "doneSplit": "{units} units moved to {stock} ({status})."
+    },
+    "booking": {
+      "title": "Booking",
+      "bookedBy": "Booked by",
+      "bookedOn": "Booked on"
     }
   },
   "acquisitions": {
@@ -1690,459 +1653,6 @@
       "uploadingBatchHint": "Please wait while files are uploaded. Do not close this page."
     }
   },
-  "inspections": {
-    "title": "Inspections",
-    "description": "Vehicle condition checks before sale, return, or reconditioning.",
-    "actions": {
-      "add": "New inspection",
-      "retry": "Retry",
-      "loading": "Updating…",
-      "previous": "Previous",
-      "next": "Next",
-      "back": "Back to list",
-      "cancel": "Cancel",
-      "cancelInspection": "Cancel inspection",
-      "createSubmit": "Create & start checklist",
-      "assign": "Assign",
-      "perform": "Perform",
-      "submit": "Submit",
-      "saveDraft": "Save draft",
-      "approve": "Approve",
-      "reject": "Reject",
-      "review": "Review",
-      "reinspect": "Request re-inspection",
-      "updateOutcome": "Update vehicle & inspection status",
-      "addFinding": "Add finding",
-      "editFinding": "Edit finding",
-      "removeFinding": "Remove finding",
-      "noChangesHint": "Change something to enable Update",
-      "view": "View"
-    },
-    "pagination": {
-      "showing": "Showing {from}–{to} of {total}",
-      "pageSize": "Rows per page",
-      "previous": "Previous",
-      "next": "Next"
-    },
-    "empty": {
-      "title": "No inspections yet",
-      "hint": "Create an inspection to start a vehicle condition checklist.",
-      "filteredTitle": "No inspections found",
-      "filteredHint": "Try changing your filters.",
-      "notFound": "Inspection not found",
-      "notFoundHint": "It may have been removed, or you may not have access.",
-      "findingsTitle": "No findings recorded",
-      "findingsHint": "Failed or advisory items can be logged as findings.",
-      "photosTitle": "No photos yet",
-      "photosHint": "Capture damage, VIN, odometer, and condition photos during the inspection.",
-      "recommendationsTitle": "No recommendations",
-      "recommendationsHint": "Repair or follow-up recommendations will appear here."
-    },
-    "errors": {
-      "loadTitle": "Unable to load inspections",
-      "generic": "Unable to complete the request. Please try again."
-    },
-    "summary": {
-      "pending": "Pending",
-      "myInspections": "Assigned to me",
-      "inProgress": "In progress",
-      "awaitingReview": "Awaiting review",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
-    "status": {
-      "draft": "Draft",
-      "assigned": "Assigned",
-      "in_progress": "In progress",
-      "submitted": "Submitted",
-      "under_review": "Under review",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "cancelled": "Cancelled"
-    },
-    "types": {
-      "full_inspection": "Full inspection",
-      "basic_inspection": "Basic inspection",
-      "pre_purchase_inspection": "Pre-purchase",
-      "return_inspection": "Return inspection",
-      "re_inspection": "Re-inspection"
-    },
-    "results": {
-      "pass": "Pass",
-      "pass_with_advisories": "Pass with advisories",
-      "repair_required": "Repair required",
-      "fail": "Fail"
-    },
-    "itemResults": {
-      "pass": "Pass",
-      "fail": "Fail",
-      "advisory": "Advisory",
-      "not_applicable": "N/A",
-      "not_tested": "Not tested"
-    },
-    "severities": {
-      "info": "Info",
-      "minor": "Minor",
-      "moderate": "Moderate",
-      "major": "Major",
-      "critical": "Critical"
-    },
-    "recommendations": {
-      "no_action": "No action",
-      "monitor": "Monitor",
-      "repair_before_sale": "Repair before sale",
-      "repair_urgently": "Repair urgently",
-      "replace": "Replace",
-      "reinspect": "Re-inspect"
-    },
-    "photoCategories": {
-      "front": "Front",
-      "rear": "Rear",
-      "left_side": "Left side",
-      "right_side": "Right side",
-      "interior": "Interior",
-      "dashboard": "Dashboard",
-      "odometer": "Odometer",
-      "vin": "VIN",
-      "engine": "Engine",
-      "tyre": "Tyre",
-      "damage": "Damage",
-      "undercarriage": "Undercarriage",
-      "other": "Other"
-    },
-    "damageTypes": {
-      "scratch": "Scratch",
-      "dent": "Dent",
-      "paint_damage": "Paint damage",
-      "crack": "Crack",
-      "rust": "Rust",
-      "panel_damage": "Panel damage",
-      "glass_damage": "Glass damage",
-      "mechanical_damage": "Mechanical damage",
-      "electrical_damage": "Electrical damage",
-      "accident_damage": "Accident damage",
-      "wear_and_tear": "Wear and tear",
-      "other": "Other"
-    },
-    "damageLocations": {
-      "front": "Front",
-      "rear": "Rear",
-      "left_side": "Left side",
-      "right_side": "Right side",
-      "roof": "Roof",
-      "interior": "Interior",
-      "engine_bay": "Engine bay",
-      "undercarriage": "Undercarriage",
-      "other": "Other"
-    },
-    "sort": {
-      "created_at": "Created date",
-      "updated_at": "Updated date",
-      "inspection_number": "Inspection number",
-      "status": "Status",
-      "result": "Result",
-      "overall_score": "Score",
-      "submitted_at": "Submitted date"
-    },
-    "table": {
-      "number": "Inspection #",
-      "vehicle": "Vehicle",
-      "type": "Type",
-      "branch": "Branch",
-      "assignee": "Assignee",
-      "status": "Status",
-      "result": "Result",
-      "score": "Score",
-      "updated": "Updated",
-      "actions": "Actions",
-      "view": "View"
-    },
-    "filters": {
-      "searchLabel": "Search",
-      "searchPlaceholder": "Number, stock ID, VIN, brand, model…",
-      "status": "Status",
-      "branch": "Branch",
-      "type": "Type",
-      "result": "Result",
-      "assignedTo": "Assigned to",
-      "mine": "Assigned to me",
-      "mineYes": "My inspections",
-      "hasCritical": "Has critical findings",
-      "repairRequired": "Repair required",
-      "dateFrom": "From date",
-      "dateTo": "To date",
-      "sort": "Sort by",
-      "order": "Order",
-      "asc": "Ascending",
-      "desc": "Descending",
-      "clear": "Clear all",
-      "more": "More filters",
-      "less": "Hide filters",
-      "allStatuses": "All statuses",
-      "allBranches": "All branches",
-      "allTypes": "All types",
-      "allResults": "All results",
-      "anyAssignee": "Any assignee",
-      "any": "Any",
-      "yes": "Yes",
-      "groupType": "Type & assignment",
-      "groupFlags": "Flags",
-      "groupDates": "Dates",
-      "active": "{count} active",
-      "drawerTitle": "Filters",
-      "drawerHint": "Narrow results with more options."
-    },
-    "fields": {
-      "number": "Inspection number",
-      "status": "Status",
-      "result": "Result",
-      "score": "Overall score",
-      "branch": "Branch",
-      "vehicle": "Vehicle",
-      "inspectionType": "Inspection type",
-      "template": "Template",
-      "defaultTemplate": "Use default template",
-      "assignedTo": "Assigned to",
-      "unassigned": "Unassigned",
-      "inspectedBy": "Inspected by",
-      "assignedAt": "Assigned at",
-      "submittedAt": "Submitted at",
-      "startedAt": "Started",
-      "odometer": "Odometer reading",
-      "odometerUnit": "Odometer unit",
-      "mileage": "Vehicle mileage",
-      "vin": "VIN",
-      "verifiedVin": "Verified VIN",
-      "vinVerified": "VIN verified",
-      "notes": "Notes",
-      "summary": "Summary",
-      "recommendation": "Recommendation",
-      "recommendedAction": "Recommended action",
-      "findingTitle": "Finding title",
-      "itemResult": "Item result",
-      "severity": "Severity",
-      "description": "Description",
-      "damageType": "Damage type",
-      "damageLocation": "Damage location",
-      "estimatedCost": "Estimated cost",
-      "photoCategory": "Photo category",
-      "photos": "Photos",
-      "criticalFindings": "Critical findings",
-      "failedItems": "Failed items",
-      "reviewedBy": "Reviewed by",
-      "reviewedAt": "Reviewed at",
-      "reviewNote": "Review note",
-      "rejectionReason": "Rejection reason",
-      "cancelReason": "Cancel reason",
-      "approvedAt": "Approved at",
-      "createdAt": "Created",
-      "createdBy": "Created by",
-      "updatedAt": "Updated",
-      "updatedBy": "Updated by",
-      "notSet": "Not set",
-      "selectPlaceholder": "Select…"
-    },
-    "sections": {
-      "vehicle": "Vehicle",
-      "setup": "Inspection setup",
-      "notes": "Notes",
-      "vehicle_identity": "Vehicle identity",
-      "exterior": "Exterior",
-      "interior": "Interior",
-      "engine": "Engine",
-      "transmission": "Transmission",
-      "electrical": "Electrical",
-      "air_conditioning": "Air conditioning",
-      "brakes": "Brakes",
-      "suspension": "Suspension",
-      "steering": "Steering",
-      "tyres_wheels": "Tyres & wheels",
-      "fluids": "Fluids",
-      "lights": "Lights",
-      "safety": "Safety",
-      "undercarriage": "Undercarriage",
-      "accident_damage": "Accident damage",
-      "road_test": "Road test",
-      "documents": "Documents",
-      "final_assessment": "Final assessment"
-    },
-    "detail": {
-      "overview": "Overview",
-      "progress": "Progress",
-      "assignment": "Assignment",
-      "review": "Review",
-      "audit": "Record info",
-      "critical": "CRITICAL",
-      "photoUnavailable": "Preview unavailable",
-      "latest": "Latest inspection",
-      "historyList": "Inspection history"
-    },
-    "tabs": {
-      "overview": "Overview",
-      "checklist": "Checklist",
-      "findings": "Findings",
-      "photos": "Photos",
-      "recommendations": "Recommendations",
-      "review": "Review",
-      "history": "History"
-    },
-    "form": {
-      "metaFailed": "Unable to load form options. You can still enter values manually."
-    },
-    "dialogs": {
-      "approval": {
-        "approveTitle": "Approve inspection",
-        "approveDescription": "Confirm the checklist result and approve this inspection.",
-        "approveSubmit": "Approve",
-        "rejectTitle": "Reject inspection",
-        "rejectDescription": "Provide a reason for rejecting this inspection.",
-        "rejectSubmit": "Reject",
-        "note": "Review note",
-        "notePlaceholder": "Optional note for the record",
-        "reason": "Rejection reason",
-        "reasonPlaceholder": "Required reason",
-        "overrideCritical": "Override critical findings and approve anyway"
-      },
-      "assign": {
-        "title": "Assign inspection",
-        "description": "Choose an inspector responsible for this checklist.",
-        "reason": "Note",
-        "reasonPlaceholder": "Optional assignment note",
-        "submit": "Assign"
-      },
-      "submit": {
-        "title": "Submit inspection",
-        "description": "Review progress and confirm before sending for approval.",
-        "progressSummary": "{completed} of {total} items completed",
-        "failedCount": "{count} failed items",
-        "criticalCount": "{count} critical findings",
-        "uncheckedTitle": "Sections not fully checked",
-        "uncheckedHint": "These tabs still have items left unchecked or marked Not tested:",
-        "overrideIncomplete": "Submit even if required items are incomplete",
-        "submit": "Submit for review"
-      },
-      "reinspect": {
-        "title": "Request re-inspection",
-        "description": "Create a follow-up inspection linked to this record.",
-        "reason": "Reason",
-        "reasonPlaceholder": "Why is a re-inspection needed?",
-        "submit": "Create re-inspection"
-      },
-      "outcome": {
-        "title": "Update vehicle & inspection status",
-        "description": "Set the inspection result and vehicle status after approval. Choosing Pass suggests Ready for Sale.",
-        "currentTitle": "Current status",
-        "currentHint": "Inspection: {inspection}. Vehicle: {vehicle}.",
-        "noResult": "No result",
-        "unknownVehicle": "Unknown",
-        "inspectionStatus": "Inspection result",
-        "vehicleStatus": "Vehicle status",
-        "note": "Note",
-        "notePlaceholder": "Optional note for this status change",
-        "overrideCritical": "Override unresolved critical findings and mark as pass",
-        "submit": "Update statuses"
-      },
-      "finding": {
-        "title": "Add finding",
-        "editTitle": "Edit finding",
-        "description": "Record damage, defects, or advisories found during inspection.",
-        "editDescription": "Update this finding's details.",
-        "submit": "Save finding",
-        "updateSubmit": "Update finding"
-      },
-      "deleteFinding": {
-        "title": "Remove finding?",
-        "description": "“{title}” will be permanently removed from this inspection.",
-        "submit": "Remove finding"
-      },
-      "cancel": {
-        "title": "Cancel inspection",
-        "description": "This inspection will be closed and no longer editable.",
-        "reason": "Cancel reason",
-        "reasonPlaceholder": "Required reason",
-        "submit": "Cancel inspection"
-      }
-    },
-    "history": {
-      "statusHistory": "Status history",
-      "activity": "Activity",
-      "initial": "Created",
-      "changedBy": "by {name}",
-      "system": "System",
-      "noStatus": "No status changes yet",
-      "noStatusHint": "Status updates will appear here.",
-      "noActivity": "No activity yet",
-      "noActivityHint": "Assignments, findings, and reviews will appear here."
-    },
-    "toasts": {
-      "created": "Inspection {number} created",
-      "updated": "Inspection updated",
-      "assigned": "Inspection assigned",
-      "submitted": "Inspection submitted",
-      "approved": "Inspection approved",
-      "rejected": "Inspection rejected",
-      "cancelled": "Inspection cancelled",
-      "reinspect": "Re-inspection {number} created",
-      "outcomeUpdated": "Vehicle and inspection status updated",
-      "findingAdded": "Finding added",
-      "findingUpdated": "Finding updated",
-      "findingRemoved": "Finding removed",
-      "photoAdded": "Photo uploaded",
-      "photosAdded": "{count} photos uploaded",
-      "photoRemoved": "Photo removed",
-      "error": "Something went wrong. Please try again."
-    },
-    "progress": {
-      "items": "{completed} of {total} items",
-      "sections": "{completed} of {total} sections",
-      "critical": "{count} critical"
-    },
-    "perform": {
-      "title": "Perform inspection",
-      "sectionNav": "Inspection sections",
-      "identity": "Vehicle identity",
-      "photos": "Photos",
-      "capture": "Camera",
-      "gallery": "Gallery",
-      "photoCount": "{count} photos attached",
-      "findingCount": "{count} findings recorded",
-      "itemFindings": "{count} findings on this item",
-      "sectionFindings": "Section findings",
-      "sectionFindingsHint": "Findings not tied to a specific checklist item",
-      "noSectionFindings": "No section-level findings yet.",
-      "noItemFindings": "No findings on this item yet.",
-      "required": "Required",
-      "itemResult": "Item result",
-      "saving": "Saving…",
-      "saved": "Saved",
-      "unsaved": "Unsaved changes",
-      "saveError": "Save failed",
-      "uploading": "Uploading photos…",
-      "uploadingPercent": "Uploading {percent}%",
-      "savingPhoto": "Saving photo…",
-      "uploadFailed": "Upload failed",
-      "removePhoto": "Remove photo",
-      "dismissFailedUpload": "Dismiss failed upload"
-    },
-    "offline": {
-      "online": "Online",
-      "offline": "Offline draft"
-    },
-    "warnings": {
-      "odometerTitle": "Odometer differs from vehicle mileage",
-      "odometerBody": "Vehicle record shows {vehicle} km; entered reading is {reading} km.",
-      "vinTitle": "VIN mismatch",
-      "vinBody": "Vehicle VIN is {vehicle}; verified VIN is {verified}."
-    },
-    "review": {
-      "title": "Review inspection",
-      "summary": "Review summary",
-      "criticalTitle": "Critical findings present",
-      "criticalBody": "{count} critical findings require attention before approval.",
-      "notReviewableTitle": "Not ready for review",
-      "notReviewableBody": "Current status is {status}."
-    }
-  },
   "workshop": {
     "title": "Workshop",
     "description": "Repair and refurbishment work to prepare vehicles for sale.",
@@ -2415,14 +1925,13 @@
     "fields": {
       "minimum": "Minimum selling price",
       "target": "Target selling price",
-      "advertised": "Advertised price",
-      "current": "Current selling price",
       "maxDiscountAmount": "Maximum discount amount",
       "maxDiscountPercent": "Maximum discount %",
       "notes": "Pricing notes",
       "changeReason": "Change reason",
       "overrideMinimum": "Override minimum selling price",
-      "overrideReason": "Override reason"
+      "overrideReason": "Override reason",
+      "maxDiscountPercentHint": "Calculated from the discount amount and the target selling price."
     },
     "cost": {
       "purchase": "Purchase price",
@@ -2434,7 +1943,7 @@
       "totalCost": "Total vehicle cost",
       "expectedProfit": "Expected gross profit",
       "margin": "Expected margin",
-      "discount": "Discount"
+      "maxDiscount": "Maximum discount"
     },
     "status": {
       "draft": "Draft",
@@ -2502,7 +2011,8 @@
     },
     "validation": {
       "minExceedsTarget": "Minimum price cannot exceed target price.",
-      "currentExceedsAdvertised": "Current price cannot exceed advertised price."
+      "currentExceedsAdvertised": "Current price cannot exceed advertised price.",
+      "discountExceedsTarget": "Discount cannot exceed the target selling price."
     }
   },
   "bookings": {
@@ -2528,7 +2038,6 @@
     "lastName": "Last name",
     "phone": "Phone",
     "deposit": "Deposit (AED)",
-    "expiresOn": "Hold until",
     "notes": "Notes",
     "number": "Booking #",
     "status": "Status",
@@ -2550,18 +2059,30 @@
     "errors": {
       "createFailed": "Could not create the booking.",
       "actionFailed": "That action failed. Try again.",
-      "expiryPast": "Pick a date from today onwards.",
       "vehicleNotFound": "That car no longer exists.",
       "notAvailable": "That car is no longer ready for sale.",
       "alreadyBooked": "That car already has an active booking.",
       "customerExists": "A customer with this phone number already exists. Select them as an existing customer.",
-      "salespersonRequired": "Choose the sales executive for this customer."
+      "salespersonRequired": "Choose the sales executive for this customer.",
+      "noMinimumPrice": "Set a minimum selling price before booking this car.",
+      "belowMinimum": "This price is below the minimum allowed for this car.",
+      "optionsFailed": "Booking options could not be loaded. Close and try again.",
+      "tooManyUnits": "That is more units than are available."
     },
     "salesperson": "Sales executive",
     "selectSalesperson": "Select the sales executive",
     "noSalespeople": "No sales executives yet",
     "salespersonLinked": "This customer always stays with their sales executive.",
     "salespersonSelf": "New customers you add are linked to you.",
-    "useExisting": "Use {name} instead"
+    "useExisting": "Use {name} instead",
+    "sellingPrice": "Selling price (AED)",
+    "myTitle": "My bookings",
+    "myDescription": "Cars you booked for your customers. Booking a car marks it Booked; cancelling returns it to Ready for sale.",
+    "edit": "Edit",
+    "editTitle": "Edit booking",
+    "updated": "Booking updated.",
+    "units": "Units to book",
+    "unitsHint": "{count} units available. The rest stay Ready for sale.",
+    "sellingTotal": "Total for {count} units: {total}"
   }
 }

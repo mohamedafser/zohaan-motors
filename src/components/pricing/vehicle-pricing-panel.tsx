@@ -165,12 +165,11 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
                 <dd><Money value={p.targetSellingPrice} locale={locale} /></dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("pricing.fields.advertised")}</dt>
-                <dd><Money value={p.advertisedPrice} locale={locale} /></dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("pricing.fields.current")}</dt>
-                <dd><Money value={p.currentSellingPrice} locale={locale} /></dd>
+                <dt className="text-muted-foreground">{t("pricing.summary.maxDiscount")}</dt>
+                <dd>
+                  <Money value={p.maximumDiscountAmount} locale={locale} />
+                  {p.maximumDiscountPercent != null ? ` (${p.maximumDiscountPercent.toFixed(2)}%)` : null}
+                </dd>
               </div>
               {canProfit ? (
                 <>
@@ -242,11 +241,22 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
                     {formatDate(item.changedAt, locale, "dateTime")}
                   </span>
                 </div>
-                <p>
-                  <Money value={item.previousCurrentPrice} locale={locale} />
-                  {" → "}
-                  <Money value={item.newCurrentPrice} locale={locale} />
-                </p>
+                {item.previousMinimumPrice !== item.newMinimumPrice ? (
+                  <p>
+                    <span className="text-muted-foreground">{t("pricing.fields.minimum")}: </span>
+                    <Money value={item.previousMinimumPrice} locale={locale} />
+                    {" → "}
+                    <Money value={item.newMinimumPrice} locale={locale} />
+                  </p>
+                ) : null}
+                {item.previousTargetPrice !== item.newTargetPrice ? (
+                  <p>
+                    <span className="text-muted-foreground">{t("pricing.fields.target")}: </span>
+                    <Money value={item.previousTargetPrice} locale={locale} />
+                    {" → "}
+                    <Money value={item.newTargetPrice} locale={locale} />
+                  </p>
+                ) : null}
                 {item.reason ? (
                   <p className="text-muted-foreground">{t(`pricing.reasons.${item.reason}`)}</p>
                 ) : null}

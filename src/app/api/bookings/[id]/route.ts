@@ -1,5 +1,6 @@
 import { jsonError, jsonOk, requireApiUser } from "@/lib/api/http";
-import { updateBooking } from "@/lib/bookings/service";
+import { editBooking, updateBooking } from "@/lib/bookings/service";
+import { firstFieldErrors } from "@/lib/validation";
 import { bookingActionSchema } from "@/lib/validation/booking";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -8,11 +9,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const parsed = bookingActionSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return jsonError("validation", "Invalid action.", 400);
+  if (!parsed.success) {
+    return jsonError("validation", "Invalid action.", 400, { fieldErrors: firstFieldErrors(parsed.error) });
+  }
 
-  const result = await updateBooking(id, parsed.data, auth.context);
+  const { data: action } = parsed;
+  const result =
+    action.action === "edit"
+      ? await editBooking(id, action, auth.context)
+      : await updateBooking(id, action, auth.context);
   if (result.error) {
-    return jsonError(result.error.code, result.error.message, result.error.code === "forbidden" ? 403 : 400);
+    return jsonError(result.error.code, result.error.message, result.error.code === "forbidden" ? 403 : 400, {
+      fieldErrors: result.error.fieldErrors,
+    });
   }
   return jsonOk({ ok: true });
 }

@@ -21,10 +21,10 @@ import { cn } from "@/lib/utils";
 export function MobileNav() {
   const t = useTranslations();
   const pathname = usePathname();
-  const { can } = usePermission();
+  const { can, user } = usePermission();
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const filtered = useMemo(() => filterNavigation(navigation, can), [can]);
+  const filtered = useMemo(() => filterNavigation(navigation, can, user.roles), [can, user.roles]);
   const allowedQuickActions = useMemo(
     () => quickActions.filter((action) => can(action.permission)),
     [can],
@@ -63,7 +63,11 @@ export function MobileNav() {
               <PlusIcon className="size-6" />
             </button>
           </li>
-          {bookings ? <MobileSlot item={bookings} label={t("nav.bookings")} pathname={pathname} /> : null}
+          {bookings ? <MobileSlot
+              item={bookings}
+              label={t(bookings.labelKey as Parameters<typeof t>[0])}
+              pathname={pathname}
+            /> : null}
           <li>
             <button
               type="button"

@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 
-import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { LanguageSwitcher } from "@/components/navigation/language-switcher";
 import { NotificationMenu } from "@/components/navigation/notification-menu";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
@@ -18,9 +17,6 @@ export function HeaderBar({ user }: { user: UserContext }) {
       <div className="min-w-0 lg:hidden">
         <BrandMark showName={false} />
         <span className="sr-only">{t("app.name")}</span>
-      </div>
-      <div className="hidden min-w-0 md:block">
-        <AppBreadcrumbs />
       </div>
       <div className="ms-auto flex items-center gap-1.5">
         <div className="hidden items-center gap-0.5 md:flex">

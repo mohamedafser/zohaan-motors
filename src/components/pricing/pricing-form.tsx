@@ -19,6 +19,7 @@ import { usePermission } from "@/hooks/use-permission";
 import { usePricingMutations } from "@/hooks/use-pricing";
 import {
   calculatePricingPreview,
+  maxDiscountPercentFrom,
   parseMoneyInput,
   upsertPricingSchema,
   type UpsertPricingValues,
@@ -50,8 +51,6 @@ export function PricingForm({
     defaultValues: {
       minimumSellingPrice: detail.pricing?.minimumSellingPrice ?? null,
       targetSellingPrice: detail.pricing?.targetSellingPrice ?? null,
-      advertisedPrice: detail.pricing?.advertisedPrice ?? null,
-      currentSellingPrice: detail.pricing?.currentSellingPrice ?? null,
       maximumDiscountAmount: detail.pricing?.maximumDiscountAmount ?? null,
       maximumDiscountPercent: detail.pricing?.maximumDiscountPercent ?? null,
       pricingNotes: detail.pricing?.pricingNotes ?? "",
@@ -67,8 +66,6 @@ export function PricingForm({
     form.reset({
       minimumSellingPrice: detail.pricing?.minimumSellingPrice ?? null,
       targetSellingPrice: detail.pricing?.targetSellingPrice ?? null,
-      advertisedPrice: detail.pricing?.advertisedPrice ?? null,
-      currentSellingPrice: detail.pricing?.currentSellingPrice ?? null,
       maximumDiscountAmount: detail.pricing?.maximumDiscountAmount ?? null,
       maximumDiscountPercent: detail.pricing?.maximumDiscountPercent ?? null,
       pricingNotes: detail.pricing?.pricingNotes ?? "",
@@ -80,31 +77,41 @@ export function PricingForm({
     });
   }, [detail, form]);
 
-  const watchedMinimum = useWatch({ control: form.control, name: "minimumSellingPrice" });
-  const watchedAdvertised = useWatch({ control: form.control, name: "advertisedPrice" });
-  const watchedCurrent = useWatch({ control: form.control, name: "currentSellingPrice" });
-  const watchedOverride = useWatch({ control: form.control, name: "overrideMinimum" });
 
+  const watchedMinimum = useWatch({ control: form.control, name: "minimumSellingPrice" });
+  const watchedTarget = useWatch({ control: form.control, name: "targetSellingPrice" });
+  const watchedDiscount = useWatch({ control: form.control, name: "maximumDiscountAmount" });
+  const watchedOverride = useWatch({ control: form.control, name: "overrideMinimum" });
+  const discountPercent = maxDiscountPercentFrom(watchedDiscount, watchedTarget);
+
+  // The target is the car's selling price, so profit and margin are previewed from it.
   const preview = calculatePricingPreview({
     totalVehicleCost: totalCost,
-    advertisedPrice: parseMoneyInput(watchedAdvertised),
-    currentSellingPrice: parseMoneyInput(watchedCurrent),
+    currentSellingPrice: parseMoneyInput(watchedTarget),
     minimumSellingPrice: parseMoneyInput(watchedMinimum),
   });
 
   const { errors } = form.formState;
+  // Pricing messages aren't auto-translated by FormField (only validation.* keys are).
+  const errorText = (message?: string) =>
+    message?.startsWith("pricing.") ? t(message as Parameters<typeof t>[0]) : message;
   const money = (value: number | null) =>
     value == null ? "—" : formatCurrency(value, locale);
 
   async function submit(values: UpsertPricingValues) {
     try {
       const belowMin =
-        values.currentSellingPrice != null &&
+        values.targetSellingPrice != null &&
         values.minimumSellingPrice != null &&
-        values.currentSellingPrice < values.minimumSellingPrice;
+        values.targetSellingPrice < values.minimumSellingPrice;
 
       await upsert.mutateAsync({
         ...values,
+        // Target is the car's selling price: current mirrors it (the list, bookings and
+        // profitability read current), and advertised price is no longer used.
+        advertisedPrice: null,
+        currentSellingPrice: values.targetSellingPrice,
+        maximumDiscountPercent: maxDiscountPercentFrom(values.maximumDiscountAmount, values.targetSellingPrice),
         overrideMinimum: belowMin ? Boolean(values.overrideMinimum) : false,
         submitForApproval: belowMin && !values.overrideMinimum ? true : values.submitForApproval,
       });
@@ -121,7 +128,7 @@ export function PricingForm({
         <FormField
           label={t("pricing.fields.minimum")}
           htmlFor="pricing-min"
-          error={errors.minimumSellingPrice?.message}
+          error={errorText(errors.minimumSellingPrice?.message)}
         >
           <Input
             id="pricing-min"
@@ -135,7 +142,7 @@ export function PricingForm({
         <FormField
           label={t("pricing.fields.target")}
           htmlFor="pricing-target"
-          error={errors.targetSellingPrice?.message}
+          error={errorText(errors.targetSellingPrice?.message)}
         >
           <Input
             id="pricing-target"
@@ -147,37 +154,9 @@ export function PricingForm({
           />
         </FormField>
         <FormField
-          label={t("pricing.fields.advertised")}
-          htmlFor="pricing-advertised"
-          error={errors.advertisedPrice?.message}
-        >
-          <Input
-            id="pricing-advertised"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            {...form.register("advertisedPrice", moneyFieldOptions)}
-          />
-        </FormField>
-        <FormField
-          label={t("pricing.fields.current")}
-          htmlFor="pricing-current"
-          error={errors.currentSellingPrice?.message}
-        >
-          <Input
-            id="pricing-current"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            {...form.register("currentSellingPrice", moneyFieldOptions)}
-          />
-        </FormField>
-        <FormField
           label={t("pricing.fields.maxDiscountAmount")}
           htmlFor="pricing-max-discount"
-          error={errors.maximumDiscountAmount?.message}
+          error={errorText(errors.maximumDiscountAmount?.message)}
         >
           <Input
             id="pricing-max-discount"
@@ -191,16 +170,17 @@ export function PricingForm({
         <FormField
           label={t("pricing.fields.maxDiscountPercent")}
           htmlFor="pricing-max-discount-pct"
-          error={errors.maximumDiscountPercent?.message}
+          hint={t("pricing.fields.maxDiscountPercentHint")}
         >
+          {/* Calculated from the amount and the target selling price. */}
           <Input
             id="pricing-max-discount-pct"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            max="100"
-            {...form.register("maximumDiscountPercent", moneyFieldOptions)}
+            readOnly
+            tabIndex={-1}
+            className="bg-muted/50"
+            value={discountPercent == null ? "" : `${discountPercent.toFixed(2)}%`}
+            placeholder="—"
+            aria-live="polite"
           />
         </FormField>
       </div>
@@ -223,12 +203,10 @@ export function PricingForm({
           </span>
         </div>
         <div className="flex justify-between gap-2">
-          <span className="text-muted-foreground">{t("pricing.summary.discount")}</span>
+          <span className="text-muted-foreground">{t("pricing.summary.maxDiscount")}</span>
           <span className="font-medium">
-            {money(preview.discountAmount)}
-            {preview.discountPercent > 0
-              ? ` (${preview.discountPercent.toFixed(2)}%)`
-              : null}
+            {money(parseMoneyInput(watchedDiscount))}
+            {discountPercent != null ? ` (${discountPercent.toFixed(2)}%)` : null}
           </span>
         </div>
       </div>

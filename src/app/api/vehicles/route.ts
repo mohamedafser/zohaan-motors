@@ -1,10 +1,7 @@
 import { firstFieldErrors } from "@/lib/validation";
-import {
-  createVehicleSchema,
-  vehicleListQuerySchema,
-} from "@/lib/validation/vehicle";
+import { vehicleFormRules, vehicleListQuerySchema } from "@/lib/validation/vehicle";
 import { jsonError, jsonOk, readJsonBody, requireApiUser } from "@/lib/api/http";
-import { createVehicle, listVehicles } from "@/lib/vehicles/service";
+import { canEditVehiclePrice, createVehicle, listVehicles } from "@/lib/vehicles/service";
 
 export async function GET(request: Request) {
   const auth = await requireApiUser("vehicle.view");
@@ -20,7 +17,7 @@ export async function GET(request: Request) {
   }
 
   const hideInTransit = !auth.context.roles.includes("super_admin");
-  const result = await listVehicles({ ...parsed.data, hideInTransit });
+  const result = await listVehicles({ ...parsed.data, hideInTransit }, auth.context);
   if (result.error) {
     return jsonError(result.error.code, result.error.message, 400);
   }
@@ -36,7 +33,7 @@ export async function POST(request: Request) {
     return jsonError("validation", "Invalid JSON body.", 400);
   }
 
-  const parsed = createVehicleSchema.safeParse(body);
+  const parsed = vehicleFormRules({ requirePricing: canEditVehiclePrice(auth.context) }).safeParse(body);
   if (!parsed.success) {
     return jsonError("validation", "Please correct the highlighted fields.", 400, {
       fieldErrors: firstFieldErrors(parsed.error),
@@ -52,6 +49,7 @@ export async function POST(request: Request) {
           ? 409
           : 400;
     return jsonError(result.error.code, result.error.message, status, {
+      fieldErrors: result.error.fieldErrors,
       details: result.error.existingVehicleId
         ? { existingVehicleId: result.error.existingVehicleId }
         : undefined,

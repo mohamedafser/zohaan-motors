@@ -9,6 +9,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/utils/currency";
 import type { AcquisitionDetail } from "@/types/acquisition";
+import { vehicleHref } from "@/lib/vehicles/routes";
 
 export function AcquisitionVehicleSummary({ acquisition }: { acquisition: AcquisitionDetail }) {
   const t = useTranslations();
@@ -25,7 +26,11 @@ export function AcquisitionVehicleSummary({ acquisition }: { acquisition: Acquis
         <CardTitle>{t("acquisitions.sections.linkedVehicle")}</CardTitle>
         {acquisition.vehicleId ? (
           <Link
-            href={`/inventory/${acquisition.vehicleId}`}
+            href={
+              acquisition.vehicleStockNumber
+                ? vehicleHref(acquisition.vehicleStockNumber)
+                : `/inventory/${acquisition.vehicleId}`
+            }
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             {t("acquisitions.actions.viewVehicle")}

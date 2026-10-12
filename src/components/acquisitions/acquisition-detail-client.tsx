@@ -121,10 +121,6 @@ function Overview({ acquisition }: { acquisition: AcquisitionDetail }) {
           value={date(acquisition.receivedDate)}
         />
         <DetailItem
-          label={t("acquisitions.fields.paymentStatus")}
-          value={t(`acquisitions.enums.paymentStatus.${acquisition.paymentStatus}`)}
-        />
-        <DetailItem
           label={t("acquisitions.fields.documentStatus")}
           value={t(`acquisitions.enums.documentStatus.${acquisition.documentStatus}`)}
         />

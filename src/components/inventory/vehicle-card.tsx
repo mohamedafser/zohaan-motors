@@ -1,30 +1,35 @@
 "use client";
 
-import { CalendarCheckIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
+import { ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { BookVehicleButton } from "@/components/inventory/book-vehicle-button";
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
+import { QuantityBadge } from "@/components/inventory/quantity-badge";
+import { VehiclePrice, listPrice } from "@/components/inventory/vehicle-price";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
+import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePermission } from "@/hooks/use-permission";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatNumber } from "@/lib/utils/currency";
+import { formatNumber } from "@/lib/utils/currency";
 import type { VehicleListItem } from "@/types/vehicle";
+import { vehicleHref } from "@/lib/vehicles/routes";
 
 export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
   const t = useTranslations();
   const locale = useAppLocale();
   const { can } = usePermission();
-  const showPrice = can("vehicle.price.view") && vehicle.currentSellingPrice != null;
+  const showPrice = can("vehicle.price.view") && listPrice(vehicle) != null;
   const place = [vehicle.branchName, vehicle.locationName].filter(Boolean).join(" · ");
 
   return (
     <Card className="overflow-hidden pt-0 transition-shadow hover:shadow-md">
       <Link
-        href={`/inventory/${vehicle.id}`}
+        href={vehicleHref(vehicle.stockNumber)}
         className="focus-visible:ring-ring/50 block outline-none focus-visible:ring-3"
       >
         <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
@@ -44,6 +49,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
           <div className="absolute start-3 top-3 flex flex-wrap gap-2">
             <VehicleStatusBadge status={vehicle.status} />
             <MarketTypeBadge value={vehicle.marketType} />
+            <QuantityBadge quantity={vehicle.quantity} />
           </div>
         </div>
         <CardContent className="grid gap-3 pt-4">
@@ -66,37 +72,26 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               <span className="truncate">{place || t("inventory.fields.notSet")}</span>
             </span>
             {showPrice ? (
-              <span className="text-base font-semibold tabular-nums">
-                {formatCurrency(vehicle.currentSellingPrice as number, locale)}
-              </span>
+              <VehiclePrice vehicle={vehicle} className="text-end" amountClassName="text-base font-semibold" />
             ) : null}
           </div>
         </CardContent>
       </Link>
-      {(can("vehicle.edit") || (can("reservation.create") && vehicle.status === "ready_for_sale")) && (
-        <div className="flex flex-wrap gap-2 border-t px-4 py-3" data-row-stop>
-          {can("vehicle.edit") ? (
-            <Link
-              href={`/inventory/${vehicle.id}/edit`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <PencilIcon className="size-4" aria-hidden />
-              {t("inventory.actions.edit")}
-            </Link>
-          ) : null}
-          {can("reservation.create") && vehicle.status === "ready_for_sale" ? (
-            <Link
-              href={`/bookings?vehicleId=${vehicle.id}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <CalendarCheckIcon className="size-4" aria-hidden />
-              {t("bookings.book")}
-            </Link>
-          ) : null}
-        </div>
-      )}
+      {/* Each action renders nothing when unavailable; empty:hidden then drops the bar. */}
+      <div className="flex flex-wrap gap-2 border-t px-4 py-3 empty:hidden" data-row-stop>
+        <VehicleStatusTrigger vehicle={vehicle} variant="button" />
+        {can("vehicle.edit") ? (
+          <Link
+            href={vehicleHref(vehicle.stockNumber, "/edit")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <PencilIcon className="size-4" aria-hidden />
+            {t("inventory.actions.edit")}
+          </Link>
+        ) : null}
+        <BookVehicleButton vehicle={vehicle} variant="outline" />
+      </div>
     </Card>
   );
 }

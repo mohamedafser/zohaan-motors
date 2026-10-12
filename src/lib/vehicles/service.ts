@@ -1,4 +1,9 @@
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { decodeVehicleRef, isUuid } from "@/lib/vehicles/routes";
+import { recordForUnits, undoVehicleSplit } from "@/lib/vehicles/units";
+import { maxDiscountPercentFrom } from "@/lib/validation/pricing";
+import { getVehicleBooking } from "@/lib/bookings/service";
 import { hasPermission } from "@/lib/permissions";
 import { assertCatalogSelection } from "@/lib/vehicles/catalog";
 import { isValidVehicleStatusTransition } from "@/lib/vehicles/status-transitions";
@@ -12,8 +17,6 @@ import type {
   ModelOption,
   VehicleActivityItem,
   VehicleDetail,
-  VehicleInspectionFilter,
-  VehicleListInspectionInfo,
   VehicleListItem,
   VehicleListResult,
   VehicleMarketType,
@@ -29,8 +32,7 @@ import type {
   UpdateVehicleValues,
   VehicleListQuery,
 } from "@/lib/validation/vehicle";
-import type { ReadyForSaleEligibility, ReadyForSaleBlocker, ReadyForSaleAction } from "@/types/ready-for-sale";
-import type { InspectionResult } from "@/types/inspection";
+import type { ReadyForSaleEligibility } from "@/types/ready-for-sale";
 
 export type VehicleServiceError = {
   code:
@@ -46,6 +48,7 @@ export type VehicleServiceError = {
   message: string;
   existingVehicleId?: string;
   blockers?: unknown;
+  fieldErrors?: Record<string, string>;
 };
 
 export type ServiceResult<T> =
@@ -92,6 +95,10 @@ type VehicleRow = {
   model_year_id: string | null;
   variant_id: string | null;
   custom_variant: string | null;
+  quantity: number | null;
+  port_location: string | null;
+  has_minimum_price: boolean | null;
+  split_from_id: string | null;
   archived_at: string | null;
   created_by: string | null;
   updated_by: string | null;
@@ -107,62 +114,6 @@ function asRelation<T extends { id: string }>(
 ): T | null {
   if (!value) return null;
   return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function inspectionSummaryLabel(
-  status: string | null | undefined,
-  result: string | null | undefined,
-): VehicleInspectionFilter {
-  if (!status) return "not_inspected";
-  if (status === "approved") {
-    if (result === "fail") return "fail";
-    if (result === "pass_with_advisories" || result === "repair_required") return "pass_with_issues";
-    if (result === "pass") return "pass";
-    return "approved";
-  }
-  if (
-    status === "draft" ||
-    status === "assigned" ||
-    status === "in_progress" ||
-    status === "submitted" ||
-    status === "under_review"
-  ) {
-    return "in_progress";
-  }
-  return "not_inspected";
-}
-
-async function getLatestInspectionSummaries(
-  vehicleIds: string[],
-): Promise<Map<string, VehicleListInspectionInfo>> {
-  const map = new Map<string, VehicleListInspectionInfo>();
-  if (vehicleIds.length === 0) return map;
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("inspections")
-    .select("id, vehicle_id, status, result, created_at, approved_at, completed_at")
-    .in("vehicle_id", vehicleIds)
-    .order("created_at", { ascending: false });
-
-  if (error || !data) return map;
-
-  for (const row of data as {
-    id: string;
-    vehicle_id: string;
-    status: string;
-    result: string | null;
-  }[]) {
-    if (map.has(row.vehicle_id)) continue;
-    map.set(row.vehicle_id, {
-      id: row.id,
-      status: row.status,
-      result: row.result,
-      label: inspectionSummaryLabel(row.status, row.result),
-    });
-  }
-
-  return map;
 }
 
 function mapListItem(row: VehicleRow): VehicleListItem {
@@ -193,6 +144,9 @@ function mapListItem(row: VehicleRow): VehicleListItem {
     exteriorColor: row.exterior_color,
     purchaseDate: row.purchase_date,
     currentSellingPrice: row.current_selling_price,
+    quantity: row.quantity ?? 1,
+    portLocation: row.port_location,
+    hasMinimumPrice: row.has_minimum_price === true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -295,6 +249,8 @@ function formToInsert(values: CreateVehicleValues, userId: string) {
     custom_variant: values.customVariant,
     market_type: values.marketType,
     visible_to_staff: values.visibleToStaff ?? true,
+    quantity: values.quantity,
+    port_location: values.initialStatus === "acquired" ? values.portLocation : null,
     status: values.initialStatus ?? ("ready_for_sale" as const),
     source: "other" as const,
     created_by: userId,
@@ -308,7 +264,7 @@ const LIST_SELECT = `
   seats, doors, drive_type, origin_type, country_of_origin, condition, market_type, visible_to_staff, branch_id, location_id,
   source, status, purchase_date, registration_date, registration_expiry, description,
   current_selling_price, make_id, model_id, model_year_id, variant_id, custom_variant,
-  archived_at, created_by, updated_by, created_at, updated_at, deleted_at,
+  quantity, port_location, has_minimum_price, split_from_id, archived_at, created_by, updated_by, created_at, updated_at, deleted_at,
   branches:branch_id ( id, name ),
   branch_locations:location_id ( id, name )
 `;
@@ -379,44 +335,56 @@ function applyVehicleListFilters<T extends { eq: Function; neq: Function; ilike:
   return next;
 }
 
-function matchesInspectionFilter(
-  info: VehicleListInspectionInfo | undefined,
-  inspection: VehicleInspectionFilter,
-) {
-  const label = info?.label ?? "not_inspected";
-  if (inspection === "approved") {
-    return info?.status === "approved";
-  }
-  return label === inspection;
-}
-
+/** Counts units, not records: a 5-unit record counts as 5. */
 function buildInventorySummary(
-  rows: { status: VehicleStatus }[],
+  rows: { status: VehicleStatus; quantity: number | null }[],
 ): InventorySummary {
   const summary: InventorySummary = {
-    total: rows.length,
+    total: 0,
     inTransit: 0,
     readyForSale: 0,
-    underInspection: 0,
-    underRepair: 0,
     reserved: 0,
     sold: 0,
   };
 
   for (const row of rows) {
-    if (row.status === "acquired") summary.inTransit += 1;
-    if (row.status === "ready_for_sale") summary.readyForSale += 1;
-    if (row.status === "under_inspection") summary.underInspection += 1;
-    if (row.status === "under_repair") summary.underRepair += 1;
-    if (row.status === "reserved") summary.reserved += 1;
-    if (row.status === "sold" || row.status === "delivered") summary.sold += 1;
+    const units = row.quantity ?? 1;
+    summary.total += units;
+    if (row.status === "acquired") summary.inTransit += units;
+    if (row.status === "ready_for_sale") summary.readyForSale += units;
+    if (row.status === "reserved") summary.reserved += units;
+    if (row.status === "sold" || row.status === "delivered") summary.sold += units;
   }
 
   return summary;
 }
 
+/** Who may see minimum selling prices: cost viewers (DB rule) and price editors. */
+export function canViewMinimumPrice(context: UserContext) {
+  return (
+    hasPermission(context.permissions, "vehicle.cost.view", context.roles) ||
+    canEditVehiclePrice(context)
+  );
+}
+
+// minimum_selling_price is withheld from direct reads, so it's loaded with the service
+// role, only for the current page and only for callers allowed to see it.
+async function getMinimumPrices(vehicleIds: string[]) {
+  const map = new Map<string, number | null>();
+  if (vehicleIds.length === 0) return map;
+  const { data } = await createServiceRoleClient()
+    .from("vehicles")
+    .select("id, minimum_selling_price")
+    .in("id", vehicleIds);
+  for (const row of (data ?? []) as { id: string; minimum_selling_price: number | string | null }[]) {
+    map.set(row.id, toNumber(row.minimum_selling_price));
+  }
+  return map;
+}
+
 export async function listVehicles(
   query: VehicleListQuery & { hideInTransit?: boolean },
+  context: UserContext,
 ): Promise<ServiceResult<VehicleListResult>> {
   const supabase = await createClient();
 
@@ -442,40 +410,23 @@ export async function listVehicles(
 
   const items = ((data ?? []) as unknown as VehicleRow[]).map(mapListItem);
   const primaryUrls = await getPrimaryPhotoUrls(items.map((item) => item.id));
-  const inspections = await getLatestInspectionSummaries(items.map((item) => item.id));
+  const minimums = canViewMinimumPrice(context)
+    ? await getMinimumPrices(items.map((item) => item.id))
+    : null;
 
-  let withMeta = items.map((item) => ({
+  const withMeta = items.map((item) => ({
     ...item,
     primaryPhotoUrl: primaryUrls.get(item.id) ?? null,
-    inspection: inspections.get(item.id) ?? {
-      id: null,
-      status: null,
-      result: null,
-      label: "not_inspected" as const,
-    },
+    ...(minimums ? { minimumSellingPrice: minimums.get(item.id) ?? null } : {}),
   }));
-
-  if (query.inspection) {
-    withMeta = withMeta.filter((item) =>
-      matchesInspectionFilter(item.inspection, query.inspection!),
-    );
-  }
 
   return {
     data: {
       items: withMeta,
       page: query.page,
       pageSize: query.pageSize,
-      total: query.inspection ? withMeta.length : (count ?? 0),
-      summary: summary.data ?? {
-        total: 0,
-        inTransit: 0,
-        readyForSale: 0,
-        underInspection: 0,
-        underRepair: 0,
-        reserved: 0,
-        sold: 0,
-      },
+      total: count ?? 0,
+      summary: summary.data ?? { total: 0, inTransit: 0, readyForSale: 0, reserved: 0, sold: 0 },
     },
     error: null,
   };
@@ -487,7 +438,7 @@ export async function getInventorySummary(
   const supabase = await createClient();
   let builder = supabase
     .from("vehicles")
-    .select("id, status")
+    .select("id, status, quantity")
     .is("deleted_at", null);
 
   builder = applyVehicleListFilters(builder, {
@@ -515,15 +466,7 @@ export async function getInventorySummary(
   const { data, error } = await builder;
   if (error) return { data: null, error: mapDbError(error) };
 
-  let rows = (data ?? []) as { id: string; status: VehicleStatus }[];
-
-  if (query.inspection) {
-    const inspections = await getLatestInspectionSummaries(rows.map((row) => row.id));
-    rows = rows.filter((row) =>
-      matchesInspectionFilter(inspections.get(row.id), query.inspection!),
-    );
-  }
-
+  const rows = (data ?? []) as { id: string; status: VehicleStatus; quantity: number | null }[];
   return { data: buildInventorySummary(rows), error: null };
 }
 
@@ -567,6 +510,25 @@ export async function findDuplicateVehicle(input: {
   }
 
   return { data: null, error: null };
+}
+
+/** Resolves a vehicle page ref (stock number or legacy UUID) to its id and stock number. */
+export async function resolveVehicleRef(
+  ref: string,
+): Promise<{ id: string; stockNumber: string } | null> {
+  const value = decodeVehicleRef(ref).trim();
+  if (!value) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("vehicles")
+    .select("id, stock_number")
+    .eq(isUuid(value) ? "id" : "stock_number", value)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  const row = data as { id: string; stock_number: string } | null;
+  return row ? { id: row.id, stockNumber: row.stock_number } : null;
 }
 
 export async function getVehicle(
@@ -650,31 +612,78 @@ export async function getVehicle(
     }
   }
 
-  if (hasPermission(context.permissions, "acquisition.view", context.roles)) {
-    const { data: activeAcq } = await supabase
-      .from("acquisitions")
-      .select(
-        "id, acquisition_number, status, source_type, purchase_date, purchase_price, currency",
-      )
-      .eq("vehicle_id", id)
-      .not("status", "in", '("cancelled","rejected")')
-      .order("created_at", { ascending: false })
-      .limit(1)
+  if (row.split_from_id) {
+    const { data: origin } = await supabase
+      .from("vehicles")
+      .select("id, stock_number")
+      .eq("id", row.split_from_id)
       .maybeSingle();
+    const originRow = origin as { id: string; stock_number: string } | null;
+    detail.splitFrom = originRow ? { id: originRow.id, stockNumber: originRow.stock_number } : null;
+  }
 
-    const acq =
-      activeAcq ??
-      (
-        await supabase
-          .from("acquisitions")
-          .select(
-            "id, acquisition_number, status, source_type, purchase_date, purchase_price, currency",
-          )
-          .eq("vehicle_id", id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      ).data;
+  if (row.status === "reserved" || row.status === "sold" || row.status === "delivered") {
+    detail.booking = await getVehicleBooking(id, context);
+  }
+
+  // Price editors need the minimum (even without cost access) and the target price to
+  // prefill the edit form.
+  if (canEditVehiclePrice(context)) {
+    const { data: pricing } = await supabase
+      .from("vehicle_pricing")
+      .select("minimum_selling_price, target_selling_price")
+      .eq("vehicle_id", id)
+      .maybeSingle();
+    const pricingRow = pricing as {
+      minimum_selling_price: number | string | null;
+      target_selling_price: number | string | null;
+    } | null;
+    if (detail.minimumSellingPrice === undefined) {
+      detail.minimumSellingPrice = toNumber(pricingRow?.minimum_selling_price);
+    }
+    detail.targetSellingPrice = toNumber(pricingRow?.target_selling_price);
+  }
+
+  if (hasPermission(context.permissions, "acquisition.view", context.roles)) {
+    // Prefer an active acquisition, else the latest one.
+    const findAcquisition = async (vehicleId: string) => {
+      const select = "id, acquisition_number, status, source_type, purchase_date, purchase_price, currency";
+      const { data: active } = await supabase
+        .from("acquisitions")
+        .select(select)
+        .eq("vehicle_id", vehicleId)
+        .not("status", "in", '("cancelled","rejected")')
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (active) return active;
+      const { data: latest } = await supabase
+        .from("acquisitions")
+        .select(select)
+        .eq("vehicle_id", vehicleId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return latest;
+    };
+
+    let acq = await findAcquisition(id);
+    // Split records share the purchase of the record they came from.
+    if (!acq && row.split_from_id) {
+      const rootId = await getRootVehicleId(id, row.split_from_id);
+      acq = await findAcquisition(rootId);
+      if (acq) {
+        const { data: root } = await supabase
+          .from("vehicles")
+          .select("id, stock_number, quantity")
+          .eq("id", rootId)
+          .maybeSingle();
+        const rootRow = root as { id: string; stock_number: string; quantity: number | null } | null;
+        if (rootRow) {
+          detail.acquisitionSharedFrom = { id: rootRow.id, stockNumber: rootRow.stock_number };
+        }
+      }
+    }
 
     if (acq) {
       const row = acq as {
@@ -716,6 +725,15 @@ export async function getVehicle(
   }
 
   return { data: detail, error: null };
+}
+
+/** The original record a split record came from (the record itself when not split). */
+export async function getRootVehicleId(vehicleId: string, splitFromId?: string | null) {
+  if (!splitFromId) return vehicleId;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("vehicle_root_id" as never, { p_vehicle_id: vehicleId } as never);
+  // Before migration 00052 is applied, fall back to the direct parent.
+  return !error && data ? (data as unknown as string) : splitFromId;
 }
 
 export async function createVehicle(
@@ -769,7 +787,13 @@ export async function createVehicle(
 
   if (error) return { data: null, error: mapDbError(error) };
   const id = (data as { id: string }).id;
-  return getVehicle(id, context);
+
+  // The vehicle exists at this point; a pricing failure is reported as a warning
+  // so the client does not retry the create and duplicate the vehicle.
+  const pricing = await saveVehiclePricing(id, values, context);
+  const result = await getVehicle(id, context);
+  if (result.data && pricing.error) result.data.pricingWarning = pricing.error.message;
+  return result;
 }
 
 export async function updateVehicle(
@@ -815,6 +839,15 @@ export async function updateVehicle(
   }
 
   const supabase = await createClient();
+  const { data: currentRow } = await supabase
+    .from("vehicles")
+    .select("status")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  const current = currentRow as { status: VehicleStatus } | null;
+  if (!current) return { data: null, error: { code: "not_found", message: "Vehicle not found." } };
+
   const payload = {
     ...formToInsert(values, context.userId),
     status: undefined,
@@ -859,6 +892,9 @@ export async function updateVehicle(
       variant_id: values.variantId,
       custom_variant: values.customVariant,
       market_type: values.marketType,
+      quantity: values.quantity,
+      // Port location only applies (and is only shown) while In transit.
+      ...(current.status === "acquired" ? { port_location: values.portLocation } : {}),
       ...(values.visibleToStaff !== undefined ? { visible_to_staff: values.visibleToStaff } : {}),
       updated_by: context.userId,
     } as never)
@@ -866,7 +902,103 @@ export async function updateVehicle(
     .is("deleted_at", null);
 
   if (error) return { data: null, error: mapDbError(error) };
+
+  const pricing = await saveVehiclePricing(id, values, context);
+  if (pricing.error) return { data: null, error: pricing.error };
   return getVehicle(id, context);
+}
+
+export function canEditVehiclePrice(context: UserContext) {
+  return hasPermission(context.permissions, "vehicle.price.edit", context.roles);
+}
+
+/** Saved status, used to apply status-dependent form rules (e.g. port location) on edit. */
+export async function getVehicleStatus(id: string): Promise<VehicleStatus | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("vehicles")
+    .select("status")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return (data as { status: VehicleStatus } | null)?.status ?? null;
+}
+
+type PricingRow = {
+  minimum_selling_price: number | string | null;
+  target_selling_price: number | string | null;
+  advertised_price: number | string | null;
+  current_selling_price: number | string | null;
+  maximum_discount_amount: number | string | null;
+  maximum_discount_percent: number | string | null;
+  pricing_notes: string | null;
+};
+
+const toNumber = (value: number | string | null | undefined) =>
+  value == null ? null : Number(value);
+
+/**
+ * Saves the form's Selling Price section through upsert_vehicle_pricing, which keeps
+ * vehicle_pricing, vehicles.minimum/current_selling_price and pricing history in sync.
+ * Other pricing fields (target, advertised, discounts) are carried over unchanged.
+ */
+async function saveVehiclePricing(
+  vehicleId: string,
+  values: { minimumSellingPrice?: number | null; targetSellingPrice?: number | null },
+  context: UserContext,
+): Promise<{ error: VehicleServiceError | null }> {
+  if (!canEditVehiclePrice(context) || values.minimumSellingPrice == null) return { error: null };
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("vehicle_pricing")
+    .select(
+      "minimum_selling_price, target_selling_price, advertised_price, current_selling_price, maximum_discount_amount, maximum_discount_percent, pricing_notes",
+    )
+    .eq("vehicle_id", vehicleId)
+    .maybeSingle();
+  const existing = data as PricingRow | null;
+
+  const minimum = values.minimumSellingPrice;
+  const target = values.targetSellingPrice ?? null;
+  if (
+    existing &&
+    toNumber(existing.minimum_selling_price) === minimum &&
+    toNumber(existing.target_selling_price) === target &&
+    toNumber(existing.current_selling_price) === target
+  ) {
+    return { error: null };
+  }
+
+  const discount = toNumber(existing?.maximum_discount_amount);
+  const { error } = await supabase.rpc("upsert_vehicle_pricing", {
+    p_vehicle_id: vehicleId,
+    p_minimum_selling_price: minimum,
+    p_target_selling_price: target,
+    // Advertised price is no longer used; clearing it avoids a hidden
+    // "current cannot exceed advertised" conflict.
+    p_advertised_price: null,
+    // Target is the car's selling price; current is kept equal for the list, bookings
+    // and profitability, which read it.
+    p_current_selling_price: target,
+    p_maximum_discount_amount: discount,
+    p_maximum_discount_percent: maxDiscountPercentFrom(discount, target),
+    p_pricing_notes: existing?.pricing_notes ?? null,
+    p_change_reason: existing ? "other" : "initial_pricing",
+  });
+  if (!error) return { error: null };
+
+  const message = error.message.toLowerCase();
+  if (message.includes("cannot exceed target")) {
+    return {
+      error: {
+        code: "validation",
+        message: "Target selling price cannot be lower than the minimum selling price.",
+        fieldErrors: { targetSellingPrice: "validation.sellingBelowMinimum" },
+      },
+    };
+  }
+  return { error: mapDbError(error) };
 }
 
 export async function changeVehicleStatus(
@@ -891,15 +1023,23 @@ export async function changeVehicleStatus(
     };
   }
 
+  const target = await recordForUnits(current.data, values.quantity, context.userId);
+  if (target.error !== null) return { data: null, error: { code: "validation", message: target.error } };
+
   const supabase = await createClient();
   const { error } = await supabase.rpc("change_vehicle_status", {
-    p_vehicle_id: id,
+    p_vehicle_id: target.id,
     p_new_status: values.status,
-    p_reason: values.reason,
+    // change_vehicle_status requires a reason for the audit trail.
+    p_reason: values.reason || `Status changed to ${values.status}`,
   } as never);
 
-  if (error) return { data: null, error: mapDbError(error) };
-  return getVehicle(id, context);
+  if (error) {
+    if (target.split) await undoVehicleSplit(target.id);
+    return { data: null, error: mapDbError(error) };
+  }
+  // When only some units moved, this is the new record holding them.
+  return getVehicle(target.id, context);
 }
 
 export async function transferVehicle(
@@ -948,63 +1088,35 @@ export async function archiveVehicle(
   return getVehicle(id, context);
 }
 
+// The DB function still reports legacy inspection/workshop checks (never blocking since
+// 00039/00040). Only these still apply in the app.
+const READY_FOR_SALE_CHECKS = new Set(["documents", "status"]);
+const READY_FOR_SALE_BLOCKERS = new Set(["document_missing", "invalid_status", "branch_denied"]);
+
 function mapReadyForSaleEligibility(raw: Record<string, unknown>): ReadyForSaleEligibility {
-  const inspectionRaw = raw.inspection as Record<string, unknown> | null | undefined;
-  const summaryRaw = (raw.summary ?? {}) as Record<string, unknown>;
   const checksRaw = Array.isArray(raw.checks) ? raw.checks : [];
   const blockersRaw = Array.isArray(raw.blockers) ? raw.blockers : [];
-
-  const mapAction = (value: unknown): ReadyForSaleAction => {
-    if (
-      value === "view_inspection" ||
-      value === "create_inspection" ||
-      value === "view_documents"
-    ) {
-      return value;
-    }
-    return null;
-  };
-
-  const workshopCheckKeys = new Set(["workshop", "quality_check"]);
-  const workshopBlockerPrefixes = ["workshop", "quality_check", "active_workshop", "pending_workshop"];
 
   const checks = checksRaw
     .map((item) => {
       const row = item as Record<string, unknown>;
-      return {
-        key: String(row.key ?? ""),
-        ok: Boolean(row.ok),
-        label: String(row.label ?? ""),
-      };
+      return { key: String(row.key ?? ""), ok: Boolean(row.ok), label: String(row.label ?? "") };
     })
-    .filter((check) => !workshopCheckKeys.has(check.key));
+    .filter((check) => READY_FOR_SALE_CHECKS.has(check.key));
 
   const blockers = blockersRaw
     .map((item) => {
       const row = item as Record<string, unknown>;
-      const code = String(row.code ?? "");
-      const blocker: ReadyForSaleBlocker = {
-        code,
+      return {
+        code: String(row.code ?? ""),
         message: String(row.message ?? ""),
-        action: mapAction(row.action),
+        action: row.action === "view_documents" ? ("view_documents" as const) : null,
       };
-      if (row.inspection_id) blocker.inspectionId = String(row.inspection_id);
-      return blocker;
     })
-    .filter(
-      (blocker) =>
-        !workshopBlockerPrefixes.some(
-          (prefix) => blocker.code === prefix || blocker.code.startsWith(`${prefix}_`),
-        ),
-    );
-
-  // Client treats workshop as not required even if legacy API still returns blockers.
-  const nonWorkshopEligible =
-    Boolean(raw.eligible) ||
-    (checks.every((check) => check.ok) && blockers.length === 0);
+    .filter((blocker) => READY_FOR_SALE_BLOCKERS.has(blocker.code));
 
   return {
-    eligible: nonWorkshopEligible,
+    eligible: Boolean(raw.eligible) || (checks.every((check) => check.ok) && blockers.length === 0),
     canOverride: Boolean(raw.canOverride),
     vehicleId: String(raw.vehicleId ?? ""),
     stockNumber: String(raw.stockNumber ?? ""),
@@ -1012,32 +1124,8 @@ function mapReadyForSaleEligibility(raw: Record<string, unknown>): ReadyForSaleE
     model: String(raw.model ?? ""),
     year: Number(raw.year ?? 0),
     currentStatus: raw.currentStatus as VehicleStatus,
-    inspection: inspectionRaw
-      ? {
-          id: String(inspectionRaw.id),
-          inspectionNumber: String(inspectionRaw.inspectionNumber ?? ""),
-          result: (inspectionRaw.result as InspectionResult | null) ?? null,
-          approvedAt: (inspectionRaw.approvedAt as string | null) ?? null,
-          completedAt: (inspectionRaw.completedAt as string | null) ?? null,
-          expired: Boolean(inspectionRaw.expired),
-          repairsRequired: Boolean(inspectionRaw.repairsRequired),
-        }
-      : null,
-    workshop: {
-      required: false,
-      orderId: null,
-      orderNumber: null,
-      status: null,
-      qualityResult: null,
-      activeOrders: 0,
-      pendingJobs: 0,
-    },
     checks,
     blockers,
-    summary: {
-      inspection: String(summaryRaw.inspection ?? "missing"),
-      workshop: "not_required",
-    },
     error: raw.error ? String(raw.error) : undefined,
   };
 }
@@ -1093,16 +1181,26 @@ export async function markVehicleReadyForSale(
     };
   }
 
+  const current = await getVehicle(id, context);
+  if (current.error || !current.data) return current;
+
+  const target = await recordForUnits(current.data, values.quantity, context.userId);
+  if (target.error !== null) return { data: null, error: { code: "validation", message: target.error } };
+
   const supabase = await createClient();
   const { error } = await supabase.rpc("mark_vehicle_ready_for_sale", {
-    p_vehicle_id: id,
+    p_vehicle_id: target.id,
     p_reason: values.reason,
     p_override: values.override ?? false,
     p_override_reason: values.overrideReason,
   });
 
-  if (error) return { data: null, error: mapDbError(error) };
-  return getVehicle(id, context);
+  if (error) {
+    if (target.split) await undoVehicleSplit(target.id);
+    return { data: null, error: mapDbError(error) };
+  }
+  // When only some units moved, this is the new record holding them.
+  return getVehicle(target.id, context);
 }
 
 export async function getVehicleStatusHistory(
