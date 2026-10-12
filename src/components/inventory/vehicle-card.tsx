@@ -1,11 +1,10 @@
 "use client";
 
-import { ClipboardCheckIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
+import { CalendarCheckIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { VehicleInspectionBadge } from "@/components/inventory/vehicle-inspection-badge";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,9 +60,6 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               {t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`)}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <VehicleInspectionBadge value={vehicle.inspection?.label ?? "not_inspected"} />
-          </div>
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground flex min-w-0 items-center gap-1.5">
               <MapPinIcon className="size-3.5 shrink-0" aria-hidden />
@@ -77,7 +73,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
           </div>
         </CardContent>
       </Link>
-      {(can("vehicle.edit") || can("inspection.create")) && (
+      {(can("vehicle.edit") || (can("reservation.create") && vehicle.status === "ready_for_sale")) && (
         <div className="flex flex-wrap gap-2 border-t px-4 py-3" data-row-stop>
           {can("vehicle.edit") ? (
             <Link
@@ -89,14 +85,14 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               {t("inventory.actions.edit")}
             </Link>
           ) : null}
-          {can("inspection.create") ? (
+          {can("reservation.create") && vehicle.status === "ready_for_sale" ? (
             <Link
-              href={`/inspections/new?vehicleId=${vehicle.id}`}
+              href={`/bookings?vehicleId=${vehicle.id}`}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
               onClick={(event) => event.stopPropagation()}
             >
-              <ClipboardCheckIcon className="size-4" aria-hidden />
-              {t("inventory.inspectionCard.inspectVehicle")}
+              <CalendarCheckIcon className="size-4" aria-hidden />
+              {t("bookings.book")}
             </Link>
           ) : null}
         </div>

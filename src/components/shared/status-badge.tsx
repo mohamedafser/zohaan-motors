@@ -46,6 +46,11 @@ const statusStyles: Record<string, string> = {
   active: "bg-emerald-700/12 text-emerald-950 dark:bg-emerald-400/15 dark:text-emerald-100",
   discount_approval_required: "bg-orange-700/12 text-orange-950 dark:bg-orange-300/15 dark:text-orange-100",
   below_minimum: "bg-rose-700/12 text-rose-950 dark:bg-rose-300/15 dark:text-rose-100",
+  // Booking statuses
+  booking_active: "bg-amber-700/12 text-amber-950 dark:bg-amber-300/15 dark:text-amber-100",
+  booking_converted: "bg-violet-700/12 text-violet-950 dark:bg-violet-300/15 dark:text-violet-100",
+  booking_cancelled: "bg-stone-600/12 text-stone-900 dark:bg-stone-300/15 dark:text-stone-100",
+  booking_expired: "bg-rose-700/12 text-rose-950 dark:bg-rose-300/15 dark:text-rose-100",
   // Legacy / non-vehicle statuses still used by mock dashboard
   available: "bg-emerald-700/12 text-emerald-950 dark:bg-emerald-400/15 dark:text-emerald-100",
   workshop: "bg-sky-700/12 text-sky-950 dark:bg-sky-300/15 dark:text-sky-100",

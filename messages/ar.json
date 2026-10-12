@@ -43,7 +43,8 @@
     "cars": "السيارات",
     "workshopJobs": "المهام",
     "myWorkshopJobs": "مهامي",
-    "vehicleCatalog": "كتالوج المركبات"
+    "vehicleCatalog": "كتالوج المركبات",
+    "bookings": "الحجوزات"
   },
   "common": {
     "search": "بحث",
@@ -94,7 +95,8 @@
     "reservation": "حجز جديد",
     "sale": "عملية بيع جديدة",
     "workshop": "أمر ورشة جديد",
-    "description": "ابدأ سجلاً جديداً"
+    "description": "ابدأ سجلاً جديداً",
+    "booking": "حجز جديد"
   },
   "auth": {
     "login": {
@@ -292,7 +294,7 @@
     "kpis": {
       "stock": "المركبات في المخزون",
       "available": "المتاحة",
-      "reserved": "المحجوزة",
+      "reserved": "محجوزة",
       "sales": "مبيعات هذا الشهر"
     },
     "salesChart": "المبيعات",
@@ -335,7 +337,8 @@
     "actions": {
       "inspection": "فحص بانتظار التنفيذ",
       "reservation": "حجز بانتظار التأكيد",
-      "pricing": "تسعير بانتظار التعيين"
+      "pricing": "تسعير بانتظار التعيين",
+      "bookings": "حجوزات للمتابعة"
     },
     "viewAll": "عرض الكل"
   },
@@ -490,7 +493,9 @@
       },
       "roleNames": {
         "super_admin": "مشرف عام",
-        "viewer": "موظف"
+        "accountant": "محاسب",
+        "sales_executive": "مندوب مبيعات",
+        "logistics": "اللوجستيات"
       }
     },
     "roles": {
@@ -568,10 +573,11 @@
       "underRepair": "قيد الإصلاح",
       "reserved": "محجوزة",
       "sold": "مباعة",
-      "available": "جاهزة للبيع"
+      "available": "جاهزة للبيع",
+      "inTransit": "قيد النقل"
     },
     "status": {
-      "acquired": "تم الاستحواذ",
+      "acquired": "قيد النقل",
       "under_inspection": "قيد الفحص",
       "inspection_failed": "فشل الفحص",
       "under_repair": "قيد الإصلاح",
@@ -643,7 +649,10 @@
       "acquisitionType": "نوع الاستحواذ",
       "purchasePrice": "سعر الشراء",
       "marketType": "حالة المركبة",
-      "brand": "العلامة التجارية"
+      "brand": "العلامة التجارية",
+      "visibleToStaff": "مرئية للأدوار الأخرى",
+      "visibleToStaff_yes": "نعم",
+      "visibleToStaff_no": "لا، للمشرف العام فقط"
     },
     "enums": {
       "transmission": {
@@ -2490,5 +2499,64 @@
       "minExceedsTarget": "لا يمكن أن يتجاوز الحد الأدنى السعر المستهدف.",
       "currentExceedsAdvertised": "لا يمكن أن يتجاوز السعر الحالي السعر المعلن."
     }
+  },
+  "bookings": {
+    "title": "الحجوزات",
+    "description": "سيارات محجوزة للعملاء بعربون. حجز السيارة يجعلها محجوزة، وإلغاء الحجز يعيدها جاهزة للبيع.",
+    "new": "حجز جديد",
+    "book": "احجز",
+    "newTitle": "حجز جديد",
+    "newDescription": "احجز سيارة جاهزة للبيع لعميل.",
+    "create": "إنشاء الحجز",
+    "created": "تم إنشاء الحجز.",
+    "cancelled": "تم إلغاء الحجز.",
+    "markedSold": "تم تسجيل السيارة كمباعة.",
+    "vehicle": "السيارة",
+    "selectVehicle": "اختر سيارة جاهزة للبيع",
+    "noVehicles": "لا توجد سيارات جاهزة للبيع",
+    "customer": "العميل",
+    "existingCustomer": "عميل حالي",
+    "newCustomer": "عميل جديد",
+    "selectCustomer": "اختر عميلاً",
+    "noCustomers": "لا يوجد عملاء بعد",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "phone": "الهاتف",
+    "deposit": "العربون (درهم)",
+    "expiresOn": "محجوزة حتى",
+    "notes": "ملاحظات",
+    "number": "رقم الحجز",
+    "status": "الحالة",
+    "filterActive": "نشطة",
+    "filterAll": "الكل",
+    "empty": "لا توجد حجوزات هنا بعد.",
+    "markSold": "تسجيل كمباعة",
+    "cancel": "إلغاء",
+    "confirmCancel": "إلغاء هذا الحجز؟",
+    "confirmSold": "تسجيل هذه السيارة كمباعة؟",
+    "yes": "نعم",
+    "no": "لا",
+    "statuses": {
+      "active": "نشط",
+      "expired": "منتهي",
+      "cancelled": "ملغى",
+      "converted": "مباعة"
+    },
+    "errors": {
+      "createFailed": "تعذر إنشاء الحجز.",
+      "actionFailed": "تعذر تنفيذ الإجراء. حاول مرة أخرى.",
+      "expiryPast": "اختر تاريخاً من اليوم فصاعداً.",
+      "vehicleNotFound": "هذه السيارة لم تعد موجودة.",
+      "notAvailable": "هذه السيارة لم تعد جاهزة للبيع.",
+      "alreadyBooked": "هذه السيارة لديها حجز نشط بالفعل.",
+      "customerExists": "يوجد عميل بهذا الرقم بالفعل. اختره كعميل حالي.",
+      "salespersonRequired": "اختر مندوب المبيعات لهذا العميل."
+    },
+    "salesperson": "مندوب المبيعات",
+    "selectSalesperson": "اختر مندوب المبيعات",
+    "noSalespeople": "لا يوجد مندوبو مبيعات بعد",
+    "salespersonLinked": "يبقى هذا العميل دائماً مع مندوب مبيعاته.",
+    "salespersonSelf": "العملاء الجدد الذين تضيفهم يرتبطون بك.",
+    "useExisting": "استخدم {name} بدلاً من ذلك"
   }
 }

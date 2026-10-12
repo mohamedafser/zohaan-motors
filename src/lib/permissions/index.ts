@@ -122,18 +122,11 @@ export const routePermissions: { prefix: string; permission: Permission }[] = [
   { prefix: "/inventory/new", permission: "vehicle.create" },
   { prefix: "/inventory", permission: "vehicle.view" }, // includes /inventory/[id] and /edit
   { prefix: "/acquisitions", permission: "acquisition.view" }, // legacy redirects → inventory
-  { prefix: "/inspections/new", permission: "inspection.create" },
-  { prefix: "/inspections", permission: "inspection.view" },
   { prefix: "/customers/new", permission: "customer.create" },
   { prefix: "/customers", permission: "customer.view" },
-  { prefix: "/leads", permission: "lead.view" },
   { prefix: "/reservations", permission: "reservation.view" }, // legacy redirects → inventory
-  { prefix: "/sales/new", permission: "sale.create" },
-  { prefix: "/sales", permission: "sale.view" },
-  { prefix: "/payments", permission: "payment.view" },
-  { prefix: "/invoices", permission: "invoice.view" },
+  { prefix: "/bookings", permission: "reservation.view" },
   { prefix: "/documents", permission: "document.view" },
-  { prefix: "/reports", permission: "report.view" },
   { prefix: "/branches", permission: "branch.view" },
   { prefix: "/users", permission: "user.manage" },
   { prefix: "/vehicle-catalog", permission: "settings.manage" },

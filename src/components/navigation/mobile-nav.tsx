@@ -34,9 +34,9 @@ export function MobileNav() {
   const cars = filtered.find((group) => group.id === "operations")?.items.find(
     (item) => item.href === "/inventory",
   );
-  const leads = filtered
-    .find((group) => group.id === "crm")
-    ?.items.find((item) => item.href === "/leads");
+  const bookings = filtered
+    .find((group) => group.id === "operations")
+    ?.items.find((item) => item.href === "/bookings");
 
   const slots = [
     home ? { item: home, label: t("nav.home") } : null,
@@ -63,7 +63,7 @@ export function MobileNav() {
               <PlusIcon className="size-6" />
             </button>
           </li>
-          {leads ? <MobileSlot item={leads} label={t("nav.leads")} pathname={pathname} /> : null}
+          {bookings ? <MobileSlot item={bookings} label={t("nav.bookings")} pathname={pathname} /> : null}
           <li>
             <button
               type="button"

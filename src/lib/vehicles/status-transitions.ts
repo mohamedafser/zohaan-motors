@@ -1,5 +1,5 @@
 import type { VehicleStatus } from "@/types/vehicle";
-import { VEHICLE_STATUSES } from "@/types/vehicle";
+import { INVENTORY_STATUSES, VEHICLE_STATUSES } from "@/types/vehicle";
 
 /**
  * Central vehicle lifecycle map (mirrors PostgreSQL is_valid_vehicle_status_transition).
@@ -26,12 +26,16 @@ export function canMarkReadyForSaleFrom(status: VehicleStatus) {
 
 /**
  * Next statuses offered by the generic Change Status dialog.
- * Ready for Sale is excluded (except un-reserve) so eligibility gates are not bypassed.
+ * Ready for Sale goes through Mark Ready for Sale; Booked goes through Bookings.
  */
 export function getGenericStatusChangeOptions(from: VehicleStatus): VehicleStatus[] {
+  // Booked vehicles are managed from the Bookings page so the booking record stays in sync.
+  if (from === "reserved") return [];
   return getAllowedNextStatuses(from).filter((status) => {
+    if (!(INVENTORY_STATUSES as readonly string[]).includes(status)) return false;
+    if (status === "reserved") return false;
     if (status === "archived") return false;
-    if (status === "ready_for_sale" && from !== "reserved") return false;
+    if (status === "ready_for_sale") return false;
     return true;
   });
 }

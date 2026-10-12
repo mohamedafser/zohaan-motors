@@ -8,10 +8,9 @@ import {
   FUEL_TYPES,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
-  VEHICLE_INSPECTION_FILTERS,
   VEHICLE_MARKET_TYPES,
   VEHICLE_SORT_FIELDS,
-  VEHICLE_STATUSES,
+  INVENTORY_STATUSES,
 } from "@/types/vehicle";
 
 export const PAGE_SIZES = [25, 50, 100] as const;
@@ -21,7 +20,6 @@ export const DEFAULT_PAGE_SIZE = 25;
 export const FILTER_KEYS = [
   "status",
   "marketType",
-  "inspection",
   "branchId",
   "locationId",
   "make",
@@ -62,14 +60,12 @@ export function buildApiQuery(params: URLSearchParams) {
   const q = params.get("q")?.trim();
   if (q) out.set("q", q);
 
-  const status = oneOf(params.get("status"), VEHICLE_STATUSES);
+  const status = oneOf(params.get("status"), INVENTORY_STATUSES);
   if (status) out.set("status", status);
 
   const marketType = oneOf(params.get("marketType"), VEHICLE_MARKET_TYPES);
   if (marketType) out.set("marketType", marketType);
 
-  const inspection = oneOf(params.get("inspection"), VEHICLE_INSPECTION_FILTERS);
-  if (inspection) out.set("inspection", inspection);
 
   for (const key of ["branchId", "locationId"] as const) {
     const value = params.get(key);

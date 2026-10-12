@@ -138,7 +138,7 @@ export const dashboardSample = {
     },
   ] satisfies SampleSale[],
   actions: [
-    { id: "a1", labelKey: "dashboard.actions.inspection", href: "/inspections" },
+    { id: "a1", labelKey: "dashboard.actions.bookings", href: "/bookings" },
     { id: "a2", labelKey: "dashboard.actions.pricing", href: "/inventory" },
   ],
 };
