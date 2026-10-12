@@ -1,102 +1,154 @@
 "use client";
 
-import { CalendarCheckIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
+import { CalendarIcon, CogIcon, FuelIcon, GaugeIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
+import { BookVehicleButton } from "@/components/inventory/book-vehicle-button";
+import { enumLabel, useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
+import { QuantityBadge } from "@/components/inventory/quantity-badge";
+import { VehiclePrice, listPrice } from "@/components/inventory/vehicle-price";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
+import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { usePermission } from "@/hooks/use-permission";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatNumber } from "@/lib/utils/currency";
+import { formatNumber } from "@/lib/utils/currency";
+import { vehicleHref } from "@/lib/vehicles/routes";
 import type { VehicleListItem } from "@/types/vehicle";
+
+/**
+ * Chips sit on a solid pill so they stay readable on any photo — the badges' own
+ * tinted backgrounds are only ~10% opaque and vanish on white studio shots.
+ */
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="bg-background/95 inline-flex rounded-full shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10">
+      {children}
+    </span>
+  );
+}
 
 export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
   const t = useTranslations();
   const locale = useAppLocale();
   const { can } = usePermission();
-  const showPrice = can("vehicle.price.view") && vehicle.currentSellingPrice != null;
+  const showPrice = can("vehicle.price.view") && listPrice(vehicle) != null;
   const place = [vehicle.branchName, vehicle.locationName].filter(Boolean).join(" · ");
 
+  const specs = [
+    { icon: CalendarIcon, value: String(vehicle.year) },
+    {
+      icon: GaugeIcon,
+      value: `${formatNumber(vehicle.mileage, locale)} ${t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`)}`,
+    },
+    { icon: CogIcon, value: enumLabel(t, "transmission", vehicle.transmission) },
+    { icon: FuelIcon, value: enumLabel(t, "fuel", vehicle.fuelType) },
+  ].filter((spec): spec is { icon: typeof CalendarIcon; value: string } => !!spec.value);
+
   return (
-    <Card className="overflow-hidden pt-0 transition-shadow hover:shadow-md">
+    // h-full + flex column: every card in a grid row is the same height and the
+    // price/location row and action bar line up along the bottom.
+    <Card className="group/vehicle hover:ring-brand/30 flex h-full flex-col gap-0 overflow-hidden py-0 hover:-translate-y-1 hover:shadow-lg">
       <Link
-        href={`/inventory/${vehicle.id}`}
-        className="focus-visible:ring-ring/50 block outline-none focus-visible:ring-3"
+        href={vehicleHref(vehicle.stockNumber)}
+        className="focus-visible:ring-ring/50 flex flex-1 flex-col outline-none focus-visible:ring-3"
       >
-        <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
+        <div className="bg-muted relative aspect-[16/10] w-full shrink-0 overflow-hidden">
           {vehicle.primaryPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
             <img
               src={vehicle.primaryPhotoUrl}
               alt={vehicleTitle(vehicle)}
-              className="size-full object-cover"
+              className="size-full object-cover transition-transform duration-700 ease-(--ease-out-expo) group-hover/vehicle:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="text-muted-foreground flex size-full items-center justify-center">
+            <div className="bg-carbon text-sidebar-foreground/40 flex size-full items-center justify-center">
               <ImageIcon className="size-8" aria-hidden />
             </div>
           )}
-          <div className="absolute start-3 top-3 flex flex-wrap gap-2">
-            <VehicleStatusBadge status={vehicle.status} />
-            <MarketTypeBadge value={vehicle.marketType} />
+          {/* Soft scrim behind the chips for extra separation on busy photos. */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/30 to-transparent"
+            aria-hidden
+          />
+          <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2">
+            <Chip>
+              <VehicleStatusBadge status={vehicle.status} />
+            </Chip>
+            <div className="flex flex-wrap justify-end gap-1.5">
+              <Chip>
+                <MarketTypeBadge value={vehicle.marketType} />
+              </Chip>
+              {vehicle.quantity > 1 ? (
+                <Chip>
+                  <QuantityBadge quantity={vehicle.quantity} />
+                </Chip>
+              ) : null}
+            </div>
           </div>
         </div>
-        <CardContent className="grid gap-3 pt-4">
+
+        <div className="flex flex-1 flex-col gap-3 p-4">
           <div className="min-w-0">
-            <p className="text-muted-foreground text-xs tabular-nums">{vehicle.stockNumber}</p>
-            <p className="truncate text-base font-semibold tracking-tight">
+            <p className="text-muted-foreground font-mono text-xs">{vehicle.stockNumber}</p>
+            <p className="group-hover/vehicle:text-brand truncate text-base font-semibold tracking-tight transition-colors">
               {vehicle.make} {vehicle.model}
             </p>
-            {vehicle.variant ? (
-              <p className="text-muted-foreground truncate text-sm">{vehicle.variant}</p>
-            ) : null}
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {vehicle.year} · {formatNumber(vehicle.mileage, locale)}{" "}
-              {t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`)}
-            </p>
+            {/* Always one line tall so titles line up across the row. */}
+            <p className="text-muted-foreground min-h-5 truncate text-sm">{vehicle.variant ?? " "}</p>
           </div>
-          <div className="flex items-center justify-between gap-3 text-sm">
+
+          <ul className="flex flex-wrap gap-1.5">
+            {specs.map((spec) => (
+              <li
+                key={spec.value}
+                className="bg-muted/60 text-foreground/80 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs tabular-nums"
+              >
+                <spec.icon className="text-brand size-3.5" aria-hidden />
+                {spec.value}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-auto flex items-end justify-between gap-3 border-t pt-3 text-sm">
             <span className="text-muted-foreground flex min-w-0 items-center gap-1.5">
               <MapPinIcon className="size-3.5 shrink-0" aria-hidden />
               <span className="truncate">{place || t("inventory.fields.notSet")}</span>
             </span>
             {showPrice ? (
-              <span className="text-base font-semibold tabular-nums">
-                {formatCurrency(vehicle.currentSellingPrice as number, locale)}
-              </span>
+              <VehiclePrice
+                vehicle={vehicle}
+                className="shrink-0 text-end"
+                amountClassName="font-heading text-base font-semibold"
+              />
             ) : null}
           </div>
-        </CardContent>
-      </Link>
-      {(can("vehicle.edit") || (can("reservation.create") && vehicle.status === "ready_for_sale")) && (
-        <div className="flex flex-wrap gap-2 border-t px-4 py-3" data-row-stop>
-          {can("vehicle.edit") ? (
-            <Link
-              href={`/inventory/${vehicle.id}/edit`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <PencilIcon className="size-4" aria-hidden />
-              {t("inventory.actions.edit")}
-            </Link>
-          ) : null}
-          {can("reservation.create") && vehicle.status === "ready_for_sale" ? (
-            <Link
-              href={`/bookings?vehicleId=${vehicle.id}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <CalendarCheckIcon className="size-4" aria-hidden />
-              {t("bookings.book")}
-            </Link>
-          ) : null}
         </div>
-      )}
+      </Link>
+
+      {/* Each action renders nothing when unavailable; empty:hidden then drops the bar.
+          Buttons share the width evenly instead of wrapping onto a second line. */}
+      <div
+        className="bg-muted/30 flex gap-2 border-t px-3 py-2.5 empty:hidden [&>*]:min-w-0 [&>*]:flex-1 [&>span>button]:w-full"
+        data-row-stop
+      >
+        <VehicleStatusTrigger vehicle={vehicle} variant="button" />
+        {can("vehicle.edit") ? (
+          <Link
+            href={vehicleHref(vehicle.stockNumber, "/edit")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <PencilIcon className="size-4" aria-hidden />
+            {t("inventory.actions.edit")}
+          </Link>
+        ) : null}
+        <BookVehicleButton vehicle={vehicle} variant="outline" />
+      </div>
     </Card>
   );
 }

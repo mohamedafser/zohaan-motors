@@ -67,7 +67,7 @@ export function ForgotPasswordForm() {
           {...form.register("email")}
         />
       </FormField>
-      <LoadingButton type="submit" className="h-11" loading={pending}>
+      <LoadingButton type="submit" variant="brand" className="sheen h-11 font-semibold" loading={pending}>
         {t("auth.forgot.submit")}
       </LoadingButton>
     </form>

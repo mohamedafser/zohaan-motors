@@ -14,13 +14,15 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { navigation } from "@/config/navigation";
+import { navLabelKey, navigation } from "@/config/navigation";
 import { searchGroups } from "@/config/routes";
+import { useUserContext } from "@/hooks/use-permission";
 import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { useRouter } from "@/lib/i18n/navigation";
 
 export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations();
+  const { roles } = useUserContext();
   const router = useRouter();
   const { items, remember } = useRecentSearches();
   const [query, setQuery] = useState("");
@@ -39,6 +41,7 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
   const normalized = query.trim().toLowerCase();
   const pages = navigation
     .flatMap((group) => group.items)
+    .map((item) => ({ ...item, labelKey: navLabelKey(item, roles) }))
     .filter((item) => {
       if (!normalized) return false;
       return t(item.labelKey as Parameters<typeof t>[0]).toLowerCase().includes(normalized);

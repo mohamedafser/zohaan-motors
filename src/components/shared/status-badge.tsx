@@ -22,18 +22,11 @@ const statusStyles: Record<string, string> = {
   received: "bg-teal-700/12 text-teal-950 dark:bg-teal-300/15 dark:text-teal-100",
   cancelled: "bg-rose-700/12 text-rose-950 dark:bg-rose-300/15 dark:text-rose-100",
   rejected: "bg-rose-700/12 text-rose-950 dark:bg-rose-300/15 dark:text-rose-100",
-  // Inspection statuses / results
+  // Generic workflow statuses
   assigned: "bg-sky-700/12 text-sky-950 dark:bg-sky-300/15 dark:text-sky-100",
   in_progress: "bg-amber-700/12 text-amber-950 dark:bg-amber-300/15 dark:text-amber-100",
   submitted: "bg-indigo-700/12 text-indigo-950 dark:bg-indigo-300/15 dark:text-indigo-100",
   under_review: "bg-orange-700/12 text-orange-950 dark:bg-orange-300/15 dark:text-orange-100",
-  pass: "bg-emerald-700/12 text-emerald-950 dark:bg-emerald-400/15 dark:text-emerald-100",
-  pass_with_advisories: "bg-amber-700/12 text-amber-950 dark:bg-amber-300/15 dark:text-amber-100",
-  repair_required: "bg-orange-700/12 text-orange-950 dark:bg-orange-300/15 dark:text-orange-100",
-  fail: "bg-rose-700/12 text-rose-950 dark:bg-rose-300/15 dark:text-rose-100",
-  advisory: "bg-amber-700/12 text-amber-950 dark:bg-amber-300/15 dark:text-amber-100",
-  not_applicable: "bg-stone-600/12 text-stone-900 dark:bg-stone-300/15 dark:text-stone-100",
-  not_tested: "bg-sky-700/12 text-sky-950 dark:bg-sky-300/15 dark:text-sky-100",
   // Workshop order / job statuses
   scheduled: "bg-sky-700/12 text-sky-950 dark:bg-sky-300/15 dark:text-sky-100",
   waiting_for_parts: "bg-amber-700/12 text-amber-950 dark:bg-amber-300/15 dark:text-amber-100",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { PhoneInput } from "@/components/forms/phone-input";
@@ -21,12 +21,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { BookableVehicle, CustomerOption, PersonOption } from "@/lib/bookings/service";
 import { firstFieldErrors } from "@/lib/validation";
 import { createBookingSchema } from "@/lib/validation/booking";
-
-function inDays(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+import type { AppLocale } from "@/config/app";
+import { formatCurrency } from "@/lib/utils/currency";
+import { quantityTotal } from "@/lib/vehicles/quantity";
 
 const emptyForm = () => ({
   vehicleId: "",
@@ -37,7 +34,8 @@ const emptyForm = () => ({
   lastName: "",
   phone: "",
   deposit: "",
-  expiresOn: inDays(7),
+  sellingPrice: "",
+  quantity: "1",
   notes: "",
 });
 
@@ -45,20 +43,28 @@ export function NewBookingDialog({
   open,
   onOpenChange,
   initialVehicleId,
+  initialQuantity,
   canCreateCustomer,
   onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialVehicleId?: string;
+  /** Units to book when opened for a multi-unit car (e.g. from Update status). */
+  initialQuantity?: number;
   canCreateCustomer: boolean;
   onCreated: () => void;
 }) {
+  const locale = useLocale() as AppLocale;
   const t = useTranslations("bookings");
   const tRoot = useTranslations();
   const msg = (key: string) => tRoot(key as Parameters<typeof tRoot>[0]);
 
-  const [form, setForm] = useState(() => ({ ...emptyForm(), vehicleId: initialVehicleId ?? "" }));
+  const [form, setForm] = useState(() => ({
+    ...emptyForm(),
+    vehicleId: initialVehicleId ?? "",
+    quantity: String(initialQuantity ?? 1),
+  }));
   const [vehicles, setVehicles] = useState<BookableVehicle[]>([]);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [salesExecutives, setSalesExecutives] = useState<PersonOption[]>([]);
@@ -71,10 +77,21 @@ export function NewBookingDialog({
   useEffect(() => {
     if (!open) return;
     void fetch("/api/bookings/options", { credentials: "same-origin" })
-      .then((res) => res.json())
+      // A failed request can have an empty or non-JSON body.
+      .then((res) => res.json().catch(() => null))
       .then((json) => {
-        if (json.status !== "success") return;
+        if (json?.status !== "success") {
+          setFormError(json?.message ?? t("errors.optionsFailed"));
+          return;
+        }
         setVehicles(json.data.vehicles);
+        // A car passed in from Inventory gets its price prefilled once options arrive.
+        const preselected = (json.data.vehicles as BookableVehicle[]).find((v) => v.id === initialVehicleId);
+        if (preselected?.sellingPrice != null) {
+          setForm((prev) =>
+            prev.sellingPrice === "" ? { ...prev, sellingPrice: String(preselected.sellingPrice) } : prev,
+          );
+        }
         setCustomers(json.data.customers);
         setSalesExecutives(json.data.salesExecutives);
         setSelfSalespersonId(json.data.selfSalespersonId);
@@ -82,7 +99,7 @@ export function NewBookingDialog({
           setForm((prev) => ({ ...prev, customerMode: canCreateCustomer ? "new" : "existing" }));
         }
       });
-  }, [open, canCreateCustomer]);
+  }, [open, canCreateCustomer, initialVehicleId, t]);
 
   type FormValues = ReturnType<typeof emptyForm>;
 
@@ -108,6 +125,9 @@ export function NewBookingDialog({
     return {
       ...values,
       deposit: values.deposit === "" ? Number.NaN : Number(values.deposit),
+      sellingPrice: values.sellingPrice === "" ? Number.NaN : Number(values.sellingPrice),
+      // Only multi-unit cars send a quantity; otherwise the whole record is booked.
+      quantity: unitsFor(values.vehicleId) > 1 ? (values.quantity === "" ? Number.NaN : Number(values.quantity)) : undefined,
       customerId: values.customerMode === "existing" ? values.customerId : undefined,
       salespersonId: lockedSalesperson(values)?.id ?? (values.salespersonId || undefined),
     };
@@ -116,6 +136,10 @@ export function NewBookingDialog({
   function validate(values: ReturnType<typeof emptyForm>) {
     const parsed = createBookingSchema.safeParse(toPayload(values));
     const errors: Record<string, string> = parsed.success ? {} : firstFieldErrors(parsed.error);
+    const quantity = Number(values.quantity);
+    if (unitsFor(values.vehicleId) > 1 && quantity > unitsFor(values.vehicleId)) {
+      errors.quantity = "bookings.errors.tooManyUnits";
+    }
     if (duplicateCustomer(values)) errors.phone = "bookings.errors.customerExists";
     const customerChosen = values.customerMode === "new" || !!values.customerId;
     if (customerChosen && !lockedSalesperson(values) && !values.salespersonId) {
@@ -142,6 +166,16 @@ export function NewBookingDialog({
         return duplicateCustomer(next) ? { ...rest, phone: "bookings.errors.customerExists" } : rest;
       });
     }
+  }
+
+  function unitsFor(vehicleId: string) {
+    return vehicles.find((v) => v.id === vehicleId)?.quantity ?? 1;
+  }
+
+  // Prefill the car's current selling price; the user can still change it.
+  function selectVehicle(vehicleId: string) {
+    const price = vehicles.find((v) => v.id === vehicleId)?.sellingPrice;
+    update({ vehicleId, sellingPrice: price == null ? "" : String(price), quantity: "1" });
   }
 
   function selectDuplicate(customerId: string) {
@@ -194,6 +228,14 @@ export function NewBookingDialog({
   const error = (key: string) =>
     fieldErrors[key] ? <p className="text-destructive text-xs">{msg(fieldErrors[key])}</p> : null;
 
+  const selectedUnits = unitsFor(form.vehicleId);
+  const bookedUnits = Number(form.quantity);
+  // Selling price is per unit; show the total once more than one unit is booked.
+  const sellingTotal =
+    selectedUnits > 1 && Number.isInteger(bookedUnits) && bookedUnits > 1 && form.sellingPrice !== ""
+      ? quantityTotal(Number(form.sellingPrice), bookedUnits)
+      : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -209,13 +251,36 @@ export function NewBookingDialog({
               <SearchableSelect
                 id="booking-vehicle"
                 value={form.vehicleId}
-                onValueChange={(v) => set("vehicleId", v)}
+                onValueChange={selectVehicle}
                 options={vehicleOptions}
                 optional={false}
                 placeholder={vehicles.length ? t("selectVehicle") : t("noVehicles")}
               />
               {error("vehicleId")}
             </div>
+
+            {selectedUnits > 1 ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="booking-quantity">{t("units")}</Label>
+                <Input
+                  id="booking-quantity"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={selectedUnits}
+                  step={1}
+                  value={form.quantity}
+                  onChange={(e) => set("quantity", e.target.value)}
+                  aria-invalid={!!fieldErrors.quantity || undefined}
+                  aria-describedby="booking-quantity-hint"
+                  className="sm:max-w-40"
+                />
+                <p id="booking-quantity-hint" className="text-muted-foreground text-xs">
+                  {t("unitsHint", { count: selectedUnits })}
+                </p>
+                {error("quantity")}
+              </div>
+            ) : null}
 
             <div className="flex flex-col gap-1.5">
               <Label>{t("customer")}</Label>
@@ -340,16 +405,31 @@ export function NewBookingDialog({
                 {error("deposit")}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="booking-expires">{t("expiresOn")}</Label>
+                <Label htmlFor="booking-selling-price">
+                  {selectedUnits > 1
+                    ? tRoot("inventory.quantity.perUnitLabel", { label: t("sellingPrice") })
+                    : t("sellingPrice")}
+                </Label>
                 <Input
-                  id="booking-expires"
-                  type="date"
-                  min={inDays(0)}
-                  value={form.expiresOn}
-                  onChange={(e) => set("expiresOn", e.target.value)}
-                  aria-invalid={!!fieldErrors.expiresOn || undefined}
+                  id="booking-selling-price"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={form.sellingPrice}
+                  onChange={(e) => set("sellingPrice", e.target.value)}
+                  aria-invalid={!!fieldErrors.sellingPrice || undefined}
+                  aria-required
                 />
-                {error("expiresOn")}
+                {sellingTotal != null ? (
+                  <p className="text-muted-foreground text-xs">
+                    {t("sellingTotal", {
+                      count: bookedUnits,
+                      total: formatCurrency(sellingTotal, locale),
+                    })}
+                  </p>
+                ) : null}
+                {error("sellingPrice")}
               </div>
             </div>
 
@@ -367,7 +447,7 @@ export function NewBookingDialog({
           </div>
 
           <DialogFooter className="mt-6" showCloseButton>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" variant="brand" disabled={saving}>
               {t("create")}
             </Button>
           </DialogFooter>

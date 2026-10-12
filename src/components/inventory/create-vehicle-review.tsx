@@ -4,9 +4,12 @@ import { FileIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { useAppLocale } from "@/components/inventory/inventory-utils";
+import { QuantityTotals } from "@/components/inventory/quantity-totals";
 import { Button } from "@/components/ui/button";
 import { useInventoryMeta } from "@/hooks/use-vehicles";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils/currency";
 import type { AcquisitionFormValues } from "@/lib/validation/acquisition";
 import type { VehicleFormValues } from "@/lib/validation/vehicle";
 import type { PendingAcquisitionDocument } from "@/types/acquisition-document";
@@ -91,6 +94,7 @@ export function CreateVehicleReview({
   showAcquisition: boolean;
 }) {
   const t = useTranslations();
+  const locale = useAppLocale();
   const meta = useInventoryMeta(vehicle?.branchId || undefined);
 
   const branchName =
@@ -121,6 +125,22 @@ export function CreateVehicleReview({
               label={t("inventory.fields.mileage")}
               value={`${vehicle.mileage} ${t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`)}`}
             />
+            <ReviewField label={t("inventory.fields.quantity")} value={vehicle.quantity} />
+            {vehicle.initialStatus === "acquired" ? (
+              <ReviewField label={t("inventory.fields.portLocation")} value={vehicle.portLocation} />
+            ) : null}
+            {vehicle.minimumSellingPrice != null ? (
+              <ReviewField
+                label={t("inventory.fields.minimumSellingPrice")}
+                value={formatCurrency(vehicle.minimumSellingPrice, locale)}
+              />
+            ) : null}
+            {vehicle.targetSellingPrice != null ? (
+              <ReviewField
+                label={t("pricing.fields.target")}
+                value={formatCurrency(vehicle.targetSellingPrice, locale)}
+              />
+            ) : null}
             <ReviewField label={t("inventory.fields.bodyType")} value={vehicle.bodyType} />
             <ReviewField
               label={t("inventory.fields.transmission")}
@@ -167,6 +187,21 @@ export function CreateVehicleReview({
         )}
       </ReviewSection>
 
+      {vehicle ? (
+        <QuantityTotals
+          quantity={vehicle.quantity}
+          rows={[
+            {
+              label: t("acquisitions.fields.purchasePrice"),
+              unitPrice: acquisitionIncluded ? acquisition?.purchasePrice : null,
+              currency: acquisition?.currency,
+            },
+            { label: t("inventory.fields.minimumSellingPrice"), unitPrice: vehicle.minimumSellingPrice },
+            { label: t("pricing.fields.target"), unitPrice: vehicle.targetSellingPrice },
+          ]}
+        />
+      ) : null}
+
       {showAcquisition ? (
         <ReviewSection
           title={t("inventory.stepper.review.acquisitionTitle")}
@@ -212,10 +247,6 @@ export function CreateVehicleReview({
                 <ReviewField
                   label={t("acquisitions.fields.expectedArrivalDate")}
                   value={acquisition.expectedArrivalDate}
-                />
-                <ReviewField
-                  label={t("acquisitions.fields.paymentStatus")}
-                  value={t(`acquisitions.enums.paymentStatus.${acquisition.paymentStatus}`)}
                 />
                 <ReviewField
                   label={t("acquisitions.fields.documentStatus")}

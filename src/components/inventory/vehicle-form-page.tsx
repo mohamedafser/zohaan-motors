@@ -17,13 +17,19 @@ import {
 import { EmptyState } from "@/components/feedback/empty-state";
 import { FormStepper, type FormStepperStep } from "@/components/forms/form-stepper";
 import { CreateVehicleReview } from "@/components/inventory/create-vehicle-review";
-import { VehicleForm, type VehicleFormHandle } from "@/components/inventory/vehicle-form";
+import {
+  VehicleForm,
+  type VehicleFormHandle,
+  type VehicleTotalsValues,
+} from "@/components/inventory/vehicle-form";
+import { QuantityTotals } from "@/components/inventory/quantity-totals";
 import {
   VehicleImageManager,
   uploadPendingVehiclePhotos,
 } from "@/components/inventory/vehicle-image-manager";
 import { PageHeader } from "@/components/layout/page-header";
 import { LoadingButton } from "@/components/shared/loading-button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -120,6 +126,46 @@ function withVehicleLink(
   };
 }
 
+type PurchaseValues = { purchasePrice: number | null; currency: string };
+
+/** Acquisition-step content after Purchase: the selling price slot, then quantity totals. */
+function AfterPurchase({
+  showPricing,
+  onPricingSlot,
+  vehicle,
+  purchase,
+}: {
+  showPricing: boolean;
+  onPricingSlot: (node: HTMLDivElement | null) => void;
+  vehicle: VehicleTotalsValues | null;
+  purchase: PurchaseValues | null;
+}) {
+  const t = useTranslations();
+  return (
+    <>
+      {showPricing ? <div ref={onPricingSlot} /> : null}
+      {vehicle ? (
+        <QuantityTotals
+          quantity={vehicle.quantity}
+          rows={[
+            {
+              label: t("acquisitions.fields.purchasePrice"),
+              unitPrice: purchase?.purchasePrice,
+              currency: purchase?.currency,
+            },
+            ...(showPricing
+              ? [
+                  { label: t("inventory.fields.minimumSellingPrice"), unitPrice: vehicle.minimumSellingPrice },
+                  { label: t("pricing.fields.target"), unitPrice: vehicle.targetSellingPrice },
+                ]
+              : []),
+          ]}
+        />
+      ) : null}
+    </>
+  );
+}
+
 type CreateStepId = "vehicle" | "acquisition" | "photos" | "review";
 type EditStepId = "vehicle" | "acquisition" | "photos";
 
@@ -148,9 +194,14 @@ function CreateVehicle() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const submitLock = useRef(false);
   const stepScrollRef = useRef<HTMLDivElement | null>(null);
+  // Selling price renders on the acquisition step, next to the purchase price.
+  const [pricingSlot, setPricingSlot] = useState<HTMLDivElement | null>(null);
+  const [vehicleTotals, setVehicleTotals] = useState<VehicleTotalsValues | null>(null);
+  const [purchase, setPurchase] = useState<PurchaseValues | null>(null);
   useRevokePendingDocuments(pendingDocuments);
 
   const showAcquisition = can("acquisition.create");
+  const pricingOnAcquisition = Boolean(pricingSlot);
 
   useEffect(() => {
     stepScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
@@ -192,7 +243,7 @@ function CreateVehicle() {
             id: "acquisition" as const,
             label: t("inventory.stepper.steps.acquisition"),
             description: t("inventory.stepper.hints.acquisition"),
-            optional: true,
+            optional: !pricingOnAcquisition,
           },
         ]
       : []),
@@ -274,6 +325,7 @@ function CreateVehicle() {
         const vehicle = await create.mutateAsync(values);
         vehicleId = vehicle.id;
         setCreatedVehicleId(vehicleId);
+        if (vehicle.pricingWarning) toast.error(t("inventory.toasts.pricingNotSaved"));
       }
 
       if (wantsAcquisition && acquisitionValues && !acquisitionId) {
@@ -377,17 +429,28 @@ function CreateVehicle() {
 
   async function goNext() {
     if (stepId === "vehicle") {
-      const values = await vehicleRef.current?.validate();
-      if (!values) {
-        toast.error(t("inventory.stepper.fixVehicle"));
-        return;
+      if (pricingOnAcquisition) {
+        if (!(await vehicleRef.current?.validateScope("vehicle"))) {
+          toast.error(t("inventory.stepper.fixVehicle"));
+          return;
+        }
+      } else {
+        const values = await vehicleRef.current?.validate();
+        if (!values) {
+          toast.error(t("inventory.stepper.fixVehicle"));
+          return;
+        }
+        setVehicleSnapshot(values);
       }
-      setVehicleSnapshot(values);
       setStepId(showAcquisition ? "acquisition" : "photos");
       return;
     }
 
     if (stepId === "acquisition") {
+      if (pricingOnAcquisition && !(await vehicleRef.current?.validateScope("pricing"))) {
+        toast.error(t("inventory.stepper.fixPricing"));
+        return;
+      }
       if (acquisitionDirty || pendingDocuments.length > 0) {
         const values = await acquisitionRef.current?.validate();
         if (!values) {
@@ -408,7 +471,12 @@ function CreateVehicle() {
     }
   }
 
-  function skipAcquisition() {
+  async function skipAcquisition() {
+    // Skipping the purchase details still requires the selling price on this step.
+    if (pricingOnAcquisition && !(await vehicleRef.current?.validateScope("pricing"))) {
+      toast.error(t("inventory.stepper.fixPricing"));
+      return;
+    }
     setAcquisitionSkipped(true);
     setAcquisitionDirty(false);
     setPendingDocuments([]);
@@ -428,8 +496,9 @@ function CreateVehicle() {
   async function finish() {
     const values = (await vehicleRef.current?.validate()) ?? vehicleSnapshot;
     if (!values) {
-      setStepId("vehicle");
-      toast.error(t("inventory.stepper.fixVehicle"));
+      const onPricing = pricingOnAcquisition && vehicleRef.current?.errorScope() === "pricing";
+      setStepId(onPricing ? "acquisition" : "vehicle");
+      toast.error(t(onPricing ? "inventory.stepper.fixPricing" : "inventory.stepper.fixVehicle"));
       return;
     }
     await saveAll(values);
@@ -498,6 +567,8 @@ function CreateVehicle() {
                 cancelHref="/inventory"
                 hideActions
                 onSubmit={async () => undefined}
+                pricingContainer={pricingSlot}
+                onTotalsChange={setVehicleTotals}
               />
             </div>
 
@@ -507,6 +578,16 @@ function CreateVehicle() {
                   ref={acquisitionRef}
                   embedded
                   mode="create"
+                  afterPurchase={
+                    <AfterPurchase
+                      showPricing={can("vehicle.price.edit")}
+                      onPricingSlot={setPricingSlot}
+                      vehicle={vehicleTotals}
+                      purchase={purchase}
+                    />
+                  }
+                  onPurchaseChange={setPurchase}
+                  unitCount={vehicleTotals?.quantity ?? 1}
                   submitting={busy}
                   fieldErrors={errors.fieldErrors}
                   formError={null}
@@ -583,7 +664,7 @@ function CreateVehicle() {
                   variant="secondary"
                   size="sm"
                   className="min-w-24"
-                  onClick={stepId === "acquisition" ? skipAcquisition : () => setStepId("review")}
+                  onClick={stepId === "acquisition" ? () => void skipAcquisition() : () => setStepId("review")}
                   disabled={busy}
                 >
                   {t("inventory.stepper.skip")}
@@ -642,7 +723,11 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
   const [savingAcquisition, setSavingAcquisition] = useState(false);
   const [localAcquisitionId, setLocalAcquisitionId] = useState<string | null>(null);
   const [pendingDocuments, setPendingDocuments] = useState<PendingAcquisitionDocument[]>([]);
+  const [pricingSlot, setPricingSlot] = useState<HTMLDivElement | null>(null);
+  const [vehicleTotals, setVehicleTotals] = useState<VehicleTotalsValues | null>(null);
+  const [purchase, setPurchase] = useState<PurchaseValues | null>(null);
   useRevokePendingDocuments(pendingDocuments);
+  const pricingOnAcquisition = Boolean(pricingSlot);
 
   const linkedAcquisitionId = query.data?.acquisition?.id ?? null;
   const resolvedAcquisitionId = localAcquisitionId ?? linkedAcquisitionId;
@@ -667,7 +752,7 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
         id: "acquisition",
         label: t("inventory.stepper.steps.acquisition"),
         description: t("inventory.stepper.hints.acquisition"),
-        optional: !linkedAcquisitionId,
+        optional: !linkedAcquisitionId && !pricingOnAcquisition,
       });
     }
     items.push({
@@ -677,7 +762,7 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
       optional: true,
     });
     return items;
-  }, [linkedAcquisitionId, showAcquisition, t]);
+  }, [linkedAcquisitionId, showAcquisition, pricingOnAcquisition, t]);
 
   const stepIndex = steps.findIndex((step) => step.id === stepId);
   const isFirst = stepIndex <= 0;
@@ -691,8 +776,9 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
     errors.reset();
     const values = await vehicleRef.current?.validate();
     if (!values) {
-      setStepId("vehicle");
-      toast.error(t("inventory.stepper.fillVehicle"));
+      const onPricing = pricingOnAcquisition && vehicleRef.current?.errorScope() === "pricing";
+      setStepId(onPricing ? "acquisition" : "vehicle");
+      toast.error(t(onPricing ? "inventory.stepper.fixPricing" : "inventory.stepper.fillVehicle"));
       return;
     }
 
@@ -756,8 +842,10 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
 
   async function goNext() {
     if (stepId === "vehicle") {
-      const values = await vehicleRef.current?.validate();
-      if (!values) {
+      const valid = pricingOnAcquisition
+        ? await vehicleRef.current?.validateScope("vehicle")
+        : Boolean(await vehicleRef.current?.validate());
+      if (!valid) {
         toast.error(t("inventory.stepper.fillVehicle"));
         return;
       }
@@ -765,6 +853,10 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
       return;
     }
     if (stepId === "acquisition") {
+      if (pricingOnAcquisition && !(await vehicleRef.current?.validateScope("pricing"))) {
+        toast.error(t("inventory.stepper.fixPricing"));
+        return;
+      }
       if (acquisitionDirty || pendingDocuments.length > 0) {
         const values = await acquisitionRef.current?.validate();
         if (!values) {
@@ -853,11 +945,22 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
                 hideActions
                 onSubmit={async () => undefined}
                 allowSubmitWhenClean
+                pricingContainer={pricingSlot}
+                onTotalsChange={setVehicleTotals}
               />
             </div>
 
             {showAcquisition ? (
-              <div className={cn(stepId === "acquisition" ? "block" : "hidden")}>
+              <div className={cn(stepId === "acquisition" ? "grid gap-6" : "hidden")}>
+                {query.data.acquisitionSharedFrom ? (
+                  <Alert>
+                    <AlertDescription>
+                      {t("inventory.acquisition.sharedEdit", {
+                        stock: query.data.acquisitionSharedFrom.stockNumber,
+                      })}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
                 {acquisitionMode === "edit" && acquisitionQuery.data ? (
                   <AcquisitionForm
                     key={acquisitionQuery.data.id}
@@ -865,6 +968,16 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
                     embedded
                     mode="edit"
                     acquisition={acquisitionQuery.data}
+                    afterPurchase={
+                      <AfterPurchase
+                        showPricing={can("vehicle.price.edit")}
+                        onPricingSlot={setPricingSlot}
+                        vehicle={vehicleTotals}
+                        purchase={purchase}
+                      />
+                    }
+                    onPurchaseChange={setPurchase}
+                    unitCount={vehicleTotals?.quantity ?? 1}
                     branchId={query.data.branchId}
                     submitting={busy}
                     fieldErrors={errors.fieldErrors}
@@ -887,6 +1000,16 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
                     embedded
                     mode="create"
                     branchId={query.data.branchId}
+                    afterPurchase={
+                      <AfterPurchase
+                        showPricing={can("vehicle.price.edit")}
+                        onPricingSlot={setPricingSlot}
+                        vehicle={vehicleTotals}
+                        purchase={purchase}
+                      />
+                    }
+                    onPurchaseChange={setPurchase}
+                    unitCount={vehicleTotals?.quantity ?? 1}
                     submitting={busy}
                     fieldErrors={errors.fieldErrors}
                     formError={null}

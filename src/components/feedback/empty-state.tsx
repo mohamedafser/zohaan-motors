@@ -19,11 +19,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "bg-card flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center",
+        "bg-card animate-rise flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center",
         className,
       )}
     >
-      <span className="bg-brand-soft text-brand ring-brand-soft mb-5 flex size-14 items-center justify-center rounded-2xl ring-4">
+      <span className="bg-brand-soft text-brand ring-brand-soft animate-float mb-5 flex size-14 items-center justify-center rounded-2xl ring-4">
         <Icon className="size-6" aria-hidden />
       </span>
       <h2 className="text-base font-semibold tracking-tight">{title}</h2>

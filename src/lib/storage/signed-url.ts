@@ -5,7 +5,6 @@ const DEFAULT_EXPIRES_IN = 60 * 5; // 5 minutes
 export type StorageBucket =
   | "vehicle-photos"
   | "vehicle-documents"
-  | "inspection-photos"
   | "workshop-photos"
   | "customer-documents"
   | "sales-documents";

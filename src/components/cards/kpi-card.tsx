@@ -13,6 +13,17 @@ const tones = {
   violet: "bg-violet-600/10 text-violet-700 dark:bg-violet-400/12 dark:text-violet-300",
 } as const;
 
+/** Soft corner glow behind the card, matching the icon tone. */
+const glows: Record<KpiTone, string> = {
+  neutral: "bg-foreground/5",
+  brand: "bg-brand/25",
+  success: "bg-emerald-500/15",
+  info: "bg-sky-500/15",
+  warning: "bg-amber-500/15",
+  danger: "bg-rose-500/15",
+  violet: "bg-violet-500/15",
+};
+
 export type KpiTone = keyof typeof tones;
 
 export function KpiCard({
@@ -29,13 +40,26 @@ export function KpiCard({
   hint?: string;
 }) {
   return (
-    <Card size="sm" className="gap-3 px-4 py-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-muted-foreground truncate text-sm font-medium">{label}</p>
+    <Card
+      size="sm"
+      className="group/kpi hover:ring-brand/30 relative isolate gap-3 px-4 py-4 hover:-translate-y-0.5 hover:shadow-lg"
+    >
+      <span
+        className={cn(
+          "pointer-events-none absolute -end-10 -top-10 -z-10 size-28 rounded-full opacity-70 blur-2xl transition-all duration-500 group-hover/kpi:scale-125 group-hover/kpi:opacity-100",
+          glows[tone],
+        )}
+        aria-hidden
+      />
+      {tone === "brand" ? (
+        <span className="bg-gold absolute inset-x-0 top-0 h-0.5" aria-hidden />
+      ) : null}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-muted-foreground line-clamp-2 text-sm leading-snug font-medium">{label}</p>
         {Icon ? (
           <span
             className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-lg",
+              "flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-(--ease-spring) group-hover/kpi:scale-110 group-hover/kpi:-rotate-6",
               tones[tone],
             )}
           >
@@ -44,7 +68,9 @@ export function KpiCard({
         ) : null}
       </div>
       <div className="min-w-0">
-        <p className="truncate text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+        <p className="font-heading truncate text-2xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </p>
         {hint ? <p className="text-muted-foreground mt-0.5 truncate text-xs">{hint}</p> : null}
       </div>
     </Card>

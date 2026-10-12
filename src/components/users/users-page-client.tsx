@@ -3,15 +3,16 @@
 import { useCallback, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PencilIcon, Trash2Icon } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { InviteUserDialog } from "@/components/users/invite-user-dialog";
 import { EditUserDialog } from "@/components/users/edit-user-dialog";
+import { RemoveUserDialog } from "@/components/users/remove-user-dialog";
 import { PageHeader } from "@/components/layout/page-header";
 import type { RoleOption, UserListItem } from "@/lib/users/service";
 import { roleLabel } from "@/components/users/role-label";
+import { RoleChip } from "@/components/users/role-chip";
 import type { AppLocale } from "@/config/app";
 import { formatDate } from "@/lib/utils/date";
 
@@ -46,6 +47,8 @@ export function UsersPageClient({ initialUsers, roles }: Props) {
   const [users, setUsers] = useState(initialUsers);
   const [editUser, setEditUser] = useState<UserListItem | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [removeUser, setRemoveUser] = useState<UserListItem | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/users", { credentials: "same-origin" });
@@ -54,22 +57,6 @@ export function UsersPageClient({ initialUsers, roles }: Props) {
       setUsers(data);
     }
   }, []);
-
-  async function handleRemove(user: UserListItem) {
-    if (!confirm(`Remove ${user.displayName}? This cannot be undone.`)) return;
-
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: "DELETE",
-      credentials: "same-origin",
-    });
-
-    if (res.ok) {
-      toast.success(t("removeSuccess"));
-      setUsers((prev) => prev.filter((u) => u.id !== user.id));
-    } else {
-      toast.error(t("errors.removeFailed"));
-    }
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -108,12 +95,7 @@ export function UsersPageClient({ initialUsers, roles }: Props) {
                     <div className="flex flex-wrap gap-1">
                       {user.roles.length > 0
                         ? user.roles.map((r) => (
-                            <span
-                              key={r.key}
-                              className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground"
-                            >
-                              {roleLabel(r, (k) => t(k as Parameters<typeof t>[0]))}
-                            </span>
+                            <RoleChip key={r.key} label={roleLabel(r, (k) => t(k as Parameters<typeof t>[0]))} />
                           ))
                         : <span className="text-muted-foreground">—</span>}
                     </div>
@@ -141,7 +123,7 @@ export function UsersPageClient({ initialUsers, roles }: Props) {
                         variant="ghost"
                         size="icon-sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => handleRemove(user)}
+                        onClick={() => { setRemoveUser(user); setRemoveOpen(true); }}
                         aria-label="Remove user"
                       >
                         <Trash2Icon />
@@ -159,7 +141,15 @@ export function UsersPageClient({ initialUsers, roles }: Props) {
         user={editUser}
         open={editOpen}
         onOpenChange={setEditOpen}
+        roles={roles}
         onSuccess={refresh}
+      />
+
+      <RemoveUserDialog
+        user={removeUser}
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        onRemoved={(id) => setUsers((prev) => prev.filter((u) => u.id !== id))}
       />
     </div>
   );

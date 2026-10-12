@@ -6,10 +6,10 @@ import {
   MILEAGE_UNITS,
   ORIGIN_TYPES,
   TRANSMISSION_TYPES,
-  VEHICLE_INSPECTION_FILTERS,
   VEHICLE_MARKET_TYPES,
   VEHICLE_SORT_FIELDS,
   VEHICLE_STATUSES,
+  type VehicleStatus,
 } from "@/types/vehicle";
 
 /** Local copies — avoid importing `@/lib/validation` (circular with index re-exports). */
@@ -17,6 +17,8 @@ const messages = {
   required: "validation.required",
   number: "validation.number",
   vin: "validation.vin",
+  currency: "validation.currency",
+  sellingBelowMinimum: "validation.sellingBelowMinimum",
 } as const;
 
 const currentYear = () => new Date().getUTCFullYear();
@@ -54,6 +56,11 @@ const optionalPositiveInt = z
   .refine((value) => value === null || (Number.isInteger(value) && value > 0), {
     error: messages.number,
   });
+
+const optionalMoney = z
+  .union([z.number(), z.nan(), z.null(), z.undefined()])
+  .transform((value) => (typeof value === "number" && Number.isFinite(value) ? value : null))
+  .refine((value) => value === null || value >= 0, { error: messages.currency });
 
 export const vehicleFormSchema = z.object({
   vin: optionalVinSchema,
@@ -130,15 +137,61 @@ export const vehicleFormSchema = z.object({
     .union([z.string().uuid(), z.literal(""), z.null(), z.undefined()])
     .transform((value) => (value && String(value).length > 0 ? String(value) : null)),
   customVariant: optionalText,
+  /** Defaults to 1 when the key is omitted (older API callers); the form always sends it. */
+  quantity: z
+    .number({ error: messages.number })
+    .int({ error: messages.number })
+    .min(1, { error: messages.number })
+    .default(1),
+  /** Required while In transit (acquired); see vehicleFormRules. */
+  portLocation: optionalText.optional(),
+  /** Selling price section — only sent by users who can edit prices. */
+  minimumSellingPrice: optionalMoney.optional(),
+  targetSellingPrice: optionalMoney.optional(),
 });
+
+/**
+ * Cross-field rules. `status` is the saved vehicle status (edit); on create the
+ * chosen initialStatus wins. `requirePricing` is true when the user can edit prices.
+ */
+export function vehicleFormRules(options: { status?: VehicleStatus; requirePricing: boolean }) {
+  return vehicleFormSchema.superRefine(
+    (values, ctx) => {
+      const status = values.initialStatus ?? options.status;
+      if (status === "acquired" && !values.portLocation) {
+        ctx.addIssue({ code: "custom", path: ["portLocation"], message: messages.required });
+      }
+      const minimum = values.minimumSellingPrice;
+      if (options.requirePricing && minimum == null) {
+        ctx.addIssue({ code: "custom", path: ["minimumSellingPrice"], message: messages.required });
+      }
+      const selling = values.targetSellingPrice;
+      if (Number.isFinite(selling) && Number.isFinite(minimum) && selling! < minimum!) {
+        ctx.addIssue({ code: "custom", path: ["targetSellingPrice"], message: messages.sellingBelowMinimum });
+      }
+    },
+    // Run alongside field errors so the form shows every problem at once. Values for
+    // fields that failed may be raw input, so the checks above tolerate any type.
+    { when: (payload) => typeof payload.value === "object" && payload.value !== null },
+  );
+}
 
 export const createVehicleSchema = vehicleFormSchema;
 
 export const updateVehicleSchema = vehicleFormSchema;
 
+/** Units to move on a multi-unit record; omitted means all of them. */
+export const unitQuantitySchema = z
+  .number({ error: messages.number })
+  .int({ error: messages.number })
+  .min(1, { error: messages.number })
+  .optional();
+
 export const changeVehicleStatusSchema = z.object({
   status: z.enum(VEHICLE_STATUSES),
-  reason: z.string().trim().min(1, { error: messages.required }).max(500),
+  quantity: unitQuantitySchema,
+  /** Optional in the app; the service records a default so status history always has one. */
+  reason: z.string().trim().max(500).optional(),
 });
 
 export const transferVehicleSchema = z.object({
@@ -156,6 +209,7 @@ export const archiveVehicleSchema = z.object({
 export const markReadyForSaleSchema = z
   .object({
     reason: z.string().trim().max(500).optional().nullable(),
+    quantity: unitQuantitySchema,
     override: z.boolean().default(false),
     overrideReason: z.string().trim().max(500).optional().nullable(),
   })
@@ -200,7 +254,6 @@ export const vehicleListQuerySchema = z.object({
   q: z.preprocess(emptyToUndefined, z.string().trim().optional()).transform((value) => value ?? ""),
   status: optionalEnum(VEHICLE_STATUSES),
   marketType: optionalEnum(VEHICLE_MARKET_TYPES),
-  inspection: optionalEnum(VEHICLE_INSPECTION_FILTERS),
   branchId: optionalUuid(),
   locationId: optionalUuid(),
   make: z.preprocess(emptyToUndefined, z.string().trim().optional()),

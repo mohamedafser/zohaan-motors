@@ -10,6 +10,8 @@ export type NavItem = {
   icon: LucideIcon;
   mobile?: MobileSlot;
   permission?: Permission;
+  /** Label for users who only see their own records (e.g. "My bookings"). */
+  ownLabelKey?: string;
 };
 
 export type NavGroup = {

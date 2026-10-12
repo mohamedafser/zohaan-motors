@@ -45,7 +45,7 @@ export function AcquisitionsPageClient() {
         description={t("description")}
         actions={
           can("acquisition.create") ? (
-            <Button nativeButton={false} render={<Link href="/inventory/new" />}>
+            <Button variant="brand" nativeButton={false} render={<Link href="/inventory/new" />}>
               {t("actions.addViaInventory")}
             </Button>
           ) : null
@@ -76,7 +76,7 @@ export function AcquisitionsPageClient() {
           description={filtered ? t("empty.filteredHint") : t("empty.hint")}
           action={
             can("acquisition.create") && !filtered ? (
-              <Button nativeButton={false} render={<Link href="/inventory/new" />}>
+              <Button variant="brand" nativeButton={false} render={<Link href="/inventory/new" />}>
                 {t("actions.addViaInventory")}
               </Button>
             ) : null

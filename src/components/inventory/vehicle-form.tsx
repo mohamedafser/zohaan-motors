@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useEffect, useImperativeHandle, type ReactNode, type Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, type ReactNode, type Ref } from "react";
+import { createPortal } from "react-dom";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
@@ -10,6 +11,7 @@ import { ErrorState } from "@/components/feedback/error-state";
 import { FormField } from "@/components/forms/form-field";
 import { bodyTypeKey, toDateInputValue } from "@/components/inventory/inventory-utils";
 import { VehicleCatalogFields } from "@/components/inventory/vehicle-catalog-fields";
+import { QuantityTotals } from "@/components/inventory/quantity-totals";
 import { VehicleColorField } from "@/components/inventory/vehicle-color-field";
 import {
   BRANCH_ICON,
@@ -38,7 +40,12 @@ import { useInventoryMeta } from "@/hooks/use-vehicles";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { countrySelectOptions } from "@/lib/vehicles/countries";
-import { vehicleFormSchema, type VehicleFormValues } from "@/lib/validation/vehicle";
+import { toPrice } from "@/lib/vehicles/quantity";
+import {
+  vehicleFormRules,
+  vehicleFormSchema,
+  type VehicleFormValues,
+} from "@/lib/validation/vehicle";
 import {
   BODY_TYPES,
   DRIVE_TYPES,
@@ -54,8 +61,22 @@ type VehicleFormInput = z.input<typeof vehicleFormSchema>;
 type FieldName = keyof VehicleFormInput;
 type InventoryMeta = NonNullable<ReturnType<typeof useInventoryMeta>["data"]>;
 
+/** The Selling Price fields can render on another step (next to the purchase price). */
+const PRICING_FIELDS = ["minimumSellingPrice", "targetSellingPrice"] as const;
+export type VehicleFieldScope = "vehicle" | "pricing";
+
+export type VehicleTotalsValues = {
+  quantity: number;
+  minimumSellingPrice: number | null;
+  targetSellingPrice: number | null;
+};
+
 export type VehicleFormHandle = {
   validate: () => Promise<VehicleFormValues | null>;
+  /** Validates and shows errors for one group of fields only. */
+  validateScope: (scope: VehicleFieldScope) => Promise<boolean>;
+  /** Group holding the first current error, so the stepper can jump to it. */
+  errorScope: () => VehicleFieldScope | null;
   getValues: () => VehicleFormInput;
 };
 
@@ -75,6 +96,10 @@ export type VehicleFormProps = {
   allowSubmitWhenClean?: boolean;
   /** Hide sticky cancel/submit — parent owns navigation (e.g. create stepper). */
   hideActions?: boolean;
+  /** Render the Selling Price section here instead of inline (portal target). */
+  pricingContainer?: HTMLElement | null;
+  /** Live quantity and per-unit prices, for totals shown elsewhere (e.g. acquisition step). */
+  onTotalsChange?: (values: VehicleTotalsValues) => void;
   ref?: Ref<VehicleFormHandle | null>;
 };
 
@@ -114,6 +139,10 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
       modelYearId: "",
       variantId: "",
       customVariant: "",
+      quantity: 1,
+      portLocation: "",
+      minimumSellingPrice: undefined,
+      targetSellingPrice: undefined,
     };
   }
   return {
@@ -149,6 +178,11 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
     modelYearId: vehicle.modelYearId ?? "",
     variantId: vehicle.variantId ?? "",
     customVariant: vehicle.customVariant ?? "",
+    quantity: vehicle.quantity,
+    portLocation: vehicle.portLocation ?? "",
+    minimumSellingPrice: vehicle.minimumSellingPrice ?? undefined,
+    // Target is the car's selling price; older records may only have the current price.
+    targetSellingPrice: vehicle.targetSellingPrice ?? vehicle.currentSellingPrice ?? undefined,
   };
 }
 
@@ -176,10 +210,17 @@ function VehicleFormBody({
   extraSections,
   allowSubmitWhenClean,
   hideActions = false,
+  pricingContainer,
+  onTotalsChange,
   formRef,
 }: VehicleFormProps & { meta: InventoryMeta; formRef?: Ref<VehicleFormHandle | null> }) {
   const t = useTranslations();
-  const { user } = usePermission();
+  const { user, can } = usePermission();
+  const canEditPrice = can("vehicle.price.edit");
+  const resolver = useMemo(
+    () => zodResolver(vehicleFormRules({ status: vehicle?.status, requirePricing: canEditPrice })),
+    [vehicle?.status, canEditPrice],
+  );
 
   const defaultBranch =
     vehicle?.branchId ??
@@ -190,16 +231,22 @@ function VehicleFormBody({
         : "");
 
   const form = useForm<VehicleFormInput, unknown, VehicleFormValues>({
-    resolver: zodResolver(vehicleFormSchema),
+    resolver,
     defaultValues: toDefaults(vehicle, defaultBranch),
   });
   const { errors, isDirty } = form.formState;
 
   const branchId = useWatch({ control: form.control, name: "branchId" });
   const initialStatus = useWatch({ control: form.control, name: "initialStatus" });
-  const showStaffVisibility =
-    (user?.roles.includes("super_admin") ?? false) &&
-    (mode === "create" ? initialStatus === "acquired" : vehicle?.status === "acquired");
+  const quantity = toPrice(useWatch({ control: form.control, name: "quantity" }));
+  const minimumSellingPrice = toPrice(useWatch({ control: form.control, name: "minimumSellingPrice" }));
+  const targetSellingPrice = toPrice(useWatch({ control: form.control, name: "targetSellingPrice" }));
+
+  useEffect(() => {
+    onTotalsChange?.({ quantity: quantity ?? 1, minimumSellingPrice, targetSellingPrice });
+  }, [onTotalsChange, quantity, minimumSellingPrice, targetSellingPrice]);
+  const inTransit = mode === "create" ? initialStatus === "acquired" : vehicle?.status === "acquired";
+  const showStaffVisibility = (user?.roles.includes("super_admin") ?? false) && inTransit;
 
   // Resolve catalog ids from legacy text snapshots when FKs are missing.
   useEffect(() => {
@@ -232,6 +279,10 @@ function VehicleFormBody({
       variantId: values.variantId,
       customVariant: values.customVariant,
       variant: values.customVariant ?? values.variant,
+      portLocation: inTransit ? values.portLocation : null,
+      // Only price editors send the Selling Price section; the API ignores it otherwise.
+      minimumSellingPrice: canEditPrice ? values.minimumSellingPrice : undefined,
+      targetSellingPrice: canEditPrice ? values.targetSellingPrice : undefined,
     };
   }
 
@@ -243,6 +294,20 @@ function VehicleFormBody({
           () => resolve(null),
         )();
       }),
+    validateScope: (scope) => {
+      const pricing = new Set<string>(PRICING_FIELDS);
+      const names = (Object.keys(form.getValues()) as FieldName[]).filter(
+        (name) => pricing.has(name) === (scope === "pricing"),
+      );
+      return form.trigger(names, { shouldFocus: true });
+    },
+    errorScope: () => {
+      const names = Object.keys(form.formState.errors);
+      if (names.length === 0) return null;
+      return names.every((name) => (PRICING_FIELDS as readonly string[]).includes(name))
+        ? "pricing"
+        : "vehicle";
+    },
     getValues: () => form.getValues(),
   }));
 
@@ -262,7 +327,9 @@ function VehicleFormBody({
     label: string,
     options: {
       type?: string;
-      inputMode?: "numeric" | "text";
+      inputMode?: "numeric" | "decimal" | "text";
+      step?: string;
+      min?: string;
       number?: boolean;
       hint?: string;
       list?: string;
@@ -284,6 +351,8 @@ function VehicleFormBody({
           id={name}
           type={options.type}
           inputMode={options.inputMode}
+          step={options.step}
+          min={options.min}
           list={options.list}
           placeholder={options.placeholder}
           autoCapitalize={options.autoCapitalize}
@@ -344,6 +413,31 @@ function VehicleFormBody({
     );
   }
 
+  // Prices are per unit; say so once the record holds more than one.
+  const perUnit = (label: string) =>
+    (quantity ?? 1) > 1 ? t("inventory.quantity.perUnitLabel", { label }) : label;
+
+  const pricingSection = (
+    <Section title={t("inventory.sections.sellingPrice")}>
+      {textField("minimumSellingPrice", perUnit(t("inventory.fields.minimumSellingPrice")), {
+        type: "number",
+        inputMode: "decimal",
+        number: true,
+        min: "0",
+        step: "0.01",
+        required: true,
+        hint: t("inventory.fields.minimumSellingPriceHint"),
+      })}
+      {textField("targetSellingPrice", perUnit(t("pricing.fields.target")), {
+        type: "number",
+        inputMode: "decimal",
+        number: true,
+        min: "0",
+        step: "0.01",
+      })}
+    </Section>
+  );
+
   return (
     <form
       className={cn("grid gap-6", !hideActions && "pb-2")}
@@ -400,6 +494,12 @@ function VehicleFormBody({
               { required: true, optional: false },
             )
           : null}
+        {inTransit
+          ? textField("portLocation", t("inventory.fields.portLocation"), {
+              placeholder: t("inventory.fields.portLocationPlaceholder"),
+              required: true,
+            })
+          : null}
         {showStaffVisibility ? (
           <FormField label={t("inventory.fields.visibleToStaff")} htmlFor="visibleToStaff">
             <Controller
@@ -448,7 +548,28 @@ function VehicleFormBody({
           })),
           { searchable: false, optional: false, required: true },
         )}
+        {textField("quantity", t("inventory.fields.quantity"), {
+          type: "number",
+          inputMode: "numeric",
+          number: true,
+          min: "1",
+          step: "1",
+          required: true,
+        })}
       </Section>
+
+      {canEditPrice && !pricingContainer ? (
+        <>
+          {pricingSection}
+          <QuantityTotals
+            quantity={quantity ?? 1}
+            rows={[
+              { label: t("inventory.fields.minimumSellingPrice"), unitPrice: minimumSellingPrice },
+              { label: t("pricing.fields.target"), unitPrice: targetSellingPrice },
+            ]}
+          />
+        </>
+      ) : null}
 
       <Section title={t("inventory.sections.specs")}>
         {selectField(
@@ -628,6 +749,8 @@ function VehicleFormBody({
         </div>
       </Section>
 
+      {canEditPrice && pricingContainer ? createPortal(pricingSection, pricingContainer) : null}
+
       {extraSections}
 
       {!hideActions ? (
@@ -647,6 +770,7 @@ function VehicleFormBody({
             </Link>
             <LoadingButton
               type="submit"
+              variant="brand"
               className="h-11 sm:h-9"
               loading={submitting}
               disabled={mode === "edit" && !isDirty && !allowSubmitWhenClean}

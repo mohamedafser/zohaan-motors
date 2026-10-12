@@ -37,6 +37,11 @@ export function isPublicAuthPath(pathname: string) {
   return publicAuthPaths.has(pathname);
 }
 
+/** Breadcrumb labels for users who only see their own records. */
+export const ownBreadcrumbLabels: Record<string, string> = {
+  bookings: "nav.myBookings",
+};
+
 export const breadcrumbLabels: Record<string, string> = {
   dashboard: "nav.dashboard",
   inventory: "nav.inventory",

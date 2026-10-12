@@ -7,6 +7,7 @@ import type {
   VehicleDocumentsResult,
 } from "@/types/vehicle-document";
 import { createClient } from "@/lib/supabase/server";
+import { getRootVehicleId } from "@/lib/vehicles/service";
 import { createSignedStorageUrl, type StorageBucket } from "@/lib/storage/signed-url";
 import { hasPermission } from "@/lib/permissions";
 
@@ -66,8 +67,6 @@ function sourceFromEntityType(entityType: string): VehicleDocumentSource {
   switch (entityType) {
     case "acquisitions":
       return "acquisition";
-    case "inspections":
-      return "inspection";
     case "vehicle_pricing":
       return "pricing";
     default:
@@ -75,12 +74,8 @@ function sourceFromEntityType(entityType: string): VehicleDocumentSource {
   }
 }
 
-function bucketForSource(source: VehicleDocumentSource, kind: "document" | "photo"): StorageBucket {
-  if (kind === "photo") {
-    if (source === "inspection") return "inspection-photos";
-    return "vehicle-photos";
-  }
-  return "vehicle-documents";
+function bucketForSource(_source: VehicleDocumentSource, kind: "document" | "photo"): StorageBucket {
+  return kind === "photo" ? "vehicle-photos" : "vehicle-documents";
 }
 
 async function loadNames(
@@ -114,7 +109,6 @@ function emptyCounts(): VehicleDocumentCounts {
     all: 0,
     general: 0,
     acquisition: 0,
-    inspection: 0,
     reconditioning: 0,
     pricing: 0,
   };
@@ -197,7 +191,7 @@ export async function getVehicleDocuments(
   const supabase = await createClient();
   const { data: vehicle, error: vehicleError } = await supabase
     .from("vehicles")
-    .select("id")
+    .select("id, split_from_id")
     .eq("id", vehicleId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -213,20 +207,22 @@ export async function getVehicleDocuments(
   const items: VehicleDocumentItem[] = [];
   const showAmounts = canViewCosts(context);
 
-  const [acquisitionsRes, inspectionsRes] = await Promise.all([
-    supabase.from("acquisitions").select("id").eq("vehicle_id", vehicleId),
-    supabase.from("inspections").select("id").eq("vehicle_id", vehicleId),
-  ]);
-
+  // Split records share the acquisition (and its documents) of the record they came from.
+  const acquisitionVehicleId = await getRootVehicleId(
+    vehicleId,
+    (vehicle as { split_from_id?: string | null }).split_from_id,
+  );
+  const acquisitionsRes = await supabase
+    .from("acquisitions")
+    .select("id")
+    .in("vehicle_id", [...new Set([vehicleId, acquisitionVehicleId])]);
   const acquisitionIds = ((acquisitionsRes.data ?? []) as { id: string }[]).map((r) => r.id);
-  const inspectionIds = ((inspectionsRes.data ?? []) as { id: string }[]).map((r) => r.id);
 
   // Generic documents for vehicle + related entities
   try {
     const entityFilters: Array<{ type: string; ids: string[] }> = [
       { type: "vehicles", ids: [vehicleId] },
       { type: "acquisitions", ids: acquisitionIds },
-      { type: "inspections", ids: inspectionIds },
     ];
 
     for (const group of entityFilters) {
@@ -302,61 +298,6 @@ export async function getVehicleDocuments(
     }
   } catch (error) {
     errors.general = error instanceof Error ? error.message : "Failed to load documents";
-  }
-
-  // Inspection photos as inspection evidence
-  if (inspectionIds.length > 0) {
-    try {
-      const { data, error } = await supabase
-        .from("inspection_photos")
-        .select("id, inspection_id, category, storage_path, uploaded_by, created_at")
-        .in("inspection_id", inspectionIds)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        errors.inspection = errors.inspection ?? error.message;
-      } else {
-        const rows = (data ?? []) as Array<{
-          id: string;
-          inspection_id: string;
-          category: string;
-          storage_path: string;
-          uploaded_by: string | null;
-          created_at: string;
-        }>;
-        const names = await loadNames(
-          supabase,
-          rows.map((row) => row.uploaded_by),
-        );
-        for (const row of rows) {
-          items.push({
-            id: `insp-photo:${row.id}`,
-            vehicleId,
-            source: "inspection",
-            sourceEntityId: row.inspection_id,
-            category: row.category || "inspection",
-            categoryLabel: row.category || "Inspection",
-            name: row.storage_path.split("/").pop() || "Inspection photo",
-            mimeType: "image/*",
-            fileSize: null,
-            storagePath: row.storage_path,
-            bucket: "inspection-photos",
-            createdBy: row.uploaded_by,
-            createdByName: row.uploaded_by ? (names.get(row.uploaded_by) ?? null) : null,
-            createdAt: row.created_at,
-            amount: null,
-            currency: null,
-            referenceNumber: null,
-            url: null,
-            kind: "photo",
-          });
-        }
-      }
-    } catch (error) {
-      errors.inspection =
-        errors.inspection ??
-        (error instanceof Error ? error.message : "Failed to load inspection photos");
-    }
   }
 
   items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

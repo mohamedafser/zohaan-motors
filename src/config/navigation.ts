@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 
 import type { Permission } from "@/lib/permissions";
-import type { NavGroup } from "@/types/navigation";
+import { canViewAllBookings } from "@/lib/permissions/roles";
+import type { NavGroup, NavItem } from "@/types/navigation";
 
 export const navigation: NavGroup[] = [
   {
@@ -41,6 +42,7 @@ export const navigation: NavGroup[] = [
       {
         href: "/bookings",
         labelKey: "nav.bookings",
+        ownLabelKey: "nav.myBookings",
         icon: CalendarCheck,
         mobile: "bookings",
         permission: "reservation.view",
@@ -100,14 +102,22 @@ export function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** The label to show for an item, given the user's roles. */
+export function navLabelKey(item: NavItem, roles: readonly string[]) {
+  return item.ownLabelKey && !canViewAllBookings(roles) ? item.ownLabelKey : item.labelKey;
+}
+
 export function filterNavigation(
   groups: NavGroup[],
   can: (permission: Permission) => boolean,
+  roles: readonly string[] = [],
 ): NavGroup[] {
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.permission || can(item.permission)),
+      items: group.items
+        .filter((item) => !item.permission || can(item.permission))
+        .map((item) => ({ ...item, labelKey: navLabelKey(item, roles) })),
     }))
     .filter((group) => group.items.length > 0);
 }

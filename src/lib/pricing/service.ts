@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/permissions";
 import type { UserContext } from "@/types/auth";
-import type {
-  ApprovePricingValues,
-  PricingListQuery,
-  UpsertPricingValues,
+import {
+  maxDiscountPercentFrom,
+  type ApprovePricingValues,
+  type PricingListQuery,
+  type UpsertPricingValues,
 } from "@/lib/validation/pricing";
 import type {
   PricingListItem,
@@ -331,7 +332,11 @@ export async function upsertVehiclePricing(
     p_advertised_price: values.advertisedPrice,
     p_current_selling_price: values.currentSellingPrice,
     p_maximum_discount_amount: values.maximumDiscountAmount,
-    p_maximum_discount_percent: values.maximumDiscountPercent,
+    // Derived from the amount and target price; any client-sent percentage is ignored.
+    p_maximum_discount_percent: maxDiscountPercentFrom(
+      values.maximumDiscountAmount,
+      values.targetSellingPrice,
+    ),
     p_pricing_notes: values.pricingNotes ?? null,
     p_change_reason: values.changeReason,
     p_change_notes: values.changeNotes ?? null,

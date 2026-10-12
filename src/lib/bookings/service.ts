@@ -1,8 +1,12 @@
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, type Permission } from "@/lib/permissions";
+import { canViewAllBookings, isSalesExecutive as isSalesExecutiveRole } from "@/lib/permissions/roles";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { CreateBookingValues } from "@/lib/validation/booking";
+import { quantityTotal } from "@/lib/vehicles/quantity";
+import { recordForUnits, undoVehicleSplit } from "@/lib/vehicles/units";
+import type { BookingActionValues, CreateBookingValues } from "@/lib/validation/booking";
 import type { UserContext } from "@/types/auth";
+import type { VehicleBookingInfo } from "@/types/vehicle";
 
 export type BookingStatus = "active" | "expired" | "cancelled" | "converted";
 
@@ -11,16 +15,39 @@ export type BookingListItem = {
   number: string;
   status: BookingStatus;
   deposit: number;
+  /** Agreed price per unit. */
+  sellingPrice: number | null;
+  /** Units held by this booking (multi-unit records book several at once). */
+  units: number;
+  /** Selling price × units. */
+  totalPrice: number | null;
+  /** What the customer still owes on top of the deposit: total − deposit. */
+  balanceDue: number | null;
+  /** Balance paid when the booking was marked sold. */
+  balanceReceived: number | null;
+  soldAt: string | null;
   currency: string;
   reservedAt: string;
-  expiresAt: string;
+  /** Older bookings had a hold-until date; new ones don't expire. */
+  expiresAt: string | null;
   notes: string | null;
+  /** What the signed-in user may do with this booking (permissions + ownership). */
+  can: { edit: boolean; sell: boolean; cancel: boolean };
   vehicle: { id: string; stockNumber: string | null; title: string; status: string } | null;
   customer: { id: string; name: string; phone: string } | null;
   salesperson: { id: string; name: string } | null;
 };
 
-export type BookableVehicle = { id: string; stockNumber: string | null; title: string; branchId: string };
+export type BookableVehicle = {
+  id: string;
+  stockNumber: string | null;
+  title: string;
+  branchId: string;
+  /** Current selling price, used to prefill the booking's selling price. */
+  sellingPrice: number | null;
+  /** Units on the record; the booking can take some or all of them. */
+  quantity: number;
+};
 export type PersonOption = { id: string; name: string };
 export type CustomerOption = {
   id: string;
@@ -51,7 +78,7 @@ const one = <T,>(value: Joined<T>): T | null => (Array.isArray(value) ? (value[0
 
 // A customer's sales executive is the salesperson on their first booking.
 // Read with the service role so every salesperson sees the same owner.
-async function customerOwners(customerIds?: string[]): Promise<Map<string, string>> {
+export async function customerOwners(customerIds?: string[]): Promise<Map<string, string>> {
   const admin = createServiceRoleClient();
   let query = admin
     .from("reservations")
@@ -67,7 +94,7 @@ async function customerOwners(customerIds?: string[]): Promise<Map<string, strin
   return owners;
 }
 
-async function profileNames(ids: string[]): Promise<Map<string, string>> {
+export async function profileNames(ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const admin = createServiceRoleClient();
   const { data } = await admin.from("profiles").select("id, display_name").in("id", ids);
@@ -91,17 +118,51 @@ async function listSalesExecutives(): Promise<PersonOption[]> {
   return ((data ?? []) as { id: string; display_name: string }[]).map((p) => ({ id: p.id, name: p.display_name }));
 }
 
-const isSalesExecutive = (context: UserContext) => context.roles.includes("sales_executive");
+const isSalesExecutive = (context: UserContext) => isSalesExecutiveRole(context.roles);
 
-export async function listBookings(): Promise<Result<BookingListItem[]>> {
+/** Everyone except Super Admins and Accountants works only with their own bookings. */
+const ownBookingsOnly = (context: UserContext) => !canViewAllBookings(context.roles);
+
+function ownBookingFilter(context: UserContext) {
+  return `created_by.eq.${context.userId},salesperson_id.eq.${context.userId}`;
+}
+
+const isOwnBooking = (
+  booking: { created_by: string | null; salesperson_id: string | null },
+  context: UserContext,
+) => booking.created_by === context.userId || booking.salesperson_id === context.userId;
+
+type Ownership = { created_by: string | null; salesperson_id: string | null };
+
+// Sales executives may edit, sell and cancel their own bookings even without the
+// broader sale/status permissions. Other roles go by permission, and only Super Admins
+// and Accountants may act on bookings that aren't theirs.
+function canActOnBooking(booking: Ownership, context: UserContext, ...permissions: Permission[]) {
+  const own = isOwnBooking(booking, context);
+  if (isSalesExecutive(context)) return own;
+  if (ownBookingsOnly(context) && !own) return false;
+  return permissions.some((permission) => hasPermission(context.permissions, permission, context.roles));
+}
+
+const canEditBooking = (booking: Ownership, context: UserContext) =>
+  canActOnBooking(booking, context, "reservation.create");
+
+const canSellBooking = (booking: Ownership, context: UserContext) =>
+  canActOnBooking(booking, context, "sale.create", "vehicle.status.change");
+
+const canCancelBooking = (booking: Ownership, context: UserContext) =>
+  canActOnBooking(booking, context, "reservation.cancel");
+
+export async function listBookings(context: UserContext): Promise<Result<BookingListItem[]>> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("reservations")
     .select(
-      "id, reservation_number, status, amount, currency, reserved_at, expires_at, notes, salesperson_id, vehicles(id, stock_number, year, make, model, status), customers(id, display_name, phone)",
-    )
-    .order("reserved_at", { ascending: false })
-    .limit(500);
+      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, currency, reserved_at, expires_at, notes, created_by, salesperson_id, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)",
+    );
+  // RLS enforces the same rule; filtering here keeps it explicit in the app.
+  if (ownBookingsOnly(context)) query = query.or(ownBookingFilter(context));
+  const { data, error } = await query.order("reserved_at", { ascending: false }).limit(500);
   if (error) return fail(error.code ?? "db_error", error.message);
 
   type Row = {
@@ -109,12 +170,24 @@ export async function listBookings(): Promise<Result<BookingListItem[]>> {
     reservation_number: string;
     status: BookingStatus;
     amount: number;
+    selling_price: number | string | null;
+    balance_received: number | string | null;
+    sold_at: string | null;
     currency: string;
     reserved_at: string;
-    expires_at: string;
+    expires_at: string | null;
     notes: string | null;
+    created_by: string | null;
     salesperson_id: string | null;
-    vehicles: Joined<{ id: string; stock_number: string | null; year: number | null; make: string | null; model: string | null; status: string }>;
+    vehicles: Joined<{
+      id: string;
+      stock_number: string | null;
+      year: number | null;
+      make: string | null;
+      model: string | null;
+      status: string;
+      quantity: number | null;
+    }>;
     customers: Joined<{ id: string; display_name: string; phone: string }>;
   };
 
@@ -127,16 +200,33 @@ export async function listBookings(): Promise<Result<BookingListItem[]>> {
       const customer = one(row.customers);
       // Active bookings past their expiry date are shown as expired.
       const status =
-        row.status === "active" && new Date(row.expires_at).getTime() < now ? "expired" : row.status;
+        row.status === "active" && row.expires_at && new Date(row.expires_at).getTime() < now
+          ? "expired"
+          : row.status;
+      const deposit = Number(row.amount);
+      const sellingPrice = row.selling_price == null ? null : Number(row.selling_price);
+      const units = vehicle?.quantity ?? 1;
+      const totalPrice = quantityTotal(sellingPrice, units);
       return {
         id: row.id,
         number: row.reservation_number,
         status,
-        deposit: Number(row.amount),
+        deposit,
+        sellingPrice,
+        units,
+        totalPrice,
+        balanceDue: totalPrice == null ? null : Math.max(0, Math.round((totalPrice - deposit) * 100) / 100),
+        balanceReceived: row.balance_received == null ? null : Number(row.balance_received),
+        soldAt: row.sold_at,
         currency: row.currency,
         reservedAt: row.reserved_at,
         expiresAt: row.expires_at,
         notes: row.notes,
+        can: {
+          edit: status === "active" && canEditBooking(row, context),
+          sell: status === "active" && canSellBooking(row, context),
+          cancel: status === "active" && canCancelBooking(row, context),
+        },
         vehicle: vehicle
           ? { id: vehicle.id, stockNumber: vehicle.stock_number, title: vehicleTitle(vehicle), status: vehicle.status }
           : null,
@@ -163,8 +253,9 @@ export async function listBookingOptions(context: UserContext): Promise<
   const [vehicles, customers] = await Promise.all([
     supabase
       .from("vehicles")
-      .select("id, stock_number, year, make, model, branch_id")
+      .select("id, stock_number, year, make, model, branch_id, current_selling_price, quantity")
       .eq("status", "ready_for_sale")
+      .eq("has_minimum_price", true)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase
@@ -176,7 +267,16 @@ export async function listBookingOptions(context: UserContext): Promise<
   ]);
   if (vehicles.error) return fail(vehicles.error.code ?? "db_error", vehicles.error.message);
 
-  type V = { id: string; stock_number: string | null; year: number | null; make: string | null; model: string | null; branch_id: string };
+  type V = {
+    id: string;
+    stock_number: string | null;
+    year: number | null;
+    make: string | null;
+    model: string | null;
+    branch_id: string;
+    current_selling_price: number | string | null;
+    quantity: number | null;
+  };
   type C = { id: string; display_name: string; phone: string };
   const customerRows = (customers.data ?? []) as C[];
   const [owners, salesExecutives] = await Promise.all([
@@ -191,6 +291,8 @@ export async function listBookingOptions(context: UserContext): Promise<
         stockNumber: v.stock_number,
         title: vehicleTitle(v),
         branchId: v.branch_id,
+        sellingPrice: v.current_selling_price == null ? null : Number(v.current_selling_price),
+        quantity: v.quantity ?? 1,
       })),
       customers: customerRows.map((c) => {
         const ownerId = owners.get(c.id);
@@ -227,6 +329,21 @@ async function setVehicleStatus(vehicleId: string, from: string, to: string, use
   return !error && (data?.length ?? 0) === 1;
 }
 
+// The minimum is hidden from sales roles, so it's read with the service role and
+// only the pass/fail result is returned.
+async function checkMinimumPrice(vehicleId: string, sellingPrice: number) {
+  const { data } = await createServiceRoleClient()
+    .from("vehicles")
+    .select("minimum_selling_price")
+    .eq("id", vehicleId)
+    .maybeSingle();
+  const minimum = Number((data as { minimum_selling_price: number | string | null } | null)?.minimum_selling_price ?? 0);
+  if (sellingPrice >= minimum) return null;
+  return fail("below_minimum", "The selling price is below the minimum allowed for this car.", {
+    sellingPrice: "bookings.errors.belowMinimum",
+  });
+}
+
 export async function createBooking(
   values: CreateBookingValues,
   context: UserContext,
@@ -235,24 +352,32 @@ export async function createBooking(
     return fail("forbidden", "You do not have permission to create bookings.");
   }
 
-  // End of the chosen day in UAE time (UTC+4).
-  const expiresAt = new Date(`${values.expiresOn}T23:59:59+04:00`);
-  if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
-    return fail("validation", "Expiry must be in the future.", { expiresOn: "bookings.errors.expiryPast" });
-  }
-
   const supabase = await createClient();
   const { data: vehicleRow } = await supabase
     .from("vehicles")
-    .select("id, status, branch_id")
+    .select("id, status, branch_id, has_minimum_price, quantity")
     .eq("id", values.vehicleId)
     .is("deleted_at", null)
     .maybeSingle();
-  const vehicle = vehicleRow as { id: string; status: string; branch_id: string } | null;
+  const vehicle = vehicleRow as
+    | { id: string; status: string; branch_id: string; has_minimum_price: boolean | null; quantity: number | null }
+    | null;
   if (!vehicle) return fail("not_found", "Vehicle not found.", { vehicleId: "bookings.errors.vehicleNotFound" });
   if (vehicle.status !== "ready_for_sale") {
     return fail("not_available", "Vehicle is not ready for sale.", { vehicleId: "bookings.errors.notAvailable" });
   }
+  const units = vehicle.quantity ?? 1;
+  if (values.quantity != null && values.quantity > units) {
+    return fail("validation", `Only ${units} units are available.`, { quantity: "bookings.errors.tooManyUnits" });
+  }
+  if (!vehicle.has_minimum_price) {
+    return fail("no_minimum_price", "Set a minimum selling price before booking this car.", {
+      vehicleId: "bookings.errors.noMinimumPrice",
+    });
+  }
+
+  const belowMinimum = await checkMinimumPrice(vehicle.id, values.sellingPrice);
+  if (belowMinimum) return belowMinimum;
 
   let customerId = values.customerId ?? null;
   let createdCustomerId: string | null = null;
@@ -317,20 +442,29 @@ export async function createBooking(
   }
 
   const admin = createServiceRoleClient();
-  const undoCustomer = async () => {
+  // Booking some of a multi-unit record moves those units to their own record first.
+  const target = await recordForUnits({ id: vehicle.id, quantity: units }, values.quantity, context.userId);
+  if (target.error !== null) {
     if (createdCustomerId) await admin.from("customers").delete().eq("id", createdCustomerId);
+    return fail("split_failed", target.error);
+  }
+  // Removes a customer created for this booking and puts split units back.
+  const rollback = async () => {
+    if (createdCustomerId) await admin.from("customers").delete().eq("id", createdCustomerId);
+    if (target.split) await undoVehicleSplit(target.id);
   };
 
   const { data: bookingRow, error: bookingError } = await supabase
     .from("reservations")
     .insert({
       reservation_number: code("BK"),
-      vehicle_id: vehicle.id,
+      vehicle_id: target.id,
       customer_id: customerId,
       salesperson_id: salespersonId,
       branch_id: vehicle.branch_id,
       amount: values.deposit,
-      expires_at: expiresAt.toISOString(),
+      selling_price: values.sellingPrice,
+      expires_at: null,
       notes: values.notes || null,
       created_by: context.userId,
     })
@@ -339,7 +473,13 @@ export async function createBooking(
   const booking = bookingRow as { id: string } | null;
 
   if (bookingError || !booking) {
-    await undoCustomer();
+    await rollback();
+    // DB trigger backstop (e.g. minimum price removed after the check above).
+    if (bookingError?.message?.includes("minimum selling price not set")) {
+      return fail("no_minimum_price", "Set a minimum selling price before booking this car.", {
+        vehicleId: "bookings.errors.noMinimumPrice",
+      });
+    }
     if (bookingError?.code === "23505") {
       return fail("already_booked", "This vehicle already has an active booking.", {
         vehicleId: "bookings.errors.alreadyBooked",
@@ -348,9 +488,9 @@ export async function createBooking(
     return fail("booking_failed", bookingError?.message ?? "Could not create the booking.");
   }
 
-  if (!(await setVehicleStatus(vehicle.id, "ready_for_sale", "reserved", context.userId))) {
+  if (!(await setVehicleStatus(target.id, "ready_for_sale", "reserved", context.userId))) {
     await admin.from("reservations").delete().eq("id", booking.id);
-    await undoCustomer();
+    await rollback();
     return fail("not_available", "Vehicle status changed. Try again.", { vehicleId: "bookings.errors.notAvailable" });
   }
 
@@ -359,25 +499,51 @@ export async function createBooking(
 
 export async function updateBooking(
   id: string,
-  action: { action: "cancel"; reason?: string } | { action: "sold" },
+  action: Exclude<BookingActionValues, { action: "edit" }>,
   context: UserContext,
 ): Promise<Result<true>> {
-  const allowed =
-    action.action === "cancel"
-      ? hasPermission(context.permissions, "reservation.cancel", context.roles)
-      : hasPermission(context.permissions, "sale.create", context.roles) ||
-        hasPermission(context.permissions, "vehicle.status.change", context.roles);
-  if (!allowed) return fail("forbidden", "You do not have permission for this action.");
-
   const supabase = await createClient();
   const { data: bookingRow } = await supabase
     .from("reservations")
-    .select("id, status, vehicle_id")
+    .select("id, status, vehicle_id, created_by, salesperson_id, amount, selling_price, vehicles(quantity)")
     .eq("id", id)
     .maybeSingle();
-  const booking = bookingRow as { id: string; status: string; vehicle_id: string } | null;
+  const booking = bookingRow as unknown as {
+    id: string;
+    status: string;
+    vehicle_id: string;
+    created_by: string | null;
+    salesperson_id: string | null;
+    amount: number | string;
+    selling_price: number | string | null;
+    vehicles: Joined<{ quantity: number | null }>;
+  } | null;
   if (!booking) return fail("not_found", "Booking not found.");
+  const allowed =
+    action.action === "cancel" ? canCancelBooking(booking, context) : canSellBooking(booking, context);
+  if (!allowed) {
+    return fail(
+      "forbidden",
+      ownBookingsOnly(context)
+        ? "You can only manage your own bookings."
+        : "You do not have permission for this action.",
+    );
+  }
   if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
+
+  if (action.action === "sold") {
+    // A typo like an extra zero shouldn't record more than the customer owes.
+    const total = quantityTotal(
+      booking.selling_price == null ? null : Number(booking.selling_price),
+      one(booking.vehicles)?.quantity,
+    );
+    const due = total == null ? null : Math.max(0, total - Number(booking.amount));
+    if (due != null && action.balanceReceived > due + 0.005) {
+      return fail("validation", "The amount received is more than the balance due.", {
+        balanceReceived: "bookings.errors.exceedsBalance",
+      });
+    }
+  }
 
   const patch =
     action.action === "cancel"
@@ -386,7 +552,12 @@ export async function updateBooking(
           cancelled_at: new Date().toISOString(),
           cancel_reason: action.reason || null,
         }
-      : { status: "converted" as const };
+      : {
+          status: "converted" as const,
+          balance_received: action.balanceReceived,
+          sold_at: new Date().toISOString(),
+          sold_by: context.userId,
+        };
 
   // Booking first: a sold vehicle can't move back to booked, but a booking can be re-activated.
   const { error } = await supabase.from("reservations").update(patch).eq("id", id);
@@ -396,9 +567,113 @@ export async function updateBooking(
   if (!(await setVehicleStatus(booking.vehicle_id, "reserved", nextVehicleStatus, context.userId))) {
     await createServiceRoleClient()
       .from("reservations")
-      .update({ status: "active", cancelled_at: null, cancel_reason: null })
+      .update({
+        status: "active",
+        cancelled_at: null,
+        cancel_reason: null,
+        balance_received: null,
+        sold_at: null,
+        sold_by: null,
+      })
       .eq("id", id);
     return fail("vehicle_state", "The vehicle is no longer booked.");
   }
   return { data: true, error: null };
+}
+
+export async function editBooking(
+  id: string,
+  values: { deposit: number; sellingPrice: number; notes?: string },
+  context: UserContext,
+): Promise<Result<true>> {
+  const supabase = await createClient();
+  const { data: bookingRow } = await supabase
+    .from("reservations")
+    .select("id, status, vehicle_id, created_by, salesperson_id")
+    .eq("id", id)
+    .maybeSingle();
+  const booking = bookingRow as ({ id: string; status: string; vehicle_id: string } & Ownership) | null;
+  if (!booking) return fail("not_found", "Booking not found.");
+  if (!canEditBooking(booking, context)) {
+    return fail(
+      "forbidden",
+      ownBookingsOnly(context)
+        ? "You can only manage your own bookings."
+        : "You do not have permission to edit bookings.",
+    );
+  }
+  if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
+
+  const belowMinimum = await checkMinimumPrice(booking.vehicle_id, values.sellingPrice);
+  if (belowMinimum) return belowMinimum;
+
+  const { data, error } = await supabase
+    .from("reservations")
+    .update({ amount: values.deposit, selling_price: values.sellingPrice, notes: values.notes || null })
+    .eq("id", id)
+    .eq("status", "active")
+    .select("id");
+  if (error) return fail(error.code ?? "db_error", error.message);
+  if ((data?.length ?? 0) === 0) return fail("not_active", "This booking is no longer active.");
+  return { data: true, error: null };
+}
+
+/**
+ * The current (or, once sold, the converted) booking for a vehicle, for the people who
+ * may see it: its sales person, Accountants and Super Admins. RLS enforces the same rule.
+ */
+export async function getVehicleBooking(
+  vehicleId: string,
+  context: UserContext,
+): Promise<VehicleBookingInfo | null> {
+  if (!hasPermission(context.permissions, "reservation.view", context.roles)) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("reservations")
+    .select(
+      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, currency, reserved_at, notes, created_by, salesperson_id, customers(display_name, phone)",
+    )
+    .eq("vehicle_id", vehicleId)
+    .in("status", ["active", "converted"])
+    .order("reserved_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  type Row = Ownership & {
+    id: string;
+    reservation_number: string;
+    status: BookingStatus;
+    amount: number | string;
+    selling_price: number | string | null;
+    balance_received: number | string | null;
+    sold_at: string | null;
+    currency: string;
+    reserved_at: string;
+    notes: string | null;
+    customers: Joined<{ display_name: string; phone: string }>;
+  };
+  const row = data as unknown as Row | null;
+  if (!row) return null;
+  if (ownBookingsOnly(context) && !isOwnBooking(row, context)) return null;
+
+  const names = await profileNames(
+    [row.salesperson_id, row.created_by].filter((id): id is string => Boolean(id)),
+  );
+  const customer = one(row.customers);
+  return {
+    id: row.id,
+    number: row.reservation_number,
+    status: row.status,
+    deposit: Number(row.amount),
+    sellingPrice: row.selling_price == null ? null : Number(row.selling_price),
+    balanceReceived: row.balance_received == null ? null : Number(row.balance_received),
+    soldAt: row.sold_at,
+    currency: row.currency,
+    reservedAt: row.reserved_at,
+    notes: row.notes,
+    customer: customer ? { name: customer.display_name, phone: customer.phone } : null,
+    salesperson: row.salesperson_id ? (names.get(row.salesperson_id) ?? null) : null,
+    bookedBy: row.created_by ? (names.get(row.created_by) ?? null) : null,
+  };
 }

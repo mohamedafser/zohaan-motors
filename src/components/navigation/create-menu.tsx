@@ -27,7 +27,7 @@ export function CreateMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button className="hidden md:inline-flex" />}>
+      <DropdownMenuTrigger render={<Button variant="brand" className="hidden md:inline-flex" />}>
         <PlusIcon />
         {t("quick.title")}
       </DropdownMenuTrigger>

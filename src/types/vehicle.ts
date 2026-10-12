@@ -21,24 +21,6 @@ export type InventoryStatus = (typeof INVENTORY_STATUSES)[number];
 export const VEHICLE_MARKET_TYPES = ["new", "used"] as const;
 export type VehicleMarketType = (typeof VEHICLE_MARKET_TYPES)[number];
 
-/** Inspection summary filters on inventory list (not vehicle status). */
-export const VEHICLE_INSPECTION_FILTERS = [
-  "not_inspected",
-  "in_progress",
-  "pass",
-  "pass_with_issues",
-  "fail",
-  "approved",
-] as const;
-export type VehicleInspectionFilter = (typeof VEHICLE_INSPECTION_FILTERS)[number];
-
-export type VehicleListInspectionInfo = {
-  id: string | null;
-  status: string | null;
-  result: string | null;
-  label: VehicleInspectionFilter;
-};
-
 export const TRANSMISSION_TYPES = ["automatic", "manual", "cvt", "other"] as const;
 export type TransmissionType = (typeof TRANSMISSION_TYPES)[number];
 
@@ -108,10 +90,35 @@ export type VehicleListItem = {
   exteriorColor: string | null;
   purchaseDate: string | null;
   currentSellingPrice: number | null;
+  quantity: number;
+  /** Arrival port while In transit. */
+  portLocation: string | null;
+  /** Minimum selling price is set (> 0). Required before the car can be booked. */
+  hasMinimumPrice: boolean;
+  /** Only present for users allowed to see it (cost viewers and price editors). */
+  minimumSellingPrice?: number | null;
+  /** Target selling price (the car's selling price), loaded for price editors. */
+  targetSellingPrice?: number | null;
   primaryPhotoUrl?: string | null;
-  inspection?: VehicleListInspectionInfo | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type VehicleBookingInfo = {
+  id: string;
+  number: string;
+  status: "active" | "expired" | "cancelled" | "converted";
+  deposit: number;
+  sellingPrice: number | null;
+  /** Balance paid when the booking was marked sold. */
+  balanceReceived: number | null;
+  soldAt: string | null;
+  currency: string;
+  reservedAt: string;
+  notes: string | null;
+  customer: { name: string; phone: string } | null;
+  salesperson: string | null;
+  bookedBy: string | null;
 };
 
 export type VehicleDetail = VehicleListItem & {
@@ -137,9 +144,16 @@ export type VehicleDetail = VehicleListItem & {
   updatedBy: string | null;
   createdByName: string | null;
   updatedByName: string | null;
-  /** Only present when caller has vehicle.cost.view / price.view */
+  /** Only present when caller has vehicle.cost.view (minimumSellingPrice: see VehicleListItem). */
   totalAcquisitionCost?: number;
-  minimumSellingPrice?: number | null;
+  /** Booking for a Booked/Sold car, only for its sales person, Accountants and Super Admins. */
+  booking?: VehicleBookingInfo | null;
+  /** Set when the acquisition shown belongs to the record these units were split from. */
+  acquisitionSharedFrom?: { id: string; stockNumber: string } | null;
+  /** Record these units were split from (multi-unit status changes). */
+  splitFrom?: { id: string; stockNumber: string } | null;
+  /** Set on create/update responses when the vehicle saved but its pricing did not. */
+  pricingWarning?: string;
   /** Linked acquisition when user has acquisition.view */
   acquisition?: {
     id: string;
@@ -180,8 +194,6 @@ export type InventorySummary = {
   total: number;
   inTransit: number;
   readyForSale: number;
-  underInspection: number;
-  underRepair: number;
   reserved: number;
   sold: number;
 };

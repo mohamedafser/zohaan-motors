@@ -17,7 +17,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const t = useTranslations();
   const { can } = usePermission();
   const user = useUserContext();
-  const items = useMemo(() => filterNavigation(navigation, can), [can]);
+  const items = useMemo(() => filterNavigation(navigation, can, user.roles), [can, user.roles]);
   const name = user.displayName || user.email || t("common.account");
   const ToggleIcon = collapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon;
   const toggleLabel = collapsed ? t("nav.expand") : t("nav.collapse");
@@ -33,16 +33,25 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   return (
     <aside
       className={cn(
-        "border-sidebar-border bg-sidebar text-sidebar-foreground hidden h-full shrink-0 flex-col border-e transition-[width] duration-200 lg:flex",
+        "border-sidebar-border bg-carbon text-sidebar-foreground relative isolate hidden h-full shrink-0 flex-col border-e transition-[width] duration-300 ease-(--ease-out-expo) lg:flex",
         collapsed ? "w-[4.5rem]" : "w-64",
       )}
     >
+      {/* Gold glow behind the logo, like showroom spotlights on the badge. */}
+      <div
+        className="bg-sidebar-primary/20 pointer-events-none absolute -top-16 start-1/2 -z-10 size-48 -translate-x-1/2 rounded-full blur-3xl rtl:translate-x-1/2"
+        aria-hidden
+      />
       <div className={cn("flex h-16 items-center gap-2 px-4", collapsed && "justify-center px-2")}>
         <BrandMark showName={!collapsed} className="text-sidebar-foreground" />
       </div>
+      <div
+        className="via-sidebar-primary/40 mx-4 h-px bg-linear-to-r from-transparent to-transparent"
+        aria-hidden
+      />
       <nav
         aria-label={t("app.name")}
-        className={cn("flex-1 space-y-5 overflow-y-auto px-3 pt-2 pb-4", collapsed && "px-2.5")}
+        className={cn("stagger flex-1 space-y-5 overflow-y-auto px-3 pt-4 pb-4 [--stagger:40ms]", collapsed && "px-2.5")}
       >
         {items.map((group) => (
           <div key={group.id} className="space-y-0.5">

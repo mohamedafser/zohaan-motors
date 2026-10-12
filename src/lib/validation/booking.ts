@@ -5,6 +5,18 @@ import { validationMessages } from "@/lib/validation/index";
 
 const required = z.string().trim().min(1, { error: validationMessages.required });
 
+const bookingAmounts = {
+  deposit: z
+    .number({ error: validationMessages.number })
+    .finite({ error: validationMessages.number })
+    .nonnegative({ error: validationMessages.currency }),
+  /** Agreed price for the car; the server checks it against the minimum selling price. */
+  sellingPrice: z
+    .number({ error: validationMessages.required })
+    .finite({ error: validationMessages.required })
+    .nonnegative({ error: validationMessages.currency }),
+};
+
 export const createBookingSchema = z
   .object({
     vehicleId: z.string().uuid({ error: validationMessages.required }),
@@ -14,11 +26,13 @@ export const createBookingSchema = z
     firstName: z.string().trim().optional(),
     lastName: z.string().trim().optional(),
     phone: z.string().trim().optional(),
-    deposit: z
+    ...bookingAmounts,
+    /** Units to book on a multi-unit record; omitted means all of them. */
+    quantity: z
       .number({ error: validationMessages.number })
-      .finite({ error: validationMessages.number })
-      .nonnegative({ error: validationMessages.currency }),
-    expiresOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: validationMessages.date }),
+      .int({ error: validationMessages.number })
+      .min(1, { error: validationMessages.number })
+      .optional(),
     notes: z.string().trim().max(1000).optional(),
   })
   .superRefine((value, ctx) => {
@@ -40,9 +54,24 @@ export const createBookingSchema = z
     }
   });
 
+
+export const editBookingSchema = z.object({
+  ...bookingAmounts,
+  notes: z.string().trim().max(1000).optional(),
+});
+
 export const bookingActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), reason: z.string().trim().max(500).optional() }),
-  z.object({ action: z.literal("sold") }),
+  z.object({
+    action: z.literal("sold"),
+    /** Balance paid on completion, on top of the deposit. */
+    balanceReceived: z
+      .number({ error: validationMessages.required })
+      .finite({ error: validationMessages.required })
+      .nonnegative({ error: validationMessages.currency }),
+  }),
+  editBookingSchema.extend({ action: z.literal("edit") }),
 ]);
 
 export type CreateBookingValues = z.infer<typeof createBookingSchema>;
+export type BookingActionValues = z.infer<typeof bookingActionSchema>;

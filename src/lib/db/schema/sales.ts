@@ -78,9 +78,13 @@ export const reservations = pgTable(
     reservedAt: timestamp("reserved_at", { withTimezone: true, mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "string" }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true, mode: "string" }),
+    sellingPrice: numeric("selling_price", { precision: 14, scale: 2 }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "string" }),
     cancelReason: text("cancel_reason"),
+    balanceReceived: numeric("balance_received", { precision: 14, scale: 2 }),
+    soldAt: timestamp("sold_at", { withTimezone: true, mode: "string" }),
+    soldBy: uuid("sold_by"),
     notes: text(),
     createdBy: uuid("created_by"),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
@@ -133,6 +137,11 @@ export const reservations = pgTable(
       name: "reservations_salesperson_id_fkey",
     }).onDelete("set null"),
     foreignKey({
+      columns: [table.soldBy],
+      foreignColumns: [profiles.id],
+      name: "reservations_sold_by_fkey",
+    }).onDelete("set null"),
+    foreignKey({
       columns: [table.vehicleId],
       foreignColumns: [vehicles.id],
       name: "reservations_vehicle_id_fkey",
@@ -148,18 +157,26 @@ export const reservations = pgTable(
       as: "permissive",
       for: "select",
       to: ["authenticated"],
-      using: sql`has_permission_for_branch('reservation.view'::text, branch_id)`,
+      using: sql`(has_permission_for_branch('reservation.view'::text, branch_id) AND (can_view_all_bookings() OR (created_by = auth.uid()) OR (salesperson_id = auth.uid())))`,
     }),
     pgPolicy("reservations_update", {
       as: "permissive",
       for: "update",
       to: ["authenticated"],
-      using: sql`(has_permission_for_branch('reservation.create'::text, branch_id) OR has_permission_for_branch('reservation.cancel'::text, branch_id))`,
+      using: sql`((has_permission_for_branch('reservation.create'::text, branch_id) OR has_permission_for_branch('reservation.cancel'::text, branch_id)) AND (can_view_all_bookings() OR (created_by = auth.uid()) OR (salesperson_id = auth.uid())))`,
       withCheck: sql`(has_permission_for_branch('reservation.create'::text, branch_id) OR has_permission_for_branch('reservation.cancel'::text, branch_id))`,
     }),
     check("reservations_amount_non_negative", sql`amount >= (0)::numeric`),
     check("reservations_currency_format", sql`currency ~ '^[A-Z]{3}$'::text`),
     check("reservations_expires_after_reserved", sql`expires_at > reserved_at`),
+    check(
+      "reservations_selling_price_non_negative",
+      sql`(selling_price IS NULL) OR (selling_price >= (0)::numeric)`,
+    ),
+    check(
+      "reservations_balance_received_non_negative",
+      sql`(balance_received IS NULL) OR (balance_received >= (0)::numeric)`,
+    ),
   ],
 ).enableRLS();
 

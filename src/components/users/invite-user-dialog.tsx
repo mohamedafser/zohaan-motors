@@ -29,6 +29,7 @@ import { firstFieldErrors } from "@/lib/validation";
 import { inviteUserSchema } from "@/lib/validation/user";
 import type { RoleOption } from "@/lib/users/service";
 import { roleLabel } from "@/components/users/role-label";
+import { RoleChip } from "@/components/users/role-chip";
 
 export function InviteUserDialog({
   roles,
@@ -112,7 +113,7 @@ export function InviteUserDialog({
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="brand" />}>
         <UserPlusIcon />
         {t("invite")}
       </DialogTrigger>
@@ -179,14 +180,14 @@ export function InviteUserDialog({
                   <SelectValue placeholder={t("role")}>
                     {(value: string | null) => {
                       const role = roles.find((r) => r.key === value);
-                      return role ? label(role) : t("role");
+                      return role ? <RoleChip label={label(role)} /> : t("role");
                     }}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((role) => (
                     <SelectItem key={role.key} value={role.key}>
-                      {label(role)}
+                      <RoleChip label={label(role)} />
                     </SelectItem>
                   ))}
                 </SelectContent>
