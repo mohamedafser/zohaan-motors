@@ -108,7 +108,7 @@ export function CreateBranchDialog({ onSuccess }: { onSuccess: () => void }) {
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="brand" />}>
         <PlusIcon />
         {t("create")}
       </DialogTrigger>

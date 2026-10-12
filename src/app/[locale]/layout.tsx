@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Noto_Sans_Arabic, Source_Sans_3 } from "next/font/google";
+import { Geist_Mono, Noto_Sans_Arabic, Sora, Source_Sans_3 } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
@@ -13,6 +13,13 @@ import "../globals.css";
 const latin = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-latin",
+  display: "swap",
+});
+
+// Geometric display face for headings and figures — reads like dashboard instrumentation.
+const heading = Sora({
+  subsets: ["latin"],
+  variable: "--font-heading-latin",
   display: "swap",
 });
 
@@ -47,8 +54,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#13181c" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f5f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f12" },
   ],
 };
 
@@ -76,7 +83,7 @@ export default async function LocaleLayout({
       lang={localeParam}
       dir={directionFor(localeParam)}
       suppressHydrationWarning
-      className={`${latin.variable} ${arabic.variable} ${mono.variable} h-full antialiased`}
+      className={`${latin.variable} ${heading.variable} ${arabic.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden" suppressHydrationWarning>
         <AppProviders locale={localeParam} direction={directionFor(localeParam)} messages={messages}>

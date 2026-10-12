@@ -2,8 +2,9 @@ import { hasPermission, type Permission } from "@/lib/permissions";
 import { canViewAllBookings, isSalesExecutive as isSalesExecutiveRole } from "@/lib/permissions/roles";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { quantityTotal } from "@/lib/vehicles/quantity";
 import { recordForUnits, undoVehicleSplit } from "@/lib/vehicles/units";
-import type { CreateBookingValues } from "@/lib/validation/booking";
+import type { BookingActionValues, CreateBookingValues } from "@/lib/validation/booking";
 import type { UserContext } from "@/types/auth";
 import type { VehicleBookingInfo } from "@/types/vehicle";
 
@@ -14,7 +15,17 @@ export type BookingListItem = {
   number: string;
   status: BookingStatus;
   deposit: number;
+  /** Agreed price per unit. */
   sellingPrice: number | null;
+  /** Units held by this booking (multi-unit records book several at once). */
+  units: number;
+  /** Selling price × units. */
+  totalPrice: number | null;
+  /** What the customer still owes on top of the deposit: total − deposit. */
+  balanceDue: number | null;
+  /** Balance paid when the booking was marked sold. */
+  balanceReceived: number | null;
+  soldAt: string | null;
   currency: string;
   reservedAt: string;
   /** Older bookings had a hold-until date; new ones don't expire. */
@@ -67,7 +78,7 @@ const one = <T,>(value: Joined<T>): T | null => (Array.isArray(value) ? (value[0
 
 // A customer's sales executive is the salesperson on their first booking.
 // Read with the service role so every salesperson sees the same owner.
-async function customerOwners(customerIds?: string[]): Promise<Map<string, string>> {
+export async function customerOwners(customerIds?: string[]): Promise<Map<string, string>> {
   const admin = createServiceRoleClient();
   let query = admin
     .from("reservations")
@@ -83,7 +94,7 @@ async function customerOwners(customerIds?: string[]): Promise<Map<string, strin
   return owners;
 }
 
-async function profileNames(ids: string[]): Promise<Map<string, string>> {
+export async function profileNames(ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const admin = createServiceRoleClient();
   const { data } = await admin.from("profiles").select("id, display_name").in("id", ids);
@@ -147,7 +158,7 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
   let query = supabase
     .from("reservations")
     .select(
-      "id, reservation_number, status, amount, selling_price, currency, reserved_at, expires_at, notes, created_by, salesperson_id, vehicles(id, stock_number, year, make, model, status), customers(id, display_name, phone)",
+      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, currency, reserved_at, expires_at, notes, created_by, salesperson_id, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)",
     );
   // RLS enforces the same rule; filtering here keeps it explicit in the app.
   if (ownBookingsOnly(context)) query = query.or(ownBookingFilter(context));
@@ -160,13 +171,23 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
     status: BookingStatus;
     amount: number;
     selling_price: number | string | null;
+    balance_received: number | string | null;
+    sold_at: string | null;
     currency: string;
     reserved_at: string;
     expires_at: string | null;
     notes: string | null;
     created_by: string | null;
     salesperson_id: string | null;
-    vehicles: Joined<{ id: string; stock_number: string | null; year: number | null; make: string | null; model: string | null; status: string }>;
+    vehicles: Joined<{
+      id: string;
+      stock_number: string | null;
+      year: number | null;
+      make: string | null;
+      model: string | null;
+      status: string;
+      quantity: number | null;
+    }>;
     customers: Joined<{ id: string; display_name: string; phone: string }>;
   };
 
@@ -182,12 +203,21 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
         row.status === "active" && row.expires_at && new Date(row.expires_at).getTime() < now
           ? "expired"
           : row.status;
+      const deposit = Number(row.amount);
+      const sellingPrice = row.selling_price == null ? null : Number(row.selling_price);
+      const units = vehicle?.quantity ?? 1;
+      const totalPrice = quantityTotal(sellingPrice, units);
       return {
         id: row.id,
         number: row.reservation_number,
         status,
-        deposit: Number(row.amount),
-        sellingPrice: row.selling_price == null ? null : Number(row.selling_price),
+        deposit,
+        sellingPrice,
+        units,
+        totalPrice,
+        balanceDue: totalPrice == null ? null : Math.max(0, Math.round((totalPrice - deposit) * 100) / 100),
+        balanceReceived: row.balance_received == null ? null : Number(row.balance_received),
+        soldAt: row.sold_at,
         currency: row.currency,
         reservedAt: row.reserved_at,
         expiresAt: row.expires_at,
@@ -469,21 +499,24 @@ export async function createBooking(
 
 export async function updateBooking(
   id: string,
-  action: { action: "cancel"; reason?: string } | { action: "sold" },
+  action: Exclude<BookingActionValues, { action: "edit" }>,
   context: UserContext,
 ): Promise<Result<true>> {
   const supabase = await createClient();
   const { data: bookingRow } = await supabase
     .from("reservations")
-    .select("id, status, vehicle_id, created_by, salesperson_id")
+    .select("id, status, vehicle_id, created_by, salesperson_id, amount, selling_price, vehicles(quantity)")
     .eq("id", id)
     .maybeSingle();
-  const booking = bookingRow as {
+  const booking = bookingRow as unknown as {
     id: string;
     status: string;
     vehicle_id: string;
     created_by: string | null;
     salesperson_id: string | null;
+    amount: number | string;
+    selling_price: number | string | null;
+    vehicles: Joined<{ quantity: number | null }>;
   } | null;
   if (!booking) return fail("not_found", "Booking not found.");
   const allowed =
@@ -498,6 +531,20 @@ export async function updateBooking(
   }
   if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
 
+  if (action.action === "sold") {
+    // A typo like an extra zero shouldn't record more than the customer owes.
+    const total = quantityTotal(
+      booking.selling_price == null ? null : Number(booking.selling_price),
+      one(booking.vehicles)?.quantity,
+    );
+    const due = total == null ? null : Math.max(0, total - Number(booking.amount));
+    if (due != null && action.balanceReceived > due + 0.005) {
+      return fail("validation", "The amount received is more than the balance due.", {
+        balanceReceived: "bookings.errors.exceedsBalance",
+      });
+    }
+  }
+
   const patch =
     action.action === "cancel"
       ? {
@@ -505,7 +552,12 @@ export async function updateBooking(
           cancelled_at: new Date().toISOString(),
           cancel_reason: action.reason || null,
         }
-      : { status: "converted" as const };
+      : {
+          status: "converted" as const,
+          balance_received: action.balanceReceived,
+          sold_at: new Date().toISOString(),
+          sold_by: context.userId,
+        };
 
   // Booking first: a sold vehicle can't move back to booked, but a booking can be re-activated.
   const { error } = await supabase.from("reservations").update(patch).eq("id", id);
@@ -515,7 +567,14 @@ export async function updateBooking(
   if (!(await setVehicleStatus(booking.vehicle_id, "reserved", nextVehicleStatus, context.userId))) {
     await createServiceRoleClient()
       .from("reservations")
-      .update({ status: "active", cancelled_at: null, cancel_reason: null })
+      .update({
+        status: "active",
+        cancelled_at: null,
+        cancel_reason: null,
+        balance_received: null,
+        sold_at: null,
+        sold_by: null,
+      })
       .eq("id", id);
     return fail("vehicle_state", "The vehicle is no longer booked.");
   }
@@ -573,7 +632,7 @@ export async function getVehicleBooking(
   const { data } = await supabase
     .from("reservations")
     .select(
-      "id, reservation_number, status, amount, selling_price, currency, reserved_at, notes, created_by, salesperson_id, customers(display_name, phone)",
+      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, currency, reserved_at, notes, created_by, salesperson_id, customers(display_name, phone)",
     )
     .eq("vehicle_id", vehicleId)
     .in("status", ["active", "converted"])
@@ -587,6 +646,8 @@ export async function getVehicleBooking(
     status: BookingStatus;
     amount: number | string;
     selling_price: number | string | null;
+    balance_received: number | string | null;
+    sold_at: string | null;
     currency: string;
     reserved_at: string;
     notes: string | null;
@@ -606,6 +667,8 @@ export async function getVehicleBooking(
     status: row.status,
     deposit: Number(row.amount),
     sellingPrice: row.selling_price == null ? null : Number(row.selling_price),
+    balanceReceived: row.balance_received == null ? null : Number(row.balance_received),
+    soldAt: row.sold_at,
     currency: row.currency,
     reservedAt: row.reserved_at,
     notes: row.notes,

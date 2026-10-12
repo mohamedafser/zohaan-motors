@@ -59,7 +59,7 @@ export async function DashboardView() {
       />
       <SampleNotice title={t("common.sample")} description={t("dashboard.sample")} />
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <section className="stagger grid grid-cols-2 gap-3 [--stagger:80ms] lg:grid-cols-4 lg:gap-4">
         <KpiCard
           label={t("dashboard.kpis.stock")}
           value={formatNumber(dashboardSample.kpis.stock, locale)}
@@ -85,7 +85,7 @@ export async function DashboardView() {
         />
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
+      <section className="stagger grid gap-4 [--stagger:120ms] xl:grid-cols-3">
         <div className="xl:col-span-2">
           <ChartPlaceholder
             title={t("dashboard.salesChart")}
@@ -110,11 +110,14 @@ export async function DashboardView() {
           </CardHeader>
           <CardContent className="grid gap-5">
             <div className="flex h-3 gap-1 overflow-hidden rounded-full" aria-hidden>
-              {dashboardSample.inventoryMix.map((item) => (
+              {dashboardSample.inventoryMix.map((item, index) => (
                 <div
                   key={item.key}
-                  className={`${mixColors[item.key]} h-full rounded-full`}
-                  style={{ width: `${(item.value / mixTotal) * 100}%` }}
+                  className={`${mixColors[item.key]} animate-grow-x h-full rounded-full ltr:origin-left rtl:origin-right`}
+                  style={{
+                    width: `${(item.value / mixTotal) * 100}%`,
+                    animationDelay: `${300 + index * 150}ms`,
+                  }}
                 />
               ))}
             </div>
@@ -137,7 +140,7 @@ export async function DashboardView() {
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="stagger grid gap-4 [--stagger:120ms] lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t("dashboard.aging")}</CardTitle>
@@ -151,8 +154,11 @@ export async function DashboardView() {
                 </div>
                 <div className="bg-muted h-2 overflow-hidden rounded-full">
                   <div
-                    className={`${agingColors[index] ?? "bg-brand"} h-full rounded-full`}
-                    style={{ width: `${(band.count / maxAging) * 100}%` }}
+                    className={`${agingColors[index] ?? "bg-brand"} animate-grow-x h-full rounded-full ltr:origin-left rtl:origin-right`}
+                    style={{
+                      width: `${(band.count / maxAging) * 100}%`,
+                      animationDelay: `${400 + index * 120}ms`,
+                    }}
                   />
                 </div>
               </div>
@@ -164,16 +170,16 @@ export async function DashboardView() {
           <CardHeader>
             <CardTitle>{t("dashboard.pending")}</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-2">
+          <CardContent className="stagger grid gap-2 [--stagger:60ms]">
             {dashboardSample.actions.map((action) => {
               const Icon = actionIcons[action.href] ?? TagIcon;
               return (
                 <Link
                   key={action.id}
                   href={action.href}
-                  className="group hover:bg-muted/60 hover:border-brand/30 focus-visible:ring-ring flex items-center gap-3 rounded-xl border px-3 py-3 text-sm outline-none transition-colors focus-visible:ring-2"
+                  className="group hover:bg-muted/60 hover:border-brand/40 focus-visible:ring-ring flex items-center gap-3 rounded-xl border px-3 py-3 text-sm outline-none transition-all duration-200 hover:shadow-sm focus-visible:ring-2 active:scale-[0.99]"
                 >
-                  <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg">
+                  <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 ease-(--ease-spring) group-hover:scale-110">
                     <Icon className="size-4" aria-hidden />
                   </span>
                   <span className="flex-1 font-medium">
@@ -190,7 +196,7 @@ export async function DashboardView() {
         </Card>
       </section>
 
-      <Card>
+      <Card className="animate-rise [animation-delay:450ms]">
         <CardHeader>
           <CardTitle>{t("dashboard.recentVehicles")}</CardTitle>
           <CardAction>

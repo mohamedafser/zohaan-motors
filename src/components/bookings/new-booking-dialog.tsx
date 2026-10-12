@@ -447,7 +447,7 @@ export function NewBookingDialog({
           </div>
 
           <DialogFooter className="mt-6" showCloseButton>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" variant="brand" disabled={saving}>
               {t("create")}
             </Button>
           </DialogFooter>

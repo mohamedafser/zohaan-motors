@@ -31,14 +31,14 @@ export function NavLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group/nav relative flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-2",
+        "group/nav relative flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none transition-all duration-200 focus-visible:ring-2",
         collapsed && "justify-center px-0",
         tone === "surface" && "h-11",
         tone === "sidebar" && "focus-visible:ring-sidebar-ring",
         tone === "surface" && "focus-visible:ring-ring",
         tone === "sidebar" &&
           (active
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            ? "bg-linear-to-r from-sidebar-primary/15 to-sidebar-accent/60 text-sidebar-accent-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--sidebar-primary)_18%,transparent)] rtl:bg-linear-to-l"
             : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"),
         tone === "surface" &&
           (active ? "bg-brand-soft text-foreground" : "text-foreground hover:bg-muted"),
@@ -47,7 +47,7 @@ export function NavLink({
       {active && tone === "sidebar" ? (
         <span
           className={cn(
-            "bg-sidebar-primary absolute inset-y-2 w-1 rounded-e-full",
+            "bg-gold animate-grow-y absolute inset-y-1.5 w-1 rounded-e-full shadow-[0_0_12px_2px_color-mix(in_oklch,var(--sidebar-primary)_55%,transparent)]",
             collapsed ? "-start-2.5" : "-start-3",
           )}
           aria-hidden
@@ -55,8 +55,11 @@ export function NavLink({
       ) : null}
       <Icon
         className={cn(
-          "size-[1.125rem] shrink-0 transition-colors",
-          active && (tone === "sidebar" ? "text-sidebar-primary" : "text-brand"),
+          "size-[1.125rem] shrink-0 transition-transform duration-300 ease-(--ease-spring) group-hover/nav:scale-110",
+          active &&
+            (tone === "sidebar"
+              ? "text-sidebar-primary drop-shadow-[0_0_6px_color-mix(in_oklch,var(--sidebar-primary)_60%,transparent)]"
+              : "text-brand"),
         )}
         aria-hidden
       />

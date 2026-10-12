@@ -56,11 +56,11 @@ export function MobileNav() {
           <li className="flex justify-center">
             <button
               type="button"
-              className="bg-brand text-brand-foreground focus-visible:ring-ring ring-background -mt-5 flex size-14 items-center justify-center rounded-2xl shadow-md ring-4 outline-none transition-transform focus-visible:ring-2 active:scale-95"
+              className="bg-gold sheen text-brand-foreground focus-visible:ring-ring ring-background relative -mt-5 flex size-14 items-center justify-center overflow-hidden rounded-2xl shadow-[0_8px_24px_-6px_color-mix(in_oklch,var(--brand)_60%,transparent)] ring-4 outline-none transition-transform duration-300 ease-(--ease-spring) focus-visible:ring-2 active:scale-90"
               onClick={() => setCreateOpen(true)}
               aria-label={t("quick.title")}
             >
-              <PlusIcon className="size-6" />
+              <PlusIcon className="size-6 transition-transform duration-300" />
             </button>
           </li>
           {bookings ? <MobileSlot
@@ -125,13 +125,13 @@ export function MobileNav() {
             <SheetTitle>{t("quick.title")}</SheetTitle>
             <SheetDescription>{t("quick.description")}</SheetDescription>
           </SheetHeader>
-          <ul className="grid grid-cols-2 gap-3 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <ul className="stagger grid grid-cols-2 gap-3 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] [--stagger:50ms]">
             {allowedQuickActions.map((action) => (
               <li key={action.href}>
                 <Link
                   href={action.href}
                   onClick={() => setCreateOpen(false)}
-                  className="bg-card hover:bg-muted focus-visible:ring-ring flex flex-col items-start gap-3 rounded-xl border p-4 text-sm font-medium shadow-xs outline-none focus-visible:ring-2 active:scale-[0.98]"
+                  className="bg-card hover:border-brand/40 focus-visible:ring-ring flex flex-col items-start gap-3 rounded-xl border p-4 text-sm font-medium shadow-xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 active:scale-[0.97]"
                 >
                   <span className="bg-brand-soft text-brand flex size-10 items-center justify-center rounded-lg">
                     <action.icon className="size-5" aria-hidden />
@@ -171,7 +171,7 @@ function MobileSlot({
         <span
           className={cn(
             "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
-            active && "bg-brand-soft text-brand",
+            active && "bg-brand-soft text-brand animate-pop",
           )}
         >
           <Icon className="size-5" aria-hidden />

@@ -45,7 +45,7 @@ export function InventoryPageClient() {
         description={t("description")}
         actions={
           can("vehicle.create") ? (
-            <Button nativeButton={false} render={<Link href="/inventory/new" />}>
+            <Button variant="brand" nativeButton={false} render={<Link href="/inventory/new" />}>
               {t("actions.add")}
             </Button>
           ) : null
@@ -76,7 +76,7 @@ export function InventoryPageClient() {
           description={filtered ? t("empty.filteredHint") : t("empty.hint")}
           action={
             can("vehicle.create") && !filtered ? (
-              <Button nativeButton={false} render={<Link href="/inventory/new" />}>
+              <Button variant="brand" nativeButton={false} render={<Link href="/inventory/new" />}>
                 {t("actions.add")}
               </Button>
             ) : null

@@ -570,8 +570,11 @@ export async function getVehicle(
     updatedByName = row.updated_by ? (map.get(row.updated_by) ?? null) : null;
   }
 
+  const primaryPhotoUrl = (await getPrimaryPhotoUrls([row.id])).get(row.id) ?? null;
+
   const detail: VehicleDetail = {
     ...base,
+    primaryPhotoUrl,
     engineSize: row.engine_size,
     engineCylinders: row.engine_cylinders,
     seats: row.seats,

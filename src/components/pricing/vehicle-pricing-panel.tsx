@@ -1,29 +1,29 @@
 "use client";
 
+import { CheckIcon, PencilLineIcon, ShieldAlertIcon, TrendingDownIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PricingForm } from "@/components/pricing/pricing-form";
 import { PricingStatusBadge } from "@/components/pricing/pricing-status-badge";
+import {
+  CostMixCard,
+  PriceChangeTimeline,
+  PriceCorridor,
+  PriceHistoryChart,
+  PricingKpis,
+} from "@/components/pricing/pricing-visuals";
 import { EmptyState } from "@/components/feedback/empty-state";
-import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermission } from "@/hooks/use-permission";
 import { usePricingMutations, useVehiclePricing } from "@/hooks/use-pricing";
-import { formatCurrency } from "@/lib/utils/currency";
-import { formatDate } from "@/lib/utils/date";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-function Money({ value, locale }: { value: number | null | undefined; locale: "en" | "ar" }) {
-  if (value == null) return <span className="text-muted-foreground">—</span>;
-  return <span>{formatCurrency(value, locale)}</span>;
-}
 
 export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
   const t = useTranslations();
-  const locale = useAppLocale();
   const { can } = usePermission();
   const canView =
     can("pricing.view") || can("vehicle.price.view") || can("vehicle.profit.view");
@@ -89,118 +89,63 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
     }
   }
 
+  const costLines = [
+    { label: t("pricing.cost.purchase"), value: purchaseCost ?? 0 },
+    ...(acquisitionLines.length > 0
+      ? acquisitionLines.map((line) => ({ label: expenseLabel(line.category), value: line.amount }))
+      : [{ label: t("pricing.cost.acquisitionExpenses"), value: acquisitionExpenses ?? 0 }]),
+    { label: t("pricing.cost.workshop"), value: breakdown?.workshopCost ?? p.workshopCost ?? 0 },
+    { label: t("pricing.cost.other"), value: otherCosts ?? 0 },
+  ];
+  const canHistory = can("pricing.history.view") || can("pricing.view");
+
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-semibold">{t("pricing.panel.title")}</h2>
+          <h2 className="font-heading text-base font-semibold">{t("pricing.panel.title")}</h2>
           {p.pricingStatus ? <PricingStatusBadge status={p.pricingStatus} /> : null}
         </div>
       </div>
 
       {p.belowMinimum ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="animate-rise">
+          <TriangleAlertIcon />
           <AlertTitle>{t("pricing.warnings.belowMinimumTitle")}</AlertTitle>
           <AlertDescription>{t("pricing.warnings.belowMinimumBody")}</AlertDescription>
         </Alert>
       ) : null}
 
       {p.isLoss ? (
-        <Alert>
+        <Alert className="animate-rise border-amber-500/40 bg-amber-500/10">
+          <TrendingDownIcon />
           <AlertTitle>{t("pricing.warnings.lossTitle")}</AlertTitle>
           <AlertDescription>{t("pricing.warnings.lossBody")}</AlertDescription>
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {canCost ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("pricing.sections.costBreakdown")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-2 text-sm">
-                <div className="flex justify-between gap-2">
-                  <dt className="text-muted-foreground">{t("pricing.cost.purchase")}</dt>
-                  <dd><Money value={purchaseCost} locale={locale} /></dd>
-                </div>
-                {acquisitionLines.length > 0 ? (
-                  acquisitionLines.map((line) => (
-                    <div key={line.category} className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">{expenseLabel(line.category)}</dt>
-                      <dd><Money value={line.amount} locale={locale} /></dd>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-muted-foreground">{t("pricing.cost.acquisitionExpenses")}</dt>
-                    <dd><Money value={acquisitionExpenses} locale={locale} /></dd>
-                  </div>
-                )}
-                <div className="flex justify-between gap-2">
-                  <dt className="text-muted-foreground">{t("pricing.cost.other")}</dt>
-                  <dd><Money value={otherCosts} locale={locale} /></dd>
-                </div>
-                <div className="flex justify-between gap-2 border-t border-border/60 pt-2 font-medium">
-                  <dt>{t("pricing.summary.totalCost")}</dt>
-                  <dd><Money value={totalVehicleCost} locale={locale} /></dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-        ) : null}
+      <PricingKpis p={p} totalCost={canCost ? totalVehicleCost : null} canCost={canCost} canProfit={canProfit} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("pricing.sections.profitability")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-2 text-sm">
-              <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("pricing.fields.minimum")}</dt>
-                <dd><Money value={p.minimumSellingPrice} locale={locale} /></dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("pricing.fields.target")}</dt>
-                <dd><Money value={p.targetSellingPrice} locale={locale} /></dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-muted-foreground">{t("pricing.summary.maxDiscount")}</dt>
-                <dd>
-                  <Money value={p.maximumDiscountAmount} locale={locale} />
-                  {p.maximumDiscountPercent != null ? ` (${p.maximumDiscountPercent.toFixed(2)}%)` : null}
-                </dd>
-              </div>
-              {canProfit ? (
-                <>
-                  <div className="flex justify-between gap-2 border-t border-border/60 pt-2">
-                    <dt className="text-muted-foreground">{t("pricing.summary.expectedProfit")}</dt>
-                    <dd className="font-medium">
-                      <Money value={p.expectedGrossProfit} locale={locale} />
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-muted-foreground">{t("pricing.summary.margin")}</dt>
-                    <dd className="font-medium">
-                      {p.expectedMarginPercent == null
-                        ? "—"
-                        : `${p.expectedMarginPercent.toFixed(2)}%`}
-                    </dd>
-                  </div>
-                </>
-              ) : null}
-            </dl>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className={cn(canCost ? "lg:col-span-2" : "lg:col-span-3")}>
+          <PriceCorridor p={p} totalCost={canCost ? totalVehicleCost : null} />
+        </div>
+        {canCost ? <CostMixCard lines={costLines} total={totalVehicleCost} currency={p.currency} /> : null}
       </div>
 
       {awaitingApproval && canApprove ? (
-        <Card>
+        <Card className="animate-rise border-amber-500/40 bg-amber-500/5">
           <CardHeader>
-            <CardTitle>{t("pricing.sections.approval")}</CardTitle>
+            <CardTitle className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                <ShieldAlertIcon className="size-4" aria-hidden />
+              </span>
+              {t("pricing.sections.approval")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button onClick={() => void onApprove(true)} disabled={approve.isPending}>
+            <Button variant="brand" onClick={() => void onApprove(true)} disabled={approve.isPending}>
+              <CheckIcon />
               {t("pricing.actions.approve")}
             </Button>
             <Button
@@ -208,61 +153,40 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
               onClick={() => void onApprove(false)}
               disabled={approve.isPending}
             >
+              <XIcon />
               {t("pricing.actions.reject")}
             </Button>
           </CardContent>
         </Card>
       ) : null}
 
+      {canHistory ? (
+        <div className="grid gap-4 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <PriceHistoryChart
+              history={detail.history}
+              current={{ target: p.targetSellingPrice ?? p.currentSellingPrice, minimum: p.minimumSellingPrice }}
+              currency={p.currency}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <PriceChangeTimeline history={detail.history} currency={p.currency} />
+          </div>
+        </div>
+      ) : null}
+
       {canEdit ? (
-        <Card>
+        <Card className="animate-rise [animation-delay:360ms]">
           <CardHeader>
-            <CardTitle>{t("pricing.sections.edit")}</CardTitle>
+            <CardTitle className="flex items-center gap-2.5">
+              <span className="bg-brand-soft text-brand flex size-8 items-center justify-center rounded-lg">
+                <PencilLineIcon className="size-4" aria-hidden />
+              </span>
+              {t("pricing.sections.edit")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <PricingForm detail={detail} />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {(can("pricing.history.view") || can("pricing.view")) && detail.history.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("pricing.sections.history")}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {detail.history.slice(0, 8).map((item) => (
-              <div key={item.id} className="grid gap-1 border-b border-border/50 pb-3 text-sm last:border-0">
-                <div className="flex flex-wrap justify-between gap-2">
-                  <span className="font-medium">
-                    {item.changedByName ?? t("pricing.history.unknownUser")}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {formatDate(item.changedAt, locale, "dateTime")}
-                  </span>
-                </div>
-                {item.previousMinimumPrice !== item.newMinimumPrice ? (
-                  <p>
-                    <span className="text-muted-foreground">{t("pricing.fields.minimum")}: </span>
-                    <Money value={item.previousMinimumPrice} locale={locale} />
-                    {" → "}
-                    <Money value={item.newMinimumPrice} locale={locale} />
-                  </p>
-                ) : null}
-                {item.previousTargetPrice !== item.newTargetPrice ? (
-                  <p>
-                    <span className="text-muted-foreground">{t("pricing.fields.target")}: </span>
-                    <Money value={item.previousTargetPrice} locale={locale} />
-                    {" → "}
-                    <Money value={item.newTargetPrice} locale={locale} />
-                  </p>
-                ) : null}
-                {item.reason ? (
-                  <p className="text-muted-foreground">{t(`pricing.reasons.${item.reason}`)}</p>
-                ) : null}
-                {item.notes ? <p className="text-muted-foreground">{item.notes}</p> : null}
-              </div>
-            ))}
           </CardContent>
         </Card>
       ) : null}

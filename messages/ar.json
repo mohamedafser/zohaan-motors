@@ -1241,7 +1241,49 @@
     "booking": {
       "title": "الحجز",
       "bookedBy": "تم الحجز بواسطة",
-      "bookedOn": "تاريخ الحجز"
+      "bookedOn": "تاريخ الحجز",
+      "soldOn": "تاريخ البيع"
+    },
+    "insights": {
+      "cylinders": "{count} سلندر",
+      "seatsDoors": "المقاعد · الأبواب",
+      "seats": "{count, plural, one {مقعد واحد} two {مقعدان} few {# مقاعد} many {# مقعدًا} other {# مقعد}}",
+      "doors": "{count, plural, one {باب واحد} two {بابان} few {# أبواب} many {# بابًا} other {# باب}}",
+      "noPhoto": "لا توجد صورة بعد",
+      "journey": "رحلة السيارة",
+      "agreedPrice": "السعر المتفق عليه (الحجز)",
+      "priceTitle": "السعر والربح",
+      "priceHint": "تكلفة السيارة مقارنة بسعر بيعها.",
+      "perUnitNote": "لكل وحدة · {count} وحدات في هذا السجل.",
+      "margin": "هامش الربح",
+      "profit": "ربح {amount}",
+      "ageTitle": "أيام في المخزون",
+      "ageHint": "تُحسب من تاريخ الشراء.",
+      "ageSold": "من الشراء حتى البيع.",
+      "days": "{count, plural, one {يوم} two {يومان} few {أيام} many {يومًا} other {يوم}}",
+      "collected": "المحصّل من العميل",
+      "bookedBy": "حجزها {name}",
+      "datesTitle": "التواريخ الرئيسية",
+      "addedToStock": "أُضيفت إلى المخزون",
+      "expiresIn": "{count, plural, =0 {تنتهي اليوم} one {تنتهي خلال يوم} two {تنتهي خلال يومين} few {تنتهي خلال # أيام} many {تنتهي خلال # يومًا} other {تنتهي خلال # يوم}}",
+      "expiredAgo": "{count, plural, one {انتهت منذ يوم} two {انتهت منذ يومين} few {انتهت منذ # أيام} many {انتهت منذ # يومًا} other {انتهت منذ # يوم}}",
+      "otherCosts": "الشحن والرسوم والإصلاحات",
+      "totalCost": "إجمالي التكلفة"
+    },
+    "pipeline": {
+      "title": "مسار المخزون",
+      "hint": "أين توجد وحداتك الآن.",
+      "sellThrough": "نسبة البيع",
+      "available": "متاحة للبيع"
+    },
+    "overview": {
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "copyFailed": "تعذّر النسخ. حدّد النص بدلًا من ذلك.",
+      "created": "أُنشئ",
+      "updated": "آخر تحديث",
+      "recordNotes": "السجل والملاحظات",
+      "noNotes": "لا توجد ملاحظات لهذه السيارة بعد."
     }
   },
   "acquisitions": {
@@ -2008,6 +2050,38 @@
       "minExceedsTarget": "لا يمكن أن يتجاوز الحد الأدنى السعر المستهدف.",
       "currentExceedsAdvertised": "لا يمكن أن يتجاوز السعر الحالي السعر المعلن.",
       "discountExceedsTarget": "لا يمكن أن يتجاوز الخصم سعر البيع المستهدف."
+    },
+    "visual": {
+      "corridorTitle": "نطاق السعر",
+      "corridorHint": "جميع أسعار هذه السيارة على خط واحد، من التكلفة إلى سعر العرض.",
+      "markers": {
+        "cost": "التكلفة",
+        "minimum": "الحد الأدنى",
+        "floor": "أقصى خصم",
+        "target": "المستهدف",
+        "advertised": "المُعلن"
+      },
+      "zones": {
+        "loss": "خسارة",
+        "protected": "محمي",
+        "negotiation": "تفاوض"
+      },
+      "zoneHints": {
+        "loss": "البيع هنا يحقق خسارة",
+        "protected": "أقل من الحد الأدنى، يحتاج موافقة",
+        "negotiation": "مجال للخصم"
+      },
+      "costMixTitle": "مصادر التكلفة",
+      "historyTitle": "اتجاه السعر",
+      "historyHint": "السعر المستهدف والحد الأدنى بعد كل تغيير.",
+      "notEnoughHistory": "يظهر الاتجاه بعد تغيير السعر مرة واحدة على الأقل.",
+      "noChanges": "لا توجد تغييرات في السعر بعد.",
+      "stats": {
+        "atTarget": "الربح عند المستهدف",
+        "atMinimum": "الربح عند الحد الأدنى",
+        "room": "مجال الخصم"
+      },
+      "now": "الآن"
     }
   },
   "bookings": {
@@ -2036,15 +2110,9 @@
     "notes": "ملاحظات",
     "number": "رقم الحجز",
     "status": "الحالة",
-    "filterActive": "نشطة",
-    "filterAll": "الكل",
     "empty": "لا توجد حجوزات هنا بعد.",
     "markSold": "تسجيل كمباعة",
     "cancel": "إلغاء",
-    "confirmCancel": "إلغاء هذا الحجز؟",
-    "confirmSold": "تسجيل هذه السيارة كمباعة؟",
-    "yes": "نعم",
-    "no": "لا",
     "statuses": {
       "active": "نشط",
       "expired": "منتهي",
@@ -2062,7 +2130,8 @@
       "noMinimumPrice": "حدد الحد الأدنى لسعر البيع قبل حجز هذه السيارة.",
       "belowMinimum": "هذا السعر أقل من الحد الأدنى المسموح به لهذه السيارة.",
       "optionsFailed": "تعذر تحميل خيارات الحجز. أغلق النافذة وحاول مرة أخرى.",
-      "tooManyUnits": "هذا أكثر من عدد الوحدات المتاحة."
+      "tooManyUnits": "هذا أكثر من عدد الوحدات المتاحة.",
+      "exceedsBalance": "المبلغ المستلم أكبر من المبلغ المتبقي."
     },
     "salesperson": "مندوب المبيعات",
     "selectSalesperson": "اختر مندوب المبيعات",
@@ -2078,6 +2147,85 @@
     "updated": "تم تحديث الحجز.",
     "units": "عدد الوحدات للحجز",
     "unitsHint": "{count} وحدات متاحة. تبقى البقية جاهزة للبيع.",
-    "sellingTotal": "الإجمالي لعدد {count} وحدات: {total}"
+    "sellingTotal": "الإجمالي لعدد {count} وحدات: {total}",
+    "editAction": "تعديل الحجز",
+    "cancelAction": "إلغاء الحجز",
+    "moreActions": "إجراءات أخرى للحجز {number}",
+    "filters": {
+      "active": "نشطة",
+      "sold": "مباعة",
+      "closed": "مغلقة",
+      "all": "الكل"
+    },
+    "searchPlaceholder": "ابحث بالحجز أو السيارة أو العميل أو الهاتف",
+    "clearSearch": "مسح البحث",
+    "noMatches": "لا توجد حجوزات مطابقة للبحث.",
+    "unitsBadge": "{count} وحدات",
+    "payment": {
+      "title": "الدفع",
+      "price": "السعر",
+      "deposit": "العربون",
+      "balanceDue": "المبلغ المتبقي",
+      "balanceReceived": "المبلغ المستلم",
+      "outstanding": "غير مسدد"
+    },
+    "sold": {
+      "title": "تسجيل كمباعة",
+      "sellingPrice": "سعر البيع",
+      "totalUnits": "سعر البيع × {count} وحدات",
+      "depositPaid": "العربون المدفوع",
+      "balanceDue": "المبلغ المتبقي",
+      "balanceReceived": "المبلغ المتبقي المستلم",
+      "balanceHint": "أدخل المبلغ المستلم من العميل الآن.",
+      "paidInFull": "تم السداد بالكامل.",
+      "outstanding": "سيبقى {amount} غير مسدد.",
+      "effect": "سيُغلق الحجز وتنتقل السيارة إلى «مباعة». لا يمكن التراجع عن ذلك من شاشة الحجوزات.",
+      "confirm": "تأكيد البيع",
+      "fillFull": "استخدام المبلغ كاملًا"
+    },
+    "cancelDialog": {
+      "title": "إلغاء الحجز",
+      "effect": "تعود السيارة إلى «جاهزة للبيع» ويمكن حجزها مجددًا.",
+      "reason": "السبب (اختياري)",
+      "reasonPlaceholder": "مثال: غيّر العميل رأيه",
+      "confirm": "إلغاء الحجز"
+    }
+  },
+  "customers": {
+    "title": "العملاء",
+    "myTitle": "عملائي",
+    "description": "المشترون وجهات الاتصال في المعرض، مع حجوزاتهم ومندوب المبيعات.",
+    "myDescription": "العملاء التابعون لك أو الذين أضفتهم، مع حجوزاتهم.",
+    "newBooking": "حجز جديد",
+    "kpis": {
+      "total": "العملاء",
+      "active": "عملاء بحجز نشط",
+      "new": "جدد هذا الشهر",
+      "unassigned": "غير مُسندين",
+      "bookings": "إجمالي الحجوزات"
+    },
+    "filters": {
+      "all": "الكل",
+      "active": "حجز نشط",
+      "none": "بدون حجوزات"
+    },
+    "searchPlaceholder": "ابحث بالاسم أو الهاتف أو البريد أو الرمز",
+    "clearSearch": "مسح البحث",
+    "columns": {
+      "customer": "العميل",
+      "contact": "التواصل",
+      "location": "الموقع",
+      "salesperson": "مندوب المبيعات",
+      "bookings": "الحجوزات",
+      "added": "تاريخ الإضافة"
+    },
+    "unassigned": "غير مُسند",
+    "noBookings": "لا توجد حجوزات",
+    "activeCount": "{count, plural, one {# نشط} other {# نشط}}",
+    "totalCount": "{count, plural, one {حجز واحد} two {حجزان} few {{formatted} حجوزات} many {{formatted} حجزًا} other {{formatted} حجز}}",
+    "empty": "لا يوجد عملاء بعد",
+    "emptyHint": "يُضاف العملاء عند إنشاء حجز.",
+    "noMatches": "لا يوجد عملاء مطابقون",
+    "noMatchesHint": "جرّب اسمًا أو رقم هاتف أو عامل تصفية مختلفًا."
   }
 }

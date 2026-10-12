@@ -51,9 +51,12 @@ export function ChartPlaceholder({
                 <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <polygon points={area} fill="url(#chart-fill)" />
+            <polygon points={area} fill="url(#chart-fill)" className="animate-fade-in [animation-delay:500ms] [animation-duration:900ms]" />
             <polyline
               points={line}
+              pathLength={1}
+              strokeDasharray={1}
+              className="animate-draw"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
@@ -64,10 +67,13 @@ export function ChartPlaceholder({
           </svg>
           {last ? (
             <span
-              className="bg-brand ring-card absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 rtl:translate-x-1/2"
+              className="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2"
               style={{ insetInlineStart: "100%", top: `${(last.y / height) * 100}%` }}
               aria-hidden
-            />
+            >
+              <span className="bg-brand animate-ping-soft absolute inset-0 rounded-full [animation-delay:1.4s]" />
+              <span className="bg-brand ring-card animate-pop relative block size-full rounded-full ring-4 [animation-delay:1.2s]" />
+            </span>
           ) : null}
         </div>
         <p className="text-muted-foreground mt-3 text-xs">{caption}</p>

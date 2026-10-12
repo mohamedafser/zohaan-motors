@@ -110,6 +110,9 @@ export type VehicleBookingInfo = {
   status: "active" | "expired" | "cancelled" | "converted";
   deposit: number;
   sellingPrice: number | null;
+  /** Balance paid when the booking was marked sold. */
+  balanceReceived: number | null;
+  soldAt: string | null;
   currency: string;
   reservedAt: string;
   notes: string | null;

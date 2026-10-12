@@ -19,19 +19,29 @@ import { useMemo, useState } from "react";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { EmptyState } from "@/components/feedback/empty-state";
 import {
-  bodyTypeLabel,
-  enumLabel,
   useAppLocale,
   vehicleTitle,
 } from "@/components/inventory/inventory-utils";
 import { VehicleArchiveDialog } from "@/components/inventory/vehicle-archive-dialog";
-import { VehicleColorDisplay } from "@/components/inventory/vehicle-color-field";
 import { VehicleDocumentsPanel } from "@/components/inventory/vehicle-documents-panel";
 import { VehicleHistory } from "@/components/inventory/vehicle-history";
 import { VehicleImageManager } from "@/components/inventory/vehicle-image-manager";
+import {
+  AcquisitionSummaryCard,
+  IdentificationCard,
+  OriginLocationCard,
+  RecordNotesCard,
+} from "@/components/inventory/vehicle-overview-sections";
+import {
+  AcquisitionCostChart,
+  BookingProgressCard,
+  KeyDatesCard,
+  PriceProfitCard,
+  StockAgeCard,
+  VehicleHero,
+} from "@/components/inventory/vehicle-insights";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
 import { QuantityBadge } from "@/components/inventory/quantity-badge";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
 import { VehicleTransferDialog } from "@/components/inventory/vehicle-transfer-dialog";
@@ -51,9 +61,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVehicle } from "@/hooks/use-vehicles";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatNumber } from "@/lib/utils/currency";
+import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
-import { countryFlag, findCountryByName } from "@/lib/vehicles/countries";
 import { canArchiveStatus } from "@/lib/vehicles/status-transitions";
 import type { VehicleDetail } from "@/types/vehicle";
 import { vehicleHref } from "@/lib/vehicles/routes";
@@ -90,282 +99,54 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
   );
 }
 
-function DetailCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card className="border-border/70 shadow-none">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base tracking-tight">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <dl className="grid gap-2.5 sm:grid-cols-2">{children}</dl>
-      </CardContent>
-    </Card>
-  );
-}
-
 function Overview({ vehicle }: { vehicle: VehicleDetail }) {
-  const t = useTranslations();
-  const locale = useAppLocale();
-  const date = (value: string | null) => (value ? formatDate(value, locale, "medium") : null);
-  const dateTime = (value: string | null) => (value ? formatDate(value, locale, "dateTime") : null);
-  const money = (value: number | null | undefined) =>
-    value == null ? null : formatCurrency(value, locale);
-
-  const perUnit = (label: string) =>
-    vehicle.quantity > 1 ? t("inventory.quantity.perUnitLabel", { label }) : label;
-
   const hasPrivate =
     vehicle.totalAcquisitionCost !== undefined ||
     vehicle.minimumSellingPrice !== undefined ||
     vehicle.currentSellingPrice != null;
 
-  const country = findCountryByName(vehicle.countryOfOrigin);
-  const countryDisplay = vehicle.countryOfOrigin ? (
-    <span className="inline-flex items-center gap-2">
-      <span className="text-base leading-none" aria-hidden>
-        {country ? countryFlag(country.code) : "🏳️"}
-      </span>
-      {vehicle.countryOfOrigin}
-    </span>
-  ) : null;
-
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      <DetailCard title={t("inventory.detail.identity")}>
-        <DetailItem label={t("inventory.fields.stockId")} value={vehicle.stockNumber} />
-        <DetailItem
-          label={t("inventory.fields.status")}
-          value={<VehicleStatusBadge status={vehicle.status} />}
-        />
-        <DetailItem
-          label={t("inventory.fields.vin")}
-          value={vehicle.vin ? <span className="font-mono">{vehicle.vin}</span> : null}
-        />
-        <DetailItem
-          label={t("inventory.fields.chassis")}
-          value={
-            vehicle.chassisNumber ? (
-              <span className="font-mono">{vehicle.chassisNumber}</span>
-            ) : null
-          }
-        />
-        <DetailItem label={t("inventory.fields.brand")} value={vehicle.make} />
-        <DetailItem label={t("inventory.fields.model")} value={vehicle.model} />
-        <DetailItem label={t("inventory.fields.variant")} value={vehicle.variant} />
-        <DetailItem label={t("inventory.fields.year")} value={String(vehicle.year)} />
-        <DetailItem
-          label={t("inventory.fields.marketType")}
-          value={<MarketTypeBadge value={vehicle.marketType} />}
-        />
-        <DetailItem
-          label={t("inventory.fields.mileage")}
-          value={t("inventory.detail.mileageValue", {
-            value: formatNumber(vehicle.mileage, locale),
-            unit: t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`),
-          })}
-        />
-        <DetailItem label={t("inventory.fields.quantity")} value={formatNumber(vehicle.quantity, locale)} />
-        {vehicle.splitFrom ? (
-          <DetailItem
-            label={t("inventory.fields.splitFrom")}
-            value={
-              <Link href={vehicleHref(vehicle.splitFrom.stockNumber)} className="underline underline-offset-4">
-                {vehicle.splitFrom.stockNumber}
-              </Link>
-            }
-          />
+    <div className="grid gap-4">
+      <VehicleHero vehicle={vehicle} />
+
+      {/* Money and time: the questions owners ask first. */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {hasPrivate ? (
+          <div className="lg:col-span-2">
+            <PriceProfitCard vehicle={vehicle} />
+          </div>
         ) : null}
-        {vehicle.status === "acquired" ? (
-          <DetailItem label={t("inventory.fields.portLocation")} value={vehicle.portLocation} />
+        <StockAgeCard vehicle={vehicle} />
+        {!hasPrivate ? (
+          <div className="lg:col-span-2">
+            <KeyDatesCard vehicle={vehicle} />
+          </div>
         ) : null}
-      </DetailCard>
+      </div>
 
-      <DetailCard title={t("inventory.detail.specs")}>
-        <DetailItem
-          label={t("inventory.fields.bodyType")}
-          value={bodyTypeLabel(t, vehicle.bodyType)}
-        />
-        <DetailItem
-          label={t("inventory.fields.transmission")}
-          value={enumLabel(t, "transmission", vehicle.transmission)}
-        />
-        <DetailItem
-          label={t("inventory.fields.fuelType")}
-          value={enumLabel(t, "fuel", vehicle.fuelType)}
-        />
-        <DetailItem label={t("inventory.fields.engineSize")} value={vehicle.engineSize} />
-        <DetailItem
-          label={t("inventory.fields.engineCylinders")}
-          value={vehicle.engineCylinders?.toString()}
-        />
-        <DetailItem
-          label={t("inventory.fields.driveType")}
-          value={enumLabel(t, "drive", vehicle.driveType)}
-        />
-        <DetailItem label={t("inventory.fields.seats")} value={vehicle.seats?.toString()} />
-        <DetailItem label={t("inventory.fields.doors")} value={vehicle.doors?.toString()} />
-      </DetailCard>
-
-      <DetailCard title={t("inventory.detail.appearance")}>
-        <DetailItem
-          label={t("inventory.fields.exteriorColor")}
-          value={
-            vehicle.exteriorColor ? <VehicleColorDisplay value={vehicle.exteriorColor} /> : null
-          }
-        />
-        <DetailItem
-          label={t("inventory.fields.interiorColor")}
-          value={
-            vehicle.interiorColor ? <VehicleColorDisplay value={vehicle.interiorColor} /> : null
-          }
-        />
-      </DetailCard>
-
-      <DetailCard title={t("inventory.detail.originLocation")}>
-        <DetailItem
-          label={t("inventory.fields.origin")}
-          value={enumLabel(t, "origin", vehicle.originType)}
-        />
-        <DetailItem label={t("inventory.fields.countryOfOrigin")} value={countryDisplay} />
-        <DetailItem label={t("inventory.fields.branch")} value={vehicle.branchName} />
-        <DetailItem label={t("inventory.fields.location")} value={vehicle.locationName} />
-        <DetailItem label={t("inventory.fields.purchaseDate")} value={date(vehicle.purchaseDate)} />
-        <DetailItem
-          label={t("inventory.fields.registrationDate")}
-          value={date(vehicle.registrationDate)}
-        />
-        <DetailItem
-          label={t("inventory.fields.registrationExpiry")}
-          value={date(vehicle.registrationExpiry)}
-        />
-      </DetailCard>
-
-      {hasPrivate ? (
-        <DetailCard title={t("inventory.detail.summary")}>
-          {vehicle.totalAcquisitionCost !== undefined ? (
-            <DetailItem
-              label={t("inventory.fields.acquisitionCost")}
-              value={money(vehicle.totalAcquisitionCost)}
-            />
-          ) : null}
-          {vehicle.currentSellingPrice != null ? (
-            <DetailItem
-              label={perUnit(t("inventory.fields.sellingPrice"))}
-              value={money(vehicle.currentSellingPrice)}
-            />
-          ) : null}
-          {vehicle.currentSellingPrice != null && vehicle.quantity > 1 ? (
-            <DetailItem
-              label={t("inventory.totals.totalSelling", { count: vehicle.quantity })}
-              value={money(quantityTotal(vehicle.currentSellingPrice, vehicle.quantity))}
-            />
-          ) : null}
-          {vehicle.minimumSellingPrice !== undefined ? (
-            <DetailItem
-              label={perUnit(t("inventory.fields.minimumPrice"))}
-              value={money(vehicle.minimumSellingPrice)}
-            />
-          ) : null}
-          {vehicle.minimumSellingPrice != null && vehicle.quantity > 1 ? (
-            <DetailItem
-              label={t("inventory.totals.totalMinimum", { count: vehicle.quantity })}
-              value={money(quantityTotal(vehicle.minimumSellingPrice, vehicle.quantity))}
-            />
-          ) : null}
-        </DetailCard>
-      ) : null}
-
-      {vehicle.booking ? (
-        <DetailCard title={t("inventory.booking.title")}>
-          <DetailItem label={t("bookings.number")} value={<span className="font-mono">{vehicle.booking.number}</span>} />
-          <DetailItem
-            label={t("bookings.status")}
-            value={
-              <StatusBadge
-                status={`booking_${vehicle.booking.status}`}
-                label={t(`bookings.statuses.${vehicle.booking.status}`)}
-              />
-            }
-          />
-          <DetailItem
-            label={t("bookings.customer")}
-            value={
-              vehicle.booking.customer ? (
-                <span>
-                  {vehicle.booking.customer.name}
-                  <span className="text-muted-foreground block text-xs" dir="ltr">
-                    {vehicle.booking.customer.phone}
-                  </span>
-                </span>
-              ) : null
-            }
-          />
-          <DetailItem label={t("bookings.salesperson")} value={vehicle.booking.salesperson} />
-          <DetailItem label={t("inventory.booking.bookedBy")} value={vehicle.booking.bookedBy} />
-          <DetailItem label={t("inventory.booking.bookedOn")} value={dateTime(vehicle.booking.reservedAt)} />
-          <DetailItem
-            label={t("bookings.deposit")}
-            value={formatCurrency(vehicle.booking.deposit, locale, vehicle.booking.currency)}
-          />
-          <DetailItem
-            label={t("bookings.sellingPrice")}
-            value={
-              vehicle.booking.sellingPrice == null
-                ? null
-                : formatCurrency(vehicle.booking.sellingPrice, locale, vehicle.booking.currency)
-            }
-          />
-          {vehicle.booking.notes ? (
-            <div className="sm:col-span-2">
-              <DetailItem
-                label={t("bookings.notes")}
-                value={<span className="whitespace-pre-wrap">{vehicle.booking.notes}</span>}
-              />
+      {vehicle.booking || hasPrivate ? (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {vehicle.booking ? (
+            <div className="lg:col-span-2">
+              <BookingProgressCard vehicle={vehicle} />
             </div>
           ) : null}
-        </DetailCard>
-      ) : null}
-
-      {vehicle.acquisition ? (
-        <DetailCard title={t("inventory.sections.acquisition")}>
-          <DetailItem
-            label={t("inventory.fields.acquisitionNumber")}
-            value={vehicle.acquisition.acquisitionNumber}
-          />
-          <DetailItem
-            label={t("inventory.fields.acquisitionStatus")}
-            value={t(`acquisitions.status.${vehicle.acquisition.status}`)}
-          />
-          <div className="sm:col-span-2">
-            <Link
-              href={vehicleHref(vehicle.stockNumber, "", "acquisition")}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              {t("inventory.actions.viewAcquisition")}
-            </Link>
-          </div>
-        </DetailCard>
-      ) : null}
-
-      <DetailCard title={t("inventory.sections.notes")}>
-        <div className="sm:col-span-2">
-          <DetailItem
-            label={t("inventory.fields.notes")}
-            value={
-              vehicle.description ? (
-                <span className="whitespace-pre-wrap">{vehicle.description}</span>
-              ) : null
-            }
-          />
+          {hasPrivate ? (
+            <div className={cn(!vehicle.booking && "lg:col-span-3")}>
+              <KeyDatesCard vehicle={vehicle} />
+            </div>
+          ) : null}
         </div>
-      </DetailCard>
+      ) : null}
 
-      <DetailCard title={t("inventory.detail.audit")}>
-        <DetailItem label={t("inventory.fields.createdAt")} value={dateTime(vehicle.createdAt)} />
-        <DetailItem label={t("inventory.fields.createdBy")} value={vehicle.createdByName} />
-        <DetailItem label={t("inventory.fields.updatedAt")} value={dateTime(vehicle.updatedAt)} />
-        <DetailItem label={t("inventory.fields.updatedBy")} value={vehicle.updatedByName} />
-      </DetailCard>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <IdentificationCard vehicle={vehicle} />
+        <OriginLocationCard vehicle={vehicle} />
+        {vehicle.acquisition ? <AcquisitionSummaryCard vehicle={vehicle} /> : null}
+        <div className={cn(!vehicle.acquisition && "lg:col-span-2")}>
+          <RecordNotesCard vehicle={vehicle} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -453,7 +234,7 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
             </AlertDescription>
           </Alert>
         ) : null}
-        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
           <DetailItem
             label={t("inventory.fields.acquisitionNumber")}
             value={acquisition.acquisitionNumber}
@@ -510,6 +291,11 @@ function AcquisitionPanel({ vehicle }: { vehicle: VehicleDetail }) {
             />
           ) : null}
         </dl>
+        <AcquisitionCostChart
+          purchasePrice={acquisition.purchasePrice}
+          totalCost={acquisition.totalAcquisitionCost ?? vehicle.totalAcquisitionCost}
+          currency={acquisition.currency}
+        />
       </CardContent>
     </Card>
   );
@@ -586,17 +372,18 @@ export function VehicleDetailClient({
         description={meta || undefined}
         actions={
           <>
-            <div className="flex flex-wrap items-center gap-2">
+            {/* The hero photo already shows these on phones. */}
+            <div className="hidden flex-wrap items-center gap-2 sm:flex">
               <VehicleStatusBadge status={vehicle.status} />
               <MarketTypeBadge value={vehicle.marketType} />
               <QuantityBadge quantity={vehicle.quantity} />
             </div>
-            <VehicleStatusTrigger vehicle={vehicle} variant="button" className="h-10 md:h-9" />
+            <VehicleStatusTrigger vehicle={vehicle} variant="button" className="h-10 flex-1 sm:flex-none md:h-9" />
             {!isArchived ? (
               <PermissionGate permission="vehicle.edit">
                 <Link
                   href={vehicleHref(vehicle.stockNumber, "/edit")}
-                  className={cn(buttonVariants(), "h-10 md:h-9")}
+                  className={cn(buttonVariants(), "h-10 flex-1 sm:flex-none md:h-9")}
                 >
                   <PencilIcon aria-hidden />
                   {t("inventory.actions.edit")}
@@ -649,7 +436,9 @@ export function VehicleDetailClient({
             "-top-5 -mx-4 px-4 py-2 md:-mx-6 md:px-6 lg:-top-8 lg:-mx-8 lg:px-8",
           )}
         >
-          <div className="bg-muted/40 rounded-2xl border p-1.5">
+          {/* The list is wider than a phone, so it scrolls sideways inside its own box
+              instead of stretching the whole page. */}
+          <div className="bg-muted/40 overflow-x-auto overscroll-x-contain rounded-2xl border p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsList
               variant="default"
               className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0"
@@ -660,8 +449,12 @@ export function VehicleDetailClient({
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
+                    // Keep the chosen tab visible when it starts off-screen on a phone.
+                    onClick={(event) =>
+                      event.currentTarget.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" })
+                    }
                     className={cn(
-                      "h-10 shrink-0 rounded-xl px-3.5 text-sm font-medium",
+                      "h-9 shrink-0 flex-none rounded-xl px-3 text-[13px] font-medium sm:h-10 sm:px-3.5 sm:text-sm",
                       "data-active:bg-background data-active:text-foreground data-active:shadow-sm",
                       "dark:data-active:bg-background",
                     )}

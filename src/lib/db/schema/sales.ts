@@ -82,6 +82,9 @@ export const reservations = pgTable(
     sellingPrice: numeric("selling_price", { precision: 14, scale: 2 }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "string" }),
     cancelReason: text("cancel_reason"),
+    balanceReceived: numeric("balance_received", { precision: 14, scale: 2 }),
+    soldAt: timestamp("sold_at", { withTimezone: true, mode: "string" }),
+    soldBy: uuid("sold_by"),
     notes: text(),
     createdBy: uuid("created_by"),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
@@ -134,6 +137,11 @@ export const reservations = pgTable(
       name: "reservations_salesperson_id_fkey",
     }).onDelete("set null"),
     foreignKey({
+      columns: [table.soldBy],
+      foreignColumns: [profiles.id],
+      name: "reservations_sold_by_fkey",
+    }).onDelete("set null"),
+    foreignKey({
       columns: [table.vehicleId],
       foreignColumns: [vehicles.id],
       name: "reservations_vehicle_id_fkey",
@@ -164,6 +172,10 @@ export const reservations = pgTable(
     check(
       "reservations_selling_price_non_negative",
       sql`(selling_price IS NULL) OR (selling_price >= (0)::numeric)`,
+    ),
+    check(
+      "reservations_balance_received_non_negative",
+      sql`(balance_received IS NULL) OR (balance_received >= (0)::numeric)`,
     ),
   ],
 ).enableRLS();

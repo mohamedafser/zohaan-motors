@@ -62,8 +62,16 @@ export const editBookingSchema = z.object({
 
 export const bookingActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), reason: z.string().trim().max(500).optional() }),
-  z.object({ action: z.literal("sold") }),
+  z.object({
+    action: z.literal("sold"),
+    /** Balance paid on completion, on top of the deposit. */
+    balanceReceived: z
+      .number({ error: validationMessages.required })
+      .finite({ error: validationMessages.required })
+      .nonnegative({ error: validationMessages.currency }),
+  }),
   editBookingSchema.extend({ action: z.literal("edit") }),
 ]);
 
 export type CreateBookingValues = z.infer<typeof createBookingSchema>;
+export type BookingActionValues = z.infer<typeof bookingActionSchema>;

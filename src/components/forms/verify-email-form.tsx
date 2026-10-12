@@ -295,7 +295,7 @@ export function VerifyEmailForm({ email, reason }: { email: string | null; reaso
         ) : null}
       </div>
 
-      <LoadingButton type="submit" className="h-12 text-base" loading={verifying} disabled={!canVerify}>
+      <LoadingButton type="submit" variant="brand" className="sheen h-12 text-base font-semibold" loading={verifying} disabled={!canVerify}>
         {verifying ? t("verifying") : t("verify")}
       </LoadingButton>
 

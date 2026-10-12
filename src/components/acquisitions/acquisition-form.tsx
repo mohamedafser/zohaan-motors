@@ -945,6 +945,7 @@ function AcquisitionFormBody({
             </Link>
             <LoadingButton
               type="submit"
+              variant="brand"
               className="h-11 sm:h-9"
               loading={submitting}
               disabled={mode === "edit" && !isDirty}

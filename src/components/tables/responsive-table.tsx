@@ -14,7 +14,7 @@ import {
 
 export type TableColumn<T> = {
   key: string;
-  header: string;
+  header: React.ReactNode;
   cell: (row: T) => React.ReactNode;
   className?: string;
 };
@@ -63,10 +63,10 @@ export function ResponsiveTable<T extends { id: string }>({
           className={cn(
             viewMode === "grid"
               ? cn(
-                  "grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
+                  "stagger grid gap-3 [--stagger:45ms] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
                   gridClassName,
                 )
-              : "grid gap-3 md:hidden",
+              : "stagger grid gap-3 [--stagger:45ms] md:hidden",
             viewMode === "auto" && "md:hidden",
           )}
         >
@@ -92,13 +92,13 @@ export function ResponsiveTable<T extends { id: string }>({
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="stagger [--stagger:30ms]">
               {rows.map((row) => {
                 const href = hrefForRow?.(row);
                 return (
                   <TableRow
                     key={row.id}
-                    className={cn(href && "hover:bg-muted/50 cursor-pointer")}
+                    className={cn(href && "hover:bg-brand-soft/50 cursor-pointer transition-colors")}
                     onClick={
                       href
                         ? (event) => {

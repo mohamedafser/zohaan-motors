@@ -120,7 +120,7 @@ export function ResetPasswordForm() {
           {...form.register("confirmPassword")}
         />
       </FormField>
-      <LoadingButton type="submit" className="h-11" loading={pending}>
+      <LoadingButton type="submit" variant="brand" className="sheen h-11 font-semibold" loading={pending}>
         {t("auth.reset.submit")}
       </LoadingButton>
     </form>

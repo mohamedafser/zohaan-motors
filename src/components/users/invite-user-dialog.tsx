@@ -113,7 +113,7 @@ export function InviteUserDialog({
         if (!next) reset();
       }}
     >
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="brand" />}>
         <UserPlusIcon />
         {t("invite")}
       </DialogTrigger>

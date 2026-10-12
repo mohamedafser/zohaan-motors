@@ -1246,7 +1246,49 @@
     "booking": {
       "title": "Booking",
       "bookedBy": "Booked by",
-      "bookedOn": "Booked on"
+      "bookedOn": "Booked on",
+      "soldOn": "Sold on"
+    },
+    "insights": {
+      "cylinders": "{count, plural, one {# cyl} other {# cyl}}",
+      "seatsDoors": "Seats · Doors",
+      "seats": "{count, plural, one {# seat} other {# seats}}",
+      "doors": "{count, plural, one {# door} other {# doors}}",
+      "noPhoto": "No photo yet",
+      "journey": "Vehicle journey",
+      "agreedPrice": "Agreed price (booking)",
+      "priceTitle": "Price & profit",
+      "priceHint": "What the car cost you against what it sells for.",
+      "perUnitNote": "Per unit · {count} units on this record.",
+      "margin": "Margin",
+      "profit": "{amount} profit",
+      "ageTitle": "Days in stock",
+      "ageHint": "Counted from the purchase date.",
+      "ageSold": "From purchase to sale.",
+      "days": "{count, plural, one {day} other {days}}",
+      "collected": "Collected from customer",
+      "bookedBy": "Booked by {name}",
+      "datesTitle": "Key dates",
+      "addedToStock": "Added to stock",
+      "expiresIn": "{count, plural, =0 {Expires today} one {Expires in # day} other {Expires in # days}}",
+      "expiredAgo": "{count, plural, one {Expired # day ago} other {Expired # days ago}}",
+      "otherCosts": "Shipping, fees & repairs",
+      "totalCost": "Total cost"
+    },
+    "pipeline": {
+      "title": "Stock pipeline",
+      "hint": "Where your units are right now.",
+      "sellThrough": "Sell-through",
+      "available": "Available to sell"
+    },
+    "overview": {
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyFailed": "Couldn't copy. Select the text instead.",
+      "created": "Created",
+      "updated": "Last updated",
+      "recordNotes": "Record & notes",
+      "noNotes": "No notes added for this vehicle yet."
     }
   },
   "acquisitions": {
@@ -2013,6 +2055,38 @@
       "minExceedsTarget": "Minimum price cannot exceed target price.",
       "currentExceedsAdvertised": "Current price cannot exceed advertised price.",
       "discountExceedsTarget": "Discount cannot exceed the target selling price."
+    },
+    "visual": {
+      "corridorTitle": "Price corridor",
+      "corridorHint": "Every price for this car on one line, from cost to the asking price.",
+      "markers": {
+        "cost": "Cost",
+        "minimum": "Minimum",
+        "floor": "Max discount",
+        "target": "Target",
+        "advertised": "Advertised"
+      },
+      "zones": {
+        "loss": "Loss",
+        "protected": "Protected",
+        "negotiation": "Negotiation"
+      },
+      "zoneHints": {
+        "loss": "selling here loses money",
+        "protected": "below minimum, needs approval",
+        "negotiation": "room for discounts"
+      },
+      "costMixTitle": "Where the cost comes from",
+      "historyTitle": "Price trend",
+      "historyHint": "Target and minimum price after each change.",
+      "notEnoughHistory": "The trend appears after the price has been changed at least once.",
+      "noChanges": "No price changes yet.",
+      "stats": {
+        "atTarget": "Profit at target",
+        "atMinimum": "Profit at minimum",
+        "room": "Discount room"
+      },
+      "now": "Now"
     }
   },
   "bookings": {
@@ -2041,15 +2115,9 @@
     "notes": "Notes",
     "number": "Booking #",
     "status": "Status",
-    "filterActive": "Active",
-    "filterAll": "All",
     "empty": "No bookings here yet.",
-    "markSold": "Mark sold",
+    "markSold": "Mark as sold",
     "cancel": "Cancel",
-    "confirmCancel": "Cancel this booking?",
-    "confirmSold": "Mark this car as sold?",
-    "yes": "Yes",
-    "no": "No",
     "statuses": {
       "active": "Active",
       "expired": "Expired",
@@ -2067,7 +2135,8 @@
       "noMinimumPrice": "Set a minimum selling price before booking this car.",
       "belowMinimum": "This price is below the minimum allowed for this car.",
       "optionsFailed": "Booking options could not be loaded. Close and try again.",
-      "tooManyUnits": "That is more units than are available."
+      "tooManyUnits": "That is more units than are available.",
+      "exceedsBalance": "The amount received is more than the balance due."
     },
     "salesperson": "Sales executive",
     "selectSalesperson": "Select the sales executive",
@@ -2083,6 +2152,85 @@
     "updated": "Booking updated.",
     "units": "Units to book",
     "unitsHint": "{count} units available. The rest stay Ready for sale.",
-    "sellingTotal": "Total for {count} units: {total}"
+    "sellingTotal": "Total for {count} units: {total}",
+    "editAction": "Edit booking",
+    "cancelAction": "Cancel booking",
+    "moreActions": "More actions for {number}",
+    "filters": {
+      "active": "Active",
+      "sold": "Sold",
+      "closed": "Closed",
+      "all": "All"
+    },
+    "searchPlaceholder": "Search booking, car, customer or phone",
+    "clearSearch": "Clear search",
+    "noMatches": "No bookings match your search.",
+    "unitsBadge": "{count} units",
+    "payment": {
+      "title": "Payment",
+      "price": "Price",
+      "deposit": "Deposit",
+      "balanceDue": "Balance due",
+      "balanceReceived": "Balance received",
+      "outstanding": "Outstanding"
+    },
+    "sold": {
+      "title": "Mark as sold",
+      "sellingPrice": "Selling price",
+      "totalUnits": "Selling price × {count} units",
+      "depositPaid": "Deposit paid",
+      "balanceDue": "Balance due",
+      "balanceReceived": "Balance amount received",
+      "balanceHint": "Enter the amount collected from the customer now.",
+      "paidInFull": "Paid in full.",
+      "outstanding": "{amount} will remain outstanding.",
+      "effect": "The booking closes and the car moves to Sold. This can't be undone from the bookings screen.",
+      "confirm": "Confirm sale",
+      "fillFull": "Use full balance"
+    },
+    "cancelDialog": {
+      "title": "Cancel booking",
+      "effect": "The car goes back to Ready for sale so it can be booked again.",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "e.g. Customer changed their mind",
+      "confirm": "Cancel booking"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "myTitle": "My customers",
+    "description": "Buyers and contacts across the showroom, with their bookings and sales executive.",
+    "myDescription": "Customers you own or added, with their bookings.",
+    "newBooking": "New booking",
+    "kpis": {
+      "total": "Customers",
+      "active": "Active buyers",
+      "new": "New this month",
+      "unassigned": "Unassigned",
+      "bookings": "Total bookings"
+    },
+    "filters": {
+      "all": "All",
+      "active": "Active booking",
+      "none": "No bookings"
+    },
+    "searchPlaceholder": "Search name, phone, email or code",
+    "clearSearch": "Clear search",
+    "columns": {
+      "customer": "Customer",
+      "contact": "Contact",
+      "location": "Location",
+      "salesperson": "Sales executive",
+      "bookings": "Bookings",
+      "added": "Added"
+    },
+    "unassigned": "Unassigned",
+    "noBookings": "No bookings",
+    "activeCount": "{count, plural, one {# active} other {# active}}",
+    "totalCount": "{count, plural, one {{formatted} booking} other {{formatted} bookings}}",
+    "empty": "No customers yet",
+    "emptyHint": "Customers are added when you create a booking.",
+    "noMatches": "No matching customers",
+    "noMatchesHint": "Try a different name, phone number, or filter."
   }
 }
