@@ -1,10 +1,13 @@
 import { hasPermission, type Permission } from "@/lib/permissions";
 import { canViewAllBookings, isSalesExecutive as isSalesExecutiveRole } from "@/lib/permissions/roles";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { getPaymentTerms } from "@/lib/settings/payment-terms";
 import { createClient } from "@/lib/supabase/server";
 import { quantityTotal } from "@/lib/vehicles/quantity";
+import { getPrimaryPhotoUrls } from "@/lib/vehicles/photos";
 import { recordForUnits, undoVehicleSplit } from "@/lib/vehicles/units";
 import type { BookingActionValues, CreateBookingValues } from "@/lib/validation/booking";
+import { deadlineFrom, type PaymentTerms } from "@/lib/validation/payment-terms";
 import type { UserContext } from "@/types/auth";
 import type { VehicleBookingInfo } from "@/types/vehicle";
 
@@ -31,6 +34,19 @@ export type BookingListItem = {
   /** Older bookings had a hold-until date; new ones don't expire. */
   expiresAt: string | null;
   notes: string | null;
+  cancelReason: string | null;
+  cancelledAt: string | null;
+  /** When the sales executive and Super Admins were alerted about the full payment. */
+  balanceAlertedAt: string | null;
+  createdBy: string | null;
+  /** Cancelled by the system because no deposit arrived in time. */
+  autoCancelled: boolean;
+  /** Active bookings without a deposit are cancelled automatically at this time. */
+  depositDueAt: string | null;
+  /** When the full amount is due, while some of it is still outstanding. */
+  balanceDueAt: string | null;
+  /** The full-payment deadline has passed with money still outstanding. */
+  balanceOverdue: boolean;
   /** What the signed-in user may do with this booking (permissions + ownership). */
   can: { edit: boolean; sell: boolean; cancel: boolean };
   vehicle: { id: string; stockNumber: string | null; title: string; status: string } | null;
@@ -153,13 +169,17 @@ const canSellBooking = (booking: Ownership, context: UserContext) =>
 const canCancelBooking = (booking: Ownership, context: UserContext) =>
   canActOnBooking(booking, context, "reservation.cancel");
 
-export async function listBookings(context: UserContext): Promise<Result<BookingListItem[]>> {
+export async function listBookings(
+  context: UserContext,
+  options: { number?: string } = {},
+): Promise<Result<BookingListItem[]>> {
   const supabase = await createClient();
   let query = supabase
     .from("reservations")
     .select(
-      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, currency, reserved_at, expires_at, notes, created_by, salesperson_id, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)",
+      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, cancelled_at, currency, reserved_at, expires_at, notes, cancel_reason, auto_cancelled, balance_overdue_notified_at, created_by, salesperson_id, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)",
     );
+  if (options.number) query = query.eq("reservation_number", options.number);
   // RLS enforces the same rule; filtering here keeps it explicit in the app.
   if (ownBookingsOnly(context)) query = query.or(ownBookingFilter(context));
   const { data, error } = await query.order("reserved_at", { ascending: false }).limit(500);
@@ -173,10 +193,14 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
     selling_price: number | string | null;
     balance_received: number | string | null;
     sold_at: string | null;
+    cancelled_at: string | null;
     currency: string;
     reserved_at: string;
     expires_at: string | null;
     notes: string | null;
+    cancel_reason: string | null;
+    balance_overdue_notified_at: string | null;
+    auto_cancelled: boolean | null;
     created_by: string | null;
     salesperson_id: string | null;
     vehicles: Joined<{
@@ -192,7 +216,10 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
   };
 
   const rows = (data ?? []) as unknown as Row[];
-  const names = await profileNames([...new Set(rows.map((r) => r.salesperson_id).filter((id): id is string => !!id))]);
+  const [names, terms] = await Promise.all([
+    profileNames([...new Set(rows.map((r) => r.salesperson_id).filter((id): id is string => !!id))]),
+    getPaymentTerms(),
+  ]);
   const now = Date.now();
   return {
     data: rows.map((row) => {
@@ -207,6 +234,12 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
       const sellingPrice = row.selling_price == null ? null : Number(row.selling_price);
       const units = vehicle?.quantity ?? 1;
       const totalPrice = quantityTotal(sellingPrice, units);
+      const balanceReceived = row.balance_received == null ? null : Number(row.balance_received);
+      const outstanding = totalPrice == null ? 0 : totalPrice - deposit - (balanceReceived ?? 0);
+      const balanceDueAt =
+        (status === "active" || status === "converted") && outstanding > 0.005
+          ? deadlineFrom(row.reserved_at, terms.balanceMinutes)
+          : null;
       return {
         id: row.id,
         number: row.reservation_number,
@@ -216,12 +249,21 @@ export async function listBookings(context: UserContext): Promise<Result<Booking
         units,
         totalPrice,
         balanceDue: totalPrice == null ? null : Math.max(0, Math.round((totalPrice - deposit) * 100) / 100),
-        balanceReceived: row.balance_received == null ? null : Number(row.balance_received),
+        balanceReceived,
         soldAt: row.sold_at,
         currency: row.currency,
         reservedAt: row.reserved_at,
         expiresAt: row.expires_at,
         notes: row.notes,
+        cancelReason: row.cancel_reason,
+        cancelledAt: row.cancelled_at,
+        balanceAlertedAt: row.balance_overdue_notified_at,
+        createdBy: row.created_by,
+        autoCancelled: row.auto_cancelled ?? false,
+        depositDueAt:
+          status === "active" && deposit <= 0 ? deadlineFrom(row.reserved_at, terms.depositMinutes) : null,
+        balanceDueAt,
+        balanceOverdue: balanceDueAt != null && new Date(balanceDueAt).getTime() < now,
         can: {
           edit: status === "active" && canEditBooking(row, context),
           sell: status === "active" && canSellBooking(row, context),
@@ -247,6 +289,7 @@ export async function listBookingOptions(context: UserContext): Promise<
     salesExecutives: PersonOption[];
     /** Set when the caller is a sales executive: new customers are always theirs. */
     selfSalespersonId: string | null;
+    paymentTerms: PaymentTerms;
   }>
 > {
   const supabase = await createClient();
@@ -305,6 +348,7 @@ export async function listBookingOptions(context: UserContext): Promise<
       }),
       salesExecutives,
       selfSalespersonId: isSalesExecutive(context) ? context.userId : null,
+      paymentTerms: await getPaymentTerms(),
     },
     error: null,
   };
@@ -531,19 +575,12 @@ export async function updateBooking(
   }
   if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
 
-  if (action.action === "sold") {
-    // A typo like an extra zero shouldn't record more than the customer owes.
-    const total = quantityTotal(
-      booking.selling_price == null ? null : Number(booking.selling_price),
-      one(booking.vehicles)?.quantity,
-    );
-    const due = total == null ? null : Math.max(0, total - Number(booking.amount));
-    if (due != null && action.balanceReceived > due + 0.005) {
-      return fail("validation", "The amount received is more than the balance due.", {
-        balanceReceived: "bookings.errors.exceedsBalance",
-      });
-    }
-  }
+  // Selling records the full balance as received (deposit + balance = total price).
+  const total = quantityTotal(
+    booking.selling_price == null ? null : Number(booking.selling_price),
+    one(booking.vehicles)?.quantity,
+  );
+  const fullBalance = total == null ? 0 : Math.max(0, Math.round((total - Number(booking.amount)) * 100) / 100);
 
   const patch =
     action.action === "cancel"
@@ -554,7 +591,7 @@ export async function updateBooking(
         }
       : {
           status: "converted" as const,
-          balance_received: action.balanceReceived,
+          balance_received: fullBalance,
           sold_at: new Date().toISOString(),
           sold_by: context.userId,
         };
@@ -675,5 +712,35 @@ export async function getVehicleBooking(
     customer: customer ? { name: customer.display_name, phone: customer.phone } : null,
     salesperson: row.salesperson_id ? (names.get(row.salesperson_id) ?? null) : null,
     bookedBy: row.created_by ? (names.get(row.created_by) ?? null) : null,
+  };
+}
+
+export type BookingDetail = BookingListItem & {
+  vehiclePhotoUrl: string | null;
+  bookedBy: string | null;
+  paymentTerms: PaymentTerms;
+};
+
+/** One booking (by its number) with what the booking screen shows. Same visibility rules as the list. */
+export async function getBookingDetail(
+  number: string,
+  context: UserContext,
+): Promise<Result<BookingDetail | null>> {
+  const [list, terms] = await Promise.all([listBookings(context, { number }), getPaymentTerms()]);
+  if (list.error) return list;
+  const booking = list.data[0];
+  if (!booking) return { data: null, error: null };
+  const [photos, names] = await Promise.all([
+    booking.vehicle ? getPrimaryPhotoUrls([booking.vehicle.id]) : Promise.resolve(new Map<string, string | null>()),
+    profileNames(booking.createdBy ? [booking.createdBy] : []),
+  ]);
+  return {
+    data: {
+      ...booking,
+      vehiclePhotoUrl: booking.vehicle ? (photos.get(booking.vehicle.id) ?? null) : null,
+      bookedBy: booking.createdBy ? (names.get(booking.createdBy) ?? null) : null,
+      paymentTerms: terms,
+    },
+    error: null,
   };
 }

@@ -270,71 +270,106 @@
     "unread": "{count} unread",
     "markRead": "Mark as read",
     "markAllRead": "Mark all as read",
-    "sampleNote": "These notices are sample layout data, not live showroom events.",
-    "items": {
-      "lead": {
-        "title": "New lead assigned",
-        "body": "A showroom enquiry is waiting for follow-up."
+    "open": "Open",
+    "types": {
+      "bookingAutoCancelled": {
+        "title": "Booking cancelled: no deposit",
+        "body": "Booking {number} for {vehicle} was cancelled because no deposit was received within {duration}. The car is Ready for sale again."
       },
-      "payment": {
-        "title": "Payment recorded",
-        "body": "A sample payment notice for the layout."
+      "bookingBalanceOverdue": {
+        "title": "Full payment overdue",
+        "body": "Booking {number} for {vehicle} has not been paid in full within {duration}. Outstanding: {amount}."
       }
+    },
+    "alert": {
+      "title": "{count, plural, one {A booking was cancelled automatically} other {# bookings were cancelled automatically}}",
+      "description": "No deposit was received within {duration}, so the booking was cancelled and the car is Ready for sale again.",
+      "people": "Customer: {customer} · Sales executive: {salesperson}",
+      "more": "+{count} more",
+      "viewBookings": "View all cancelled bookings",
+      "dismiss": "Dismiss",
+      "view": "View",
+      "viewBooking": "View booking"
+    },
+    "push": {
+      "enable": "Turn on push alerts",
+      "enabled": "Push alerts are on for this device.",
+      "blocked": "Push alerts are blocked in this browser's site settings.",
+      "failed": "Push alerts could not be turned on."
+    },
+    "balanceAlert": {
+      "title": "{count, plural, one {A booking is not paid in full} other {# bookings are not paid in full}}",
+      "description": "The full amount was not received within {duration} of booking. Follow up with the customer.",
+      "outstanding": "Outstanding {amount}",
+      "viewBookings": "View all bookings"
     }
   },
   "dashboard": {
     "title": "Dashboard",
-    "description": "A snapshot of stock, pipeline, and work waiting on the floor.",
-    "sample": "These figures are sample placeholders. Live numbers will come from Supabase in a later phase.",
+    "greeting": "Hello, {name}",
+    "description": "Stock, bookings, payments and sales across the showroom.",
+    "descriptionOwn": "Your bookings, payments and sales, with the showroom's stock.",
+    "viewAll": "View all",
     "kpis": {
-      "stock": "Vehicles in stock",
-      "available": "Available",
-      "reserved": "Booked",
-      "sales": "Sales this month"
+      "readyForSale": "Ready for sale",
+      "readyHint": "{transit} in transit · {booked} booked",
+      "soldThisMonth": "Sales this month",
+      "mySoldThisMonth": "My sales this month",
+      "soldUnits": "{count, plural, one {# car sold} other {# cars sold}}",
+      "soldChange": "{count, plural, one {# car} other {# cars}} · {change} vs last month",
+      "activeBookings": "Active bookings",
+      "activeValue": "{value} booked value",
+      "toCollect": "Still to collect",
+      "overdueCount": "{count, plural, one {# full payment overdue} other {# full payments overdue}}",
+      "awaitingDeposit": "{count, plural, =0 {No deposits pending} one {# awaiting deposit} other {# awaiting deposit}}"
     },
-    "salesChart": "Sales",
-    "inventoryChart": "Inventory mix",
-    "chartCaption": "Sample chart. It is not connected to sales or stock.",
-    "aging": "Inventory aging",
-    "agingCaption": "Sample age bands for stock that is still unsold.",
-    "pending": "Pending actions",
-    "recentVehicles": "Recent vehicles",
-    "recentLeads": "Recent leads",
-    "recentSales": "Recent sales",
-    "columns": {
-      "stock": "Stock",
-      "vehicle": "Vehicle",
-      "price": "Price",
-      "status": "Status",
-      "branch": "Branch",
-      "customer": "Customer",
-      "source": "Source",
-      "reference": "Reference",
-      "amount": "Amount"
+    "sales": {
+      "title": "Sales by month",
+      "titleOwn": "My sales by month",
+      "description": "Value of bookings marked sold, last 6 months. Hover a month for details.",
+      "units": "{count, plural, one {# car} other {# cars}}"
     },
-    "status": {
-      "available": "Available",
-      "reserved": "Booked",
-      "workshop": "Workshop",
+    "attention": {
+      "title": "Needs attention",
+      "description": "Deposits still due and full payments overdue or due within 2 days.",
+      "empty": "Nothing needs attention right now.",
+      "deposit_due": "Deposit due by {date}",
+      "balance_overdue": "Full payment overdue since {date}",
+      "balance_due_soon": "Full payment due by {date}"
+    },
+    "recent": {
+      "title": "Latest bookings",
+      "empty": "No bookings yet."
+    },
+    "stock": {
+      "title": "Stock",
+      "askingValue": "{value} at asking price"
+    },
+    "outcomes": {
+      "title": "Booking outcomes",
+      "description": "Bookings made in the last 90 days.",
+      "conversion": "sold",
       "sold": "Sold",
-      "new": "New",
-      "contacted": "Contacted",
-      "qualified": "Qualified",
-      "draft": "Draft",
-      "confirmed": "Confirmed"
+      "active": "Still active",
+      "cancelled": "Cancelled"
+    },
+    "leaders": {
+      "title": "Sales executives",
+      "description": "Sold this month.",
+      "empty": "No sales this month yet.",
+      "detail": "{sold} sold · {active} active"
+    },
+    "age": {
+      "title": "Stock age",
+      "description": "How long unsold cars have been in stock.",
+      "units": "{count, plural, one {# car} other {# cars}}"
     },
     "agingBands": {
       "fresh": "0–30 days",
       "mid": "31–60 days",
       "aging": "61–90 days",
       "old": "90+ days"
-    },
-    "actions": {
-      "reservation": "Reservation to confirm",
-      "pricing": "Pricing to set",
-      "bookings": "Bookings to follow up"
-    },
-    "viewAll": "View all"
+    }
   },
   "modules": {
     "inventory": {
@@ -403,7 +438,7 @@
     },
     "documents": {
       "title": "Documents",
-      "description": "Mulkiya, service history, and deal files."
+      "description": "Keep your important documents in one private place. Only you and Super Admins can see them."
     },
     "reports": {
       "title": "Reports",
@@ -502,19 +537,14 @@
     },
     "settings": {
       "title": "Settings",
-      "description": "Appearance, language, and account preferences."
+      "description": "Booking payment terms and display preferences."
     }
   },
   "settings": {
     "appearance": "Appearance",
     "appearanceHint": "Light, dark, or match this device.",
     "language": "Language",
-    "languageHint": "English is left to right. Arabic switches the workspace to right to left.",
-    "security": "Security",
-    "securityHint": "Passwords are managed through your invitation and reset links.",
-    "passwordHint": "Use Forgot password on the sign-in screen if you need to change your password.",
-    "preferences": "Dealership preferences",
-    "preferencesHint": "Branch, currency display, and document defaults will live here later. Currency is AED and the timezone is Asia/Dubai.",
+    "languageHint": "Arabic switches the workspace to right to left.",
     "catalog": {
       "title": "Vehicle master catalog",
       "description": "UAE brands, models, years, and verified trims used by Inventory. Deactivate instead of deleting records linked to vehicles.",
@@ -544,7 +574,48 @@
       "delete": "Delete",
       "cancel": "Cancel",
       "deleteConfirm": "Delete “{name}”?"
-    }
+    },
+    "paymentTerms": {
+      "title": "Booking payment terms",
+      "description": "Deadlines count from the date and time a car is booked.",
+      "save": "Save payment terms",
+      "saved": "Payment terms saved.",
+      "saveFailed": "Payment terms could not be saved.",
+      "appliesTo": "Changes apply to all open bookings. Checks also run automatically every minute while the app is open.",
+      "readOnly": "Only users who manage settings can change these.",
+      "depositMinutes": {
+        "label": "Deposit deadline",
+        "hint": "Time after booking to receive a deposit."
+      },
+      "balanceMinutes": {
+        "label": "Full payment deadline",
+        "hint": "Time after booking to receive the full amount."
+      },
+      "units": {
+        "days": "days",
+        "hours": "hrs",
+        "minutes": "min"
+      },
+      "timeline": {
+        "start": "Booked",
+        "after": "+{duration}",
+        "booked": "Car booked",
+        "deposit": "Deposit due",
+        "depositMissed": "If missed: booking cancelled, car back to Ready for sale, Super Admins alerted.",
+        "balance": "Full payment due",
+        "balanceMissed": "If missed: sales executive and Super Admins alerted."
+      },
+      "runNow": "Run checks now",
+      "ran": "Checks done: {cancelled} cancelled, {overdue} full-payment alerts.",
+      "runFailed": "The checks could not run.",
+      "errors": {
+        "parts": "Use 0–365 days, 0–23 hours and 0–59 minutes.",
+        "range": "Set a deadline between 1 minute and 365 days.",
+        "balanceBeforeDeposit": "The full payment deadline can't be earlier than the deposit deadline."
+      }
+    },
+    "display": "Display",
+    "displayHint": "Applies to you on this device."
   },
   "media": {
     "title": "Photos",
@@ -2181,12 +2252,10 @@
       "depositPaid": "Deposit paid",
       "balanceDue": "Balance due",
       "balanceReceived": "Balance amount received",
-      "balanceHint": "Enter the amount collected from the customer now.",
       "paidInFull": "Paid in full.",
-      "outstanding": "{amount} will remain outstanding.",
       "effect": "The booking closes and the car moves to Sold. This can't be undone from the bookings screen.",
       "confirm": "Confirm sale",
-      "fillFull": "Use full balance"
+      "fullBalanceHint": "The full balance is recorded as received, so the booking is paid in full."
     },
     "cancelDialog": {
       "title": "Cancel booking",
@@ -2194,6 +2263,74 @@
       "reason": "Reason (optional)",
       "reasonPlaceholder": "e.g. Customer changed their mind",
       "confirm": "Cancel booking"
+    },
+    "depositDueBy": "No deposit · due by {date}",
+    "autoCancelled": "Cancelled automatically: no deposit received in time",
+    "cancelReason": "Reason: {reason}",
+    "depositHint": "No deposit yet? Leave it blank. Without a deposit within {duration}, the booking is cancelled automatically.",
+    "depositHintEdit": "Without a deposit by {date}, this booking is cancelled automatically.",
+    "balanceDueBy": "Full payment due by {date}",
+    "balanceOverdueSince": "Full payment overdue since {date}",
+    "detail": {
+      "subtitle": "Booked {date}",
+      "payment": {
+        "title": "Payment",
+        "deposit": "Deposit",
+        "balanceReceived": "Balance received",
+        "outstanding": "Outstanding",
+        "total": "Total price",
+        "collected": "Collected",
+        "paid": "paid",
+        "perUnit": "{price} × {count} units",
+        "barLabel": "{share}% of the total collected",
+        "remaining": "{amount} still to collect from the customer.",
+        "fullyPaid": "Paid in full.",
+        "noPrice": "No selling price set for this booking."
+      },
+      "nextDeadline": {
+        "title": "Next deadline",
+        "left": "left",
+        "now": "due",
+        "deposit": "Deposit due in",
+        "balance": "Full payment due in",
+        "applying": "Applying…",
+        "depositMissed": "If missed: booking cancelled automatically.",
+        "balanceMissed": "If missed: sales executive and Super Admins alerted.",
+        "none": "No open deadlines.",
+        "noneCancelled": "This booking is closed.",
+        "overdue": "Full payment was due {date}."
+      },
+      "people": {
+        "title": "People",
+        "customer": "Customer",
+        "salesperson": "Sales executive",
+        "bookedBy": "Booked by"
+      },
+      "timeline": {
+        "title": "Timeline",
+        "booked": "Car booked",
+        "depositReceived": "Deposit received · {amount}",
+        "depositDue": "Deposit",
+        "depositBy": "Deadline was {date}",
+        "depositMissed": "Not received by {date}",
+        "dueBy": "Due by {date}",
+        "balanceDue": "Full payment",
+        "paidInFull": "Paid in full",
+        "balanceAlerted": "Overdue · alert sent {date}",
+        "balanceMissed": "Overdue since {date}",
+        "sold": "Marked as sold",
+        "cancelled": "Booking cancelled",
+        "autoCancelled": "Cancelled automatically"
+      },
+      "banner": {
+        "cancelled": "This booking was cancelled.",
+        "autoCancelled": "This booking was cancelled automatically: no deposit was received in time.",
+        "overdue": "Full payment is overdue",
+        "overdueHint": "The full amount was due by {date}. Follow up with the customer.",
+        "sold": "Sold {date}"
+      },
+      "notes": "Notes",
+      "noNotes": "No notes."
     }
   },
   "customers": {
@@ -2232,5 +2369,68 @@
     "emptyHint": "Customers are added when you create a booking.",
     "noMatches": "No matching customers",
     "noMatchesHint": "Try a different name, phone number, or filter."
+  },
+  "duration": {
+    "days": "{count, plural, one {# day} other {# days}}",
+    "hours": "{count, plural, one {# hour} other {# hours}}",
+    "minutes": "{count, plural, one {# minute} other {# minutes}}"
+  },
+  "documents": {
+    "title": "My documents",
+    "description": "Keep your important documents in one private place. Only you and Super Admins can see them.",
+    "upload": "Upload document",
+    "uploadTitle": "Upload a document",
+    "uploadDescription": "PDF, image or Word file, up to 10 MB.",
+    "dropzone": "Choose a file or drag it here",
+    "fileTypes": "PDF, JPG, PNG, WEBP, HEIC, DOC, DOCX · max 10 MB",
+    "removeFile": "Remove file",
+    "category": "Type",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Emirates ID (front and back)",
+    "expiresOn": "Expiry date",
+    "noExpiry": "No expiry date",
+    "notes": "Notes",
+    "cancel": "Cancel",
+    "uploaded": "Document uploaded.",
+    "deleted": "Document deleted.",
+    "categories": {
+      "emirates_id": "Emirates ID",
+      "passport": "Passport",
+      "visa": "Visa",
+      "driving_license": "Driving licence",
+      "contract": "Contract",
+      "certificate": "Certificate",
+      "other": "Other"
+    },
+    "allCategories": "All",
+    "scope": {
+      "label": "Whose documents",
+      "mine": "Mine",
+      "all": "Everyone"
+    },
+    "search": "Search documents",
+    "clearSearch": "Clear search",
+    "empty": "No documents yet",
+    "emptyHint": "Upload your Emirates ID, passport, visa or any other document you need to keep handy.",
+    "noMatches": "No documents match your filters.",
+    "attention": "{count, plural, one {# document has expired or expires within 30 days.} other {# documents have expired or expire within 30 days.}}",
+    "expired": "Expired {date}",
+    "expiresIn": "{count, plural, =0 {Expires today} one {Expires in # day} other {Expires in # days}}",
+    "expires": "Expires {date}",
+    "uploadedOn": "Uploaded {date}",
+    "view": "View",
+    "download": "Download",
+    "delete": "Delete",
+    "deleteTitle": "Delete document",
+    "deleteDescription": "“{title}” will be permanently deleted. This can't be undone.",
+    "errors": {
+      "fileRequired": "Choose a file to upload.",
+      "empty": "This file is empty.",
+      "tooLarge": "The file is larger than 10 MB.",
+      "invalidType": "Use a PDF, image (JPG, PNG, WEBP, HEIC) or Word file.",
+      "uploadFailed": "The document could not be uploaded.",
+      "deleteFailed": "The document could not be deleted.",
+      "loadFailed": "Documents could not be loaded."
+    }
   }
 }

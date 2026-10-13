@@ -4,8 +4,9 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
+import { PushPrompt } from "@/components/notifications/push-prompt";
+import { useNotificationText } from "@/components/notifications/use-notification-text";
 import { useNotifications } from "@/components/providers/notification-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { appConfig, isAppLocale } from "@/config/app";
 import { Link } from "@/lib/i18n/navigation";
@@ -17,6 +18,7 @@ export function NotificationList() {
   const localeValue = useLocale();
   const locale = isAppLocale(localeValue) ? localeValue : appConfig.defaultLocale;
   const { items, markRead, markAllRead, unreadCount } = useNotifications();
+  const text = useNotificationText();
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,12 +26,14 @@ export function NotificationList() {
         title={t("modules.notifications.title")}
         description={t("modules.notifications.description")}
         actions={
-          <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
-            {t("notifications.markAllRead")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <PushPrompt />
+            <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
+              {t("notifications.markAllRead")}
+            </Button>
+          </div>
         }
       />
-      <p className="text-muted-foreground text-sm">{t("notifications.sampleNote")}</p>
       {items.length === 0 ? (
         <EmptyState title={t("empty.notifications")} description={t("empty.notificationsHint")} />
       ) : (
@@ -37,11 +41,8 @@ export function NotificationList() {
           {items.map((item) => (
             <li key={item.id}>
               <article className={cn("rounded-xl border bg-card p-4", !item.read && "border-brand/40")}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-medium">{t(item.titleKey)}</h2>
-                  <Badge variant="outline">{t("common.sample")}</Badge>
-                </div>
-                <p className="text-muted-foreground mt-1 text-sm">{t(item.bodyKey)}</p>
+                <h2 className="font-medium">{text(item).title}</h2>
+                <p className="text-muted-foreground mt-1 text-sm">{text(item).body}</p>
                 <p className="text-muted-foreground mt-2 text-xs">
                   {formatRelativeTime(item.createdAt, locale)}
                 </p>
@@ -56,8 +57,9 @@ export function NotificationList() {
                     size="sm"
                     nativeButton={false}
                     render={<Link href={item.href} />}
+                    onClick={() => markRead(item.id)}
                   >
-                    {t("common.viewAll")}
+                    {t("notifications.open")}
                   </Button>
                 </div>
               </article>

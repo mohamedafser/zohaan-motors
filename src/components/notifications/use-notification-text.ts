@@ -1,0 +1,53 @@
+"use client";
+
+import { useLocale, useTranslations } from "next-intl";
+
+import type { AppLocale } from "@/config/app";
+import { useFormatDuration } from "@/hooks/use-format-duration";
+import { formatCurrency } from "@/lib/utils/currency";
+
+import type { AppNotification, BookingPaymentData } from "@/types/notification";
+
+export const BOOKING_AUTO_CANCELLED = "booking_auto_cancelled";
+export const BOOKING_BALANCE_OVERDUE = "booking_balance_overdue";
+
+export function bookingVehicleLabel(data: BookingPaymentData) {
+  return data.vehicleTitle || data.stockNumber || "—";
+}
+
+/** The missed deadline in minutes (older rows stored whole days). */
+export function deadlineMinutes(data: BookingPaymentData, fallbackDays: number) {
+  return data.deadlineMinutes ?? (data.days ?? fallbackDays) * 24 * 60;
+}
+
+/** Title and body in the viewer's language, falling back to the stored English text. */
+export function useNotificationText() {
+  const t = useTranslations("notifications.types");
+  const locale = useLocale() as AppLocale;
+  const formatDuration = useFormatDuration();
+  return (item: AppNotification) => {
+    const data = item.data as BookingPaymentData;
+    if (item.type === BOOKING_AUTO_CANCELLED) {
+      return {
+        title: t("bookingAutoCancelled.title"),
+        body: t("bookingAutoCancelled.body", {
+          number: data.bookingNumber ?? "—",
+          vehicle: bookingVehicleLabel(data),
+          duration: formatDuration(deadlineMinutes(data, 3)),
+        }),
+      };
+    }
+    if (item.type === BOOKING_BALANCE_OVERDUE) {
+      return {
+        title: t("bookingBalanceOverdue.title"),
+        body: t("bookingBalanceOverdue.body", {
+          number: data.bookingNumber ?? "—",
+          vehicle: bookingVehicleLabel(data),
+          duration: formatDuration(deadlineMinutes(data, 7)),
+          amount: formatCurrency(data.outstanding ?? 0, locale, data.currency ?? "AED"),
+        }),
+      };
+    }
+    return { title: item.title, body: item.message };
+  };
+}

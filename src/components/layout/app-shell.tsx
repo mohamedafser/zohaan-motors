@@ -6,7 +6,9 @@ import { MobileNav } from "@/components/navigation/mobile-nav";
 import { HeaderBar } from "@/components/navigation/header-bar";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { PermissionProvider } from "@/hooks/use-permission";
+import { BookingPaymentAlerts } from "@/components/notifications/booking-payment-alert";
 import { NotificationProvider } from "@/components/providers/notification-provider";
+import { hasPermission } from "@/lib/permissions";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import type { UserContext } from "@/types/auth";
 
@@ -16,7 +18,7 @@ export function AppShell({ user, children }: { user: UserContext; children: Reac
 
   return (
     <PermissionProvider value={user}>
-      <NotificationProvider>
+      <NotificationProvider enabled={hasPermission(user.permissions, "notification.view", user.roles)}>
         <div className="bg-background flex h-svh flex-col overflow-hidden">
           <a
             href="#main"
@@ -32,6 +34,8 @@ export function AppShell({ user, children }: { user: UserContext; children: Reac
                 id="main"
                 className="mx-auto flex w-full max-w-[1600px] min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-6 lg:px-8 lg:py-8 lg:pb-10"
               >
+                {/* Booking payment alerts stay on every page until dismissed. */}
+                <BookingPaymentAlerts />
                 {children}
               </main>
             </div>

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { CurrencyInput } from "@/components/forms/currency-input";
 import { LoadingButton } from "@/components/shared/loading-button";
 import {
   Dialog,
@@ -15,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { AppLocale } from "@/config/app";
@@ -59,26 +59,15 @@ function MarkSoldForm({ booking, onOpenChange, onDone }: DialogProps & { booking
   const money = (value: number) => formatCurrency(value, locale, booking.currency);
   const due = booking.balanceDue;
 
-  // Prefilled with the full balance: the usual case is the customer paying it all on handover.
-  const [received, setReceived] = useState<number | null>(due ?? null);
+  // Selling closes the booking with the full balance received; it isn't editable here.
+  const received = due ?? 0;
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const outstanding = due != null && received != null ? Math.round((due - received) * 100) / 100 : null;
-  const tooMuch = outstanding != null && outstanding < 0;
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (received == null || !Number.isFinite(received) || received < 0) {
-      setError("validation.required");
-      return;
-    }
-    if (tooMuch) {
-      setError("bookings.errors.exceedsBalance");
-      return;
-    }
     setSaving(true);
-    const json = await patchBooking(booking.id, { action: "sold", balanceReceived: received });
+    const json = await patchBooking(booking.id, { action: "sold" });
     setSaving(false);
     if (json?.status !== "success") {
       const fieldError = json?.status === "error" ? json.fieldErrors?.balanceReceived : undefined;
@@ -118,31 +107,15 @@ function MarkSoldForm({ booking, onOpenChange, onDone }: DialogProps & { booking
       </dl>
 
       <div className="grid gap-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="sold-balance-received">{t("sold.balanceReceived")}</Label>
-          {due != null && received !== due ? (
-            <button
-              type="button"
-              className="text-brand text-xs font-medium hover:underline"
-              onClick={() => {
-                setReceived(due);
-                setError(null);
-              }}
-            >
-              {t("sold.fillFull")}
-            </button>
-          ) : null}
-        </div>
-        <CurrencyInput
+        <Label htmlFor="sold-balance-received">{t("sold.balanceReceived")}</Label>
+        <Input
           id="sold-balance-received"
-          autoFocus
-          value={received}
-          onChange={(value) => {
-            setReceived(value);
-            setError(null);
-          }}
-          invalid={!!error || tooMuch}
-          describedBy="sold-balance-hint"
+          value={money(received)}
+          readOnly
+          aria-readonly
+          tabIndex={-1}
+          aria-describedby="sold-balance-hint"
+          className="bg-muted/60 cursor-default font-semibold tabular-nums focus-visible:ring-0"
         />
         <div id="sold-balance-hint" aria-live="polite" className="min-h-5 text-xs">
           {error ? (
@@ -150,22 +123,10 @@ function MarkSoldForm({ booking, onOpenChange, onDone }: DialogProps & { booking
               <CircleAlertIcon className="size-3.5" aria-hidden />
               {tRoot(error as Parameters<typeof tRoot>[0])}
             </p>
-          ) : outstanding == null ? (
-            <p className="text-muted-foreground">{t("sold.balanceHint")}</p>
-          ) : outstanding === 0 ? (
+          ) : (
             <p className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
               <CircleCheckIcon className="size-3.5" aria-hidden />
-              {t("sold.paidInFull")}
-            </p>
-          ) : tooMuch ? (
-            <p className="text-destructive flex items-center gap-1.5">
-              <CircleAlertIcon className="size-3.5" aria-hidden />
-              {t("errors.exceedsBalance")}
-            </p>
-          ) : (
-            <p className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-              <CircleAlertIcon className="size-3.5" aria-hidden />
-              {t("sold.outstanding", { amount: money(outstanding) })}
+              {t("sold.fullBalanceHint")}
             </p>
           )}
         </div>

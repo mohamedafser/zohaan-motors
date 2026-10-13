@@ -3,8 +3,9 @@
 import { BellIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { PushPrompt } from "@/components/notifications/push-prompt";
+import { useNotificationText } from "@/components/notifications/use-notification-text";
 import { useNotifications } from "@/components/providers/notification-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ export function NotificationMenu() {
   const localeValue = useLocale();
   const locale = isAppLocale(localeValue) ? localeValue : appConfig.defaultLocale;
   const { items, unreadCount, markRead, markAllRead } = useNotifications();
+  const text = useNotificationText();
 
   return (
     <DropdownMenu>
@@ -37,7 +39,7 @@ export function NotificationMenu() {
         <BellIcon />
         {unreadCount > 0 ? (
           <span className="bg-brand text-brand-foreground absolute end-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.65rem] font-semibold">
-            {unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         ) : null}
       </DropdownMenuTrigger>
@@ -59,7 +61,7 @@ export function NotificationMenu() {
               {t("empty.notifications")}
             </li>
           ) : (
-            items.map((item) => (
+            items.slice(0, 20).map((item) => (
               <li key={item.id} className="border-b last:border-b-0">
                 <Link
                   href={item.href}
@@ -69,11 +71,8 @@ export function NotificationMenu() {
                     !item.read && "bg-brand/8",
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t(item.titleKey)}</span>
-                    <Badge variant="outline">{t("common.sample")}</Badge>
-                  </span>
-                  <span className="text-muted-foreground mt-1 block text-xs">{t(item.bodyKey)}</span>
+                  <span className="block text-sm font-medium">{text(item).title}</span>
+                  <span className="text-muted-foreground mt-1 block text-xs">{text(item).body}</span>
                   <span className="text-muted-foreground mt-1 block text-xs">
                     {formatRelativeTime(item.createdAt, locale)}
                   </span>
@@ -82,7 +81,8 @@ export function NotificationMenu() {
             ))
           )}
         </ul>
-        <div className="border-t p-2">
+        <div className="grid gap-1 border-t p-2">
+          <PushPrompt className="w-full" />
           <Button
             variant="ghost"
             className="w-full"

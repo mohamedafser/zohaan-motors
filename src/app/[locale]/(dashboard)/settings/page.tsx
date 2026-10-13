@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { LanguageSwitcher } from "@/components/navigation/language-switcher";
-import { ThemeToggle } from "@/components/navigation/theme-toggle";
+import { DisplayPreferences } from "@/components/settings/display-preferences";
+import { PaymentTermsCard } from "@/components/settings/payment-terms-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePagePermission } from "@/lib/auth/authorize";
+import { hasPermission } from "@/lib/permissions";
+import { getPaymentTerms } from "@/lib/settings/payment-terms";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
@@ -13,47 +15,26 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SettingsPage() {
-  await requirePagePermission("settings.view");
+  const context = await requirePagePermission("settings.view");
   const t = await getTranslations();
+  const paymentTerms = await getPaymentTerms();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <PageHeader title={t("modules.settings.title")} description={t("modules.settings.description")} />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("settings.appearance")}</CardTitle>
-            <CardDescription>{t("settings.appearanceHint")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ThemeToggle />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("settings.language")}</CardTitle>
-            <CardDescription>{t("settings.languageHint")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LanguageSwitcher />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("settings.security")}</CardTitle>
-            <CardDescription>{t("settings.securityHint")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">{t("settings.passwordHint")}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("settings.preferences")}</CardTitle>
-            <CardDescription>{t("settings.preferencesHint")}</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <PaymentTermsCard
+        initial={paymentTerms}
+        canManage={hasPermission(context.permissions, "settings.manage", context.roles)}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.display")}</CardTitle>
+          <CardDescription>{t("settings.displayHint")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DisplayPreferences />
+        </CardContent>
+      </Card>
     </div>
   );
 }

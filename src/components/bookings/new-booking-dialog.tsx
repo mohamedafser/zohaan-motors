@@ -20,6 +20,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import type { BookableVehicle, CustomerOption, PersonOption } from "@/lib/bookings/service";
 import { firstFieldErrors } from "@/lib/validation";
+import { useFormatDuration } from "@/hooks/use-format-duration";
 import { createBookingSchema } from "@/lib/validation/booking";
 import type { AppLocale } from "@/config/app";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -69,6 +70,8 @@ export function NewBookingDialog({
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [salesExecutives, setSalesExecutives] = useState<PersonOption[]>([]);
   const [selfSalespersonId, setSelfSalespersonId] = useState<string | null>(null);
+  const [depositMinutes, setDepositMinutes] = useState<number | null>(null);
+  const formatDuration = useFormatDuration();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -95,6 +98,7 @@ export function NewBookingDialog({
         setCustomers(json.data.customers);
         setSalesExecutives(json.data.salesExecutives);
         setSelfSalespersonId(json.data.selfSalespersonId);
+        setDepositMinutes(json.data.paymentTerms?.depositMinutes ?? null);
         if (json.data.customers.length === 0) {
           setForm((prev) => ({ ...prev, customerMode: canCreateCustomer ? "new" : "existing" }));
         }
@@ -124,7 +128,8 @@ export function NewBookingDialog({
   function toPayload(values: FormValues) {
     return {
       ...values,
-      deposit: values.deposit === "" ? Number.NaN : Number(values.deposit),
+      // Deposit is optional: blank means none received yet.
+      deposit: values.deposit.trim() === "" ? 0 : Number(values.deposit),
       sellingPrice: values.sellingPrice === "" ? Number.NaN : Number(values.sellingPrice),
       // Only multi-unit cars send a quantity; otherwise the whole record is booked.
       quantity: unitsFor(values.vehicleId) > 1 ? (values.quantity === "" ? Number.NaN : Number(values.quantity)) : undefined,
@@ -391,9 +396,13 @@ export function NewBookingDialog({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="booking-deposit">{t("deposit")}</Label>
+                <Label htmlFor="booking-deposit">
+                  {t("deposit")}
+                  <span className="text-muted-foreground font-normal">({tRoot("common.optional")})</span>
+                </Label>
                 <Input
                   id="booking-deposit"
+                  placeholder="0"
                   type="number"
                   inputMode="decimal"
                   min={0}
@@ -403,6 +412,9 @@ export function NewBookingDialog({
                   aria-invalid={!!fieldErrors.deposit || undefined}
                 />
                 {error("deposit")}
+                {!fieldErrors.deposit && depositMinutes != null && !(Number(form.deposit) > 0) ? (
+                  <p className="text-muted-foreground text-xs">{t("depositHint", { duration: formatDuration(depositMinutes) })}</p>
+                ) : null}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="booking-selling-price">

@@ -6,10 +6,12 @@ import { validationMessages } from "@/lib/validation/index";
 const required = z.string().trim().min(1, { error: validationMessages.required });
 
 const bookingAmounts = {
+  /** Optional: a booking can be made before any deposit is received (0 = none yet). */
   deposit: z
     .number({ error: validationMessages.number })
     .finite({ error: validationMessages.number })
-    .nonnegative({ error: validationMessages.currency }),
+    .nonnegative({ error: validationMessages.currency })
+    .default(0),
   /** Agreed price for the car; the server checks it against the minimum selling price. */
   sellingPrice: z
     .number({ error: validationMessages.required })
@@ -62,14 +64,8 @@ export const editBookingSchema = z.object({
 
 export const bookingActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), reason: z.string().trim().max(500).optional() }),
-  z.object({
-    action: z.literal("sold"),
-    /** Balance paid on completion, on top of the deposit. */
-    balanceReceived: z
-      .number({ error: validationMessages.required })
-      .finite({ error: validationMessages.required })
-      .nonnegative({ error: validationMessages.currency }),
-  }),
+  /** Selling records the full balance as received; the server works it out. */
+  z.object({ action: z.literal("sold") }),
   editBookingSchema.extend({ action: z.literal("edit") }),
 ]);
 

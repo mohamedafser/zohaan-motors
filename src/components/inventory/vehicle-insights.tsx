@@ -17,7 +17,6 @@ import {
   ShipIcon,
   TrendingDownIcon,
   TrendingUpIcon,
-  TruckIcon,
   WrenchIcon,
   ZapIcon,
   type LucideIcon,
@@ -160,7 +159,6 @@ const JOURNEY: { status: VehicleStatus; icon: LucideIcon }[] = [
   { status: "ready_for_sale", icon: BadgeCheckIcon },
   { status: "reserved", icon: CalendarCheckIcon },
   { status: "sold", icon: HandCoinsIcon },
-  { status: "delivered", icon: TruckIcon },
 ];
 
 /** Workshop-type detours sit between "In transit" and "Ready for sale". */
@@ -172,11 +170,17 @@ const DETOURS: Partial<Record<VehicleStatus, number>> = {
 
 export function LifecycleStepper({ status }: { status: VehicleStatus }) {
   const t = useTranslations();
-  const onPath = JOURNEY.findIndex((step) => step.status === status);
+  // Delivery isn't tracked: Sold is the last step, and older "delivered" cars show as Sold.
+  const onPath = JOURNEY.findIndex((step) => step.status === (status === "delivered" ? "sold" : status));
   const current = onPath >= 0 ? onPath : (DETOURS[status] ?? -1);
   const detour = onPath < 0 && current >= 0;
   const offPath = current < 0; // returned / archived
   const progress = offPath ? 0 : (current / (JOURNEY.length - 1)) * 100;
+  // Sold is the end of the journey: show it as completed, not in progress.
+  const finished = !offPath && current === JOURNEY.length - 1;
+  // Dots sit in the middle of equal columns; the track runs from the first dot to the last.
+  const edge = 50 / JOURNEY.length;
+  const span = 100 - 2 * edge;
 
   return (
     <div className="grid gap-2">
@@ -191,22 +195,26 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
           </span>
         ) : null}
       </div>
-      <ol className="relative grid grid-cols-5">
+      <ol className="relative grid" style={{ gridTemplateColumns: `repeat(${JOURNEY.length}, minmax(0, 1fr))` }}>
         {/* Track and animated fill, drawn between the first and last dot. */}
-        <span className="bg-border absolute inset-x-[10%] top-4 h-0.5 rounded-full" aria-hidden />
         <span
-          className="bg-gold animate-grow-x absolute start-[10%] top-4 h-0.5 rounded-full ltr:origin-left rtl:origin-right"
-          style={{ width: `${progress * 0.8}%`, animationDelay: "200ms" }}
+          className="bg-border absolute top-4 h-0.5 rounded-full"
+          style={{ insetInlineStart: `${edge}%`, insetInlineEnd: `${edge}%` }}
+          aria-hidden
+        />
+        <span
+          className="bg-gold animate-grow-x absolute top-4 h-0.5 rounded-full ltr:origin-left rtl:origin-right"
+          style={{ insetInlineStart: `${edge}%`, width: `${(progress / 100) * span}%`, animationDelay: "200ms" }}
           aria-hidden
         />
         {JOURNEY.map((step, index) => {
-          const done = !offPath && index < current;
-          const active = !offPath && index === current;
+          const done = !offPath && (index < current || (finished && index === current));
+          const active = !offPath && !finished && index === current;
           return (
             <li
               key={step.status}
               className="relative z-10 flex flex-col items-center gap-1.5 text-center"
-              aria-current={active ? "step" : undefined}
+              aria-current={!offPath && index === current ? "step" : undefined}
             >
               <span
                 className={cn(
@@ -225,7 +233,7 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
               <span
                 className={cn(
                   "text-[11px] leading-tight",
-                  active ? "text-foreground font-semibold" : "text-muted-foreground",
+                  !offPath && index === current ? "text-foreground font-semibold" : "text-muted-foreground",
                 )}
               >
                 {t(`inventory.status.${step.status}`)}
