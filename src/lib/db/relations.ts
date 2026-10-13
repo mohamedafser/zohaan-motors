@@ -25,6 +25,7 @@ import {
   invoices,
   taxRates,
   notifications,
+  pushSubscriptions,
   auditLogs,
   documentTypes,
   acquisitionStatusHistory,
@@ -142,6 +143,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   }),
   invoices: many(invoices),
   notifications: many(notifications),
+  pushSubscriptions: many(pushSubscriptions),
   auditLogs: many(auditLogs),
   documents_deletedBy: many(documents, {
     relationName: "documents_deletedBy_profiles_id",
@@ -636,6 +638,13 @@ export const taxRatesRelations = relations(taxRates, ({ many }) => ({
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   profile: one(profiles, {
     fields: [notifications.userId],
+    references: [profiles.id],
+  }),
+}));
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [pushSubscriptions.userId],
     references: [profiles.id],
   }),
 }));

@@ -128,10 +128,15 @@ export type Database = {
       invoices: GenericTable;
       documents: GenericTable;
       notifications: GenericTable;
+      push_subscriptions: GenericTable;
+      system_settings: GenericTable;
+      staff_documents: GenericTable;
       audit_logs: GenericTable;
     };
     Views: Record<string, never>;
     Functions: {
+      cancel_unpaid_bookings: { Args: Record<PropertyKey, never>; Returns: number };
+      notify_overdue_balances: { Args: Record<PropertyKey, never>; Returns: number };
       current_user_permissions: { Args: Record<PropertyKey, never>; Returns: string[] };
       current_user_roles: { Args: Record<PropertyKey, never>; Returns: string[] };
       activate_invited_profile: { Args: Record<PropertyKey, never>; Returns: undefined };

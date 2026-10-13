@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getUserContext } from "@/lib/auth/session";
-import { dashboardSample } from "@/lib/mock/dashboard";
+import { getDashboard } from "@/lib/dashboard/service";
 
 /**
  * Dashboard summary as application/json (not RSC / HTML).
@@ -36,6 +36,6 @@ export async function GET() {
 
   return NextResponse.json({
     status: "success",
-    data: dashboardSample,
+    data: await getDashboard(context),
   });
 }

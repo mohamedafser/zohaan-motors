@@ -1,5 +1,6 @@
 import { jsonError, jsonOk, requireApiUser } from "@/lib/api/http";
 import { editBooking, updateBooking } from "@/lib/bookings/service";
+import { invalidateBookingDeadlines } from "@/lib/notifications/service";
 import { firstFieldErrors } from "@/lib/validation";
 import { bookingActionSchema } from "@/lib/validation/booking";
 
@@ -23,5 +24,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       fieldErrors: result.error.fieldErrors,
     });
   }
+  invalidateBookingDeadlines();
   return jsonOk({ ok: true });
 }

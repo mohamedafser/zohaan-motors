@@ -56,3 +56,15 @@ test("booking quantity is an optional whole number of at least 1", () => {
   assert.equal(errors({ ...base, quantity: 0 }).quantity, "validation.number");
   assert.equal(errors({ ...base, quantity: 1.5 }).quantity, "validation.number");
 });
+
+test("deposit is optional and defaults to 0", () => {
+  const withoutDeposit: Record<string, unknown> = { ...base };
+  delete withoutDeposit.deposit;
+  const created = createBookingSchema.safeParse(withoutDeposit);
+  assert.equal(created.success, true);
+  assert.equal(created.success && created.data.deposit, 0);
+
+  const edited = bookingActionSchema.safeParse({ action: "edit", sellingPrice: 148000 });
+  assert.equal(edited.success, true);
+  assert.equal(edited.success && edited.data.action === "edit" && edited.data.deposit, 0);
+});

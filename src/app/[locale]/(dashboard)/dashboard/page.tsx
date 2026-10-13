@@ -10,6 +10,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DashboardPage() {
-  await requirePagePermission("dashboard.view");
-  return <DashboardView />;
+  const context = await requirePagePermission("dashboard.view");
+  return <DashboardView context={context} />;
 }

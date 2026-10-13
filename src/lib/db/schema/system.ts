@@ -11,6 +11,7 @@ import {
   timestamp,
   index,
   jsonb,
+  unique,
   inet,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -32,8 +33,13 @@ export const notifications = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .default(sql`timezone('utc'::text, now())`)
       .notNull(),
+    data: jsonb().default({}).notNull(),
+    pushedAt: timestamp("pushed_at", { withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
+    index("notifications_push_pending_idx")
+      .using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops"))
+      .where(sql`(pushed_at IS NULL)`),
     index("notifications_user_id_idx").using(
       "btree",
       table.userId.asc().nullsLast().op("uuid_ops"),
@@ -75,6 +81,36 @@ export const notifications = pgTable(
     ),
     check("notifications_title_not_blank", sql`length(TRIM(BOTH FROM title)) > 0`),
     check("notifications_type_not_blank", sql`length(TRIM(BOTH FROM type)) > 0`),
+  ],
+).enableRLS();
+
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    userId: uuid("user_id").notNull(),
+    endpoint: text().notNull(),
+    p256dh: text().notNull(),
+    auth: text().notNull(),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .default(sql`timezone('utc'::text, now())`)
+      .notNull(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    index("push_subscriptions_user_id_idx").using(
+      "btree",
+      table.userId.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [profiles.id],
+      name: "push_subscriptions_user_id_fkey",
+    }).onDelete("cascade"),
+    unique("push_subscriptions_endpoint_unique").on(table.endpoint),
   ],
 ).enableRLS();
 

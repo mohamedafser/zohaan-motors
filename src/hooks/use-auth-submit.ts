@@ -2,6 +2,7 @@
 
 import { useRouter } from "@/lib/i18n/navigation";
 import { postAuthJson } from "@/lib/auth/client";
+import { disablePush } from "@/lib/notifications/push-client";
 import { initialAuthState, type AuthActionState } from "@/types/auth";
 import { useCallback, useState } from "react";
 
@@ -33,6 +34,8 @@ export function useAuthSubmit(path: string) {
 }
 
 export async function signOutClient() {
+  // Stop this browser receiving the signed-out user's push alerts.
+  await disablePush().catch(() => undefined);
   const result = await postAuthJson("/api/auth/logout", {});
   if (typeof window !== "undefined") {
     window.location.href = result.redirectTo ?? "/login";

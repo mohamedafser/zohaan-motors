@@ -14,6 +14,15 @@ const presets = {
     hour: "numeric",
     minute: "2-digit",
   },
+  /** Date and time with the zone, e.g. "13 Oct 2026, 1:12 pm GMT+5:30". */
+  dateTimeZone: {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 export type DatePreset = keyof typeof presets;
@@ -26,9 +35,11 @@ export function formatDate(
   value: Date | string,
   locale: AppLocale = appConfig.defaultLocale,
   preset: DatePreset = "medium",
+  /** Defaults to the dealership's zone; pass useViewerTimeZone() to show the viewer's own. */
+  timeZone: string = appConfig.timezone,
 ) {
   return new Intl.DateTimeFormat(intlLocale(locale), {
-    timeZone: appConfig.timezone,
+    timeZone,
     ...presets[preset],
   }).format(toDate(value));
 }

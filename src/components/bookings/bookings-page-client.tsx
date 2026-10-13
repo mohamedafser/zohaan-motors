@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import { CancelBookingDialog, MarkSoldDialog } from "@/components/bookings/booki
 import { EditBookingDialog } from "@/components/bookings/edit-booking-dialog";
 import { NewBookingDialog } from "@/components/bookings/new-booking-dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
+import { useNotifications } from "@/components/providers/notification-provider";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ResponsiveTable } from "@/components/tables/responsive-table";
@@ -35,8 +36,10 @@ import type { BookingListItem } from "@/lib/bookings/service";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatNumber } from "@/lib/utils/currency";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { formatDate } from "@/lib/utils/date";
 import { formatUaePhone } from "@/lib/utils/phone";
+import { bookingHref } from "@/lib/bookings/routes";
 import { vehicleHref } from "@/lib/vehicles/routes";
 
 type Filter = "active" | "sold" | "closed" | "all";
@@ -52,21 +55,28 @@ export function BookingsPageClient({
   canCreate,
   canCreateCustomer,
   ownOnly = false,
+  depositMinutes,
 }: {
   initialBookings: BookingListItem[];
   canCreate: boolean;
   canCreateCustomer: boolean;
   /** Everyone but Super Admins and Accountants sees only their own bookings ("My bookings"). */
   ownOnly?: boolean;
+  /** Payment terms from Settings. */
+  depositMinutes: number;
 }) {
   const t = useTranslations("bookings");
   const locale = useLocale() as AppLocale;
+  const timeZone = useViewerTimeZone();
   const searchParams = useSearchParams();
   const initialVehicleId = searchParams.get("vehicleId") ?? undefined;
 
   const [bookings, setBookings] = useState(initialBookings);
-  const [filter, setFilter] = useState<Filter>("active");
-  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>(() => {
+    const requested = searchParams.get("filter");
+    return requested === "sold" || requested === "closed" || requested === "all" ? requested : "active";
+  });
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const [dialogOpen, setDialogOpen] = useState(
     canCreate && (Boolean(initialVehicleId) || searchParams.get("new") === "1"),
   );
@@ -96,6 +106,32 @@ export function BookingsPageClient({
     const json = await res.json().catch(() => null);
     if (json?.status === "success") setBookings(json.data);
   }, []);
+
+  // Refresh the list the moment a payment deadline passes, so cancellations and
+  // overdue notes appear without reloading the page.
+  useEffect(() => {
+    const now = Date.now();
+    const upcoming = bookings
+      .flatMap((b) => [b.depositDueAt, b.balanceOverdue ? null : b.balanceDueAt])
+      .filter((at): at is string => !!at)
+      .map((at) => new Date(at).getTime())
+      .filter((at) => at > now);
+    if (upcoming.length === 0) return;
+    const wait = Math.min(...upcoming) - now + 3000;
+    if (wait > 60 * 60 * 1000) return;
+    const timer = window.setTimeout(() => void refresh(), wait);
+    return () => window.clearTimeout(timer);
+  }, [bookings, refresh]);
+
+  // A new booking alert (e.g. cancelled elsewhere) also means the list changed.
+  const { items: notifications } = useNotifications();
+  const latestBookingAlert = notifications.find((n) => n.type.startsWith("booking_"))?.id;
+  const seenAlert = useRef(latestBookingAlert);
+  useEffect(() => {
+    if (latestBookingAlert === seenAlert.current) return;
+    seenAlert.current = latestBookingAlert;
+    void refresh();
+  }, [latestBookingAlert, refresh]);
 
   const counts = useMemo(
     () =>
@@ -199,6 +235,7 @@ export function BookingsPageClient({
       ) : (
         <ResponsiveTable
           rows={visible}
+          hrefForRow={(b) => bookingHref(b.number)}
           columns={[
             {
               key: "booking",
@@ -206,7 +243,7 @@ export function BookingsPageClient({
               cell: (b) => (
                 <div className="grid gap-0.5 whitespace-nowrap">
                   <span className="font-mono text-xs font-medium">{b.number}</span>
-                  <span className="text-muted-foreground text-xs">{formatDate(b.reservedAt, locale)}</span>
+                  <span className="text-muted-foreground text-xs">{formatDate(b.reservedAt, locale, "dateTime", timeZone)}</span>
                 </div>
               ),
               className: "ps-4",
@@ -227,7 +264,7 @@ export function BookingsPageClient({
             {
               key: "status",
               header: t("status"),
-              cell: (b) => <StatusBadge status={`booking_${b.status}`} label={t(`statuses.${b.status}`)} />,
+              cell: (b) => <BookingStatus booking={b} />,
             },
             {
               key: "actions",
@@ -240,11 +277,14 @@ export function BookingsPageClient({
             <article key={b.id} className="bg-card grid min-w-0 gap-3 rounded-xl border p-4 shadow-xs">
               <div className="flex items-start justify-between gap-3">
                 <div className="grid gap-0.5">
-                  <span className="font-mono text-xs font-medium">{b.number}</span>
-                  <span className="text-muted-foreground text-xs">{formatDate(b.reservedAt, locale)}</span>
+                  <Link href={bookingHref(b.number)} className="hover:text-brand font-mono text-xs font-medium underline-offset-2 hover:underline">
+                    {b.number}
+                  </Link>
+                  <span className="text-muted-foreground text-xs">{formatDate(b.reservedAt, locale, "dateTime", timeZone)}</span>
                 </div>
                 <StatusBadge status={`booking_${b.status}`} label={t(`statuses.${b.status}`)} />
               </div>
+              <BookingStatusNote booking={b} />
               <div className="grid min-w-0 gap-3 sm:grid-cols-2">
                 <VehicleCell booking={b} />
                 <CustomerCell booking={b} />
@@ -263,7 +303,7 @@ export function BookingsPageClient({
         />
       )}
 
-      <EditBookingDialog booking={selected} onSaved={refresh} {...dialogProps("edit")} />
+      <EditBookingDialog booking={selected} depositMinutes={depositMinutes} onSaved={refresh} {...dialogProps("edit")} />
       <MarkSoldDialog booking={selected} onDone={refresh} {...dialogProps("sold")} />
       <CancelBookingDialog booking={selected} onDone={refresh} {...dialogProps("cancel")} />
 
@@ -279,6 +319,51 @@ export function BookingsPageClient({
       ) : null}
     </div>
   );
+}
+
+function BookingStatus({ booking }: { booking: BookingListItem }) {
+  const t = useTranslations("bookings");
+  return (
+    <div className="grid max-w-56 justify-items-start gap-1">
+      <StatusBadge status={`booking_${booking.status}`} label={t(`statuses.${booking.status}`)} />
+      <BookingStatusNote booking={booking} />
+    </div>
+  );
+}
+
+/** Payment deadlines for open bookings, or why a booking was cancelled. */
+function BookingStatusNote({ booking }: { booking: BookingListItem }) {
+  const t = useTranslations("bookings");
+  const locale = useLocale() as AppLocale;
+  const timeZone = useViewerTimeZone();
+  if (booking.depositDueAt || booking.balanceDueAt) {
+    const { balanceOverdue } = booking;
+    return (
+      <div className="grid gap-0.5">
+        {booking.depositDueAt ? (
+          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            {t("depositDueBy", { date: formatDate(booking.depositDueAt, locale, "dateTimeZone", timeZone) })}
+          </p>
+        ) : null}
+        {booking.balanceDueAt ? (
+          <p
+            className={cn(
+              "text-xs",
+              balanceOverdue ? "text-destructive font-medium" : "text-muted-foreground",
+            )}
+          >
+            {t(balanceOverdue ? "balanceOverdueSince" : "balanceDueBy", {
+              date: formatDate(booking.balanceDueAt, locale, "dateTimeZone", timeZone),
+            })}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+  if (booking.status !== "cancelled") return null;
+  if (booking.autoCancelled) return <p className="text-destructive text-xs">{t("autoCancelled")}</p>;
+  if (!booking.cancelReason) return null;
+  return <p className="text-muted-foreground text-xs">{t("cancelReason", { reason: booking.cancelReason })}</p>;
 }
 
 function VehicleCell({ booking }: { booking: BookingListItem }) {

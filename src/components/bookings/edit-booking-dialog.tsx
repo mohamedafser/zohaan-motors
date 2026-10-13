@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,24 +19,32 @@ import { Textarea } from "@/components/ui/textarea";
 import type { BookingListItem } from "@/lib/bookings/service";
 import { firstFieldErrors } from "@/lib/validation";
 import { editBookingSchema } from "@/lib/validation/booking";
+import { deadlineFrom } from "@/lib/validation/payment-terms";
+import type { AppLocale } from "@/config/app";
+import { formatDate } from "@/lib/utils/date";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 
 const toNumber = (value: string) => (value === "" ? Number.NaN : Number(value));
 
 function EditBookingForm({
   booking,
+  depositMinutes,
   onDone,
   onSaved,
 }: {
   booking: BookingListItem;
+  depositMinutes: number;
   onDone: () => void;
   onSaved: () => void;
 }) {
   const t = useTranslations("bookings");
   const tRoot = useTranslations();
+  const locale = useLocale() as AppLocale;
+  const timeZone = useViewerTimeZone();
   const msg = (key: string) => tRoot(key as Parameters<typeof tRoot>[0]);
 
   const [form, setForm] = useState({
-    deposit: String(booking.deposit),
+    deposit: booking.deposit > 0 ? String(booking.deposit) : "",
     sellingPrice: booking.sellingPrice == null ? "" : String(booking.sellingPrice),
     notes: booking.notes ?? "",
   });
@@ -45,7 +53,8 @@ function EditBookingForm({
   const [saving, setSaving] = useState(false);
 
   const payload = (values: typeof form) => ({
-    deposit: toNumber(values.deposit),
+    // Deposit is optional: blank means none received yet.
+    deposit: values.deposit.trim() === "" ? 0 : toNumber(values.deposit),
     sellingPrice: toNumber(values.sellingPrice),
     notes: values.notes,
   });
@@ -95,9 +104,13 @@ function EditBookingForm({
     <form onSubmit={handleSubmit} noValidate className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="edit-booking-deposit">{t("deposit")}</Label>
+          <Label htmlFor="edit-booking-deposit">
+            {t("deposit")}
+            <span className="text-muted-foreground font-normal">({tRoot("common.optional")})</span>
+          </Label>
           <Input
             id="edit-booking-deposit"
+            placeholder="0"
             type="number"
             inputMode="decimal"
             min={0}
@@ -107,6 +120,13 @@ function EditBookingForm({
             aria-invalid={!!fieldErrors.deposit || undefined}
           />
           {error("deposit")}
+          {!fieldErrors.deposit && !(Number(form.deposit) > 0) ? (
+            <p className="text-muted-foreground text-xs">
+              {t("depositHintEdit", {
+                date: formatDate(deadlineFrom(booking.reservedAt, depositMinutes), locale, "dateTimeZone", timeZone),
+              })}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="edit-booking-selling-price">{t("sellingPrice")}</Label>
@@ -148,11 +168,14 @@ function EditBookingForm({
 
 export function EditBookingDialog({
   booking,
+  depositMinutes,
   open,
   onOpenChange,
   onSaved,
 }: {
   booking: BookingListItem | null;
+  /** Payment terms: an unpaid booking is cancelled this many minutes after booking. */
+  depositMinutes: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
@@ -169,7 +192,11 @@ export function EditBookingDialog({
         </DialogHeader>
         {/* Keyed so reopening for another booking starts from its saved values. */}
         {booking && open ? (
-          <EditBookingForm key={booking.id} booking={booking} onDone={() => onOpenChange(false)} onSaved={onSaved} />
+          <EditBookingForm
+            key={booking.id}
+            booking={booking}
+            depositMinutes={depositMinutes}
+            onDone={() => onOpenChange(false)} onSaved={onSaved} />
         ) : null}
       </DialogContent>
     </Dialog>
