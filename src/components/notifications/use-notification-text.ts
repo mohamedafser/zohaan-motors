@@ -10,6 +10,9 @@ import type { AppNotification, BookingPaymentData } from "@/types/notification";
 
 export const BOOKING_AUTO_CANCELLED = "booking_auto_cancelled";
 export const BOOKING_BALANCE_OVERDUE = "booking_balance_overdue";
+export const BOOKING_CREATED = "booking_created";
+export const BOOKING_CANCELLED = "booking_cancelled";
+export const BOOKING_SOLD = "booking_sold";
 
 export function bookingVehicleLabel(data: BookingPaymentData) {
   return data.vehicleTitle || data.stockNumber || "—";
@@ -46,6 +49,39 @@ export function useNotificationText() {
           duration: formatDuration(deadlineMinutes(data, 7)),
           amount: formatCurrency(data.outstanding ?? 0, locale, data.currency ?? "AED"),
         }),
+      };
+    }
+    if (item.type === BOOKING_CREATED) {
+      return {
+        title: t("bookingCreated.title"),
+        body: t("bookingCreated.body", {
+          number: data.bookingNumber ?? "—",
+          vehicle: bookingVehicleLabel(data),
+          actor: data.actorName ?? "—",
+          customer: data.customerName ?? "—",
+        }),
+      };
+    }
+    if (item.type === BOOKING_SOLD) {
+      return {
+        title: t("bookingSold.title"),
+        body: t("bookingSold.body", {
+          number: data.bookingNumber ?? "—",
+          vehicle: bookingVehicleLabel(data),
+          actor: data.actorName ?? "—",
+          customer: data.customerName ?? "—",
+        }),
+      };
+    }
+    if (item.type === BOOKING_CANCELLED) {
+      const body = t("bookingCancelled.body", {
+        number: data.bookingNumber ?? "—",
+        vehicle: bookingVehicleLabel(data),
+        actor: data.actorName ?? "—",
+      });
+      return {
+        title: t("bookingCancelled.title"),
+        body: data.reason ? `${body} ${t("bookingCancelled.reason", { reason: data.reason })}` : body,
       };
     }
     return { title: item.title, body: item.message };

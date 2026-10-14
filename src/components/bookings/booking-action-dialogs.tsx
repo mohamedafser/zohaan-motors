@@ -106,7 +106,7 @@ function MarkSoldForm({ booking, onOpenChange, onDone }: DialogProps & { booking
         ))}
       </dl>
 
-      <div className="grid gap-1.5">
+      <div className="grid content-start gap-1.5">
         <Label htmlFor="sold-balance-received">{t("sold.balanceReceived")}</Label>
         <Input
           id="sold-balance-received"
@@ -183,7 +183,7 @@ function CancelForm({ booking, onOpenChange, onDone }: DialogProps & { booking: 
   return (
     <form onSubmit={handleSubmit} noValidate className="grid gap-4">
       <p className="text-muted-foreground text-sm">{t("cancelDialog.effect")}</p>
-      <div className="grid gap-1.5">
+      <div className="grid content-start gap-1.5">
         <Label htmlFor="cancel-booking-reason">{t("cancelDialog.reason")}</Label>
         <Textarea
           id="cancel-booking-reason"

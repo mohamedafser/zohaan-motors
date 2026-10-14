@@ -34,7 +34,7 @@ import {
   SearchableSelect,
   type SearchableSelectOption,
 } from "@/components/ui/searchable-select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSectionsSkeleton } from "@/components/feedback/skeletons";
 import { Textarea } from "@/components/ui/textarea";
 import { useAcquisitionMeta } from "@/hooks/use-acquisitions";
 import { usePermission } from "@/hooks/use-permission";
@@ -183,7 +183,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</CardContent>
+      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</CardContent>
     </Card>
   );
 }
@@ -991,11 +991,7 @@ export function AcquisitionForm({ ref, ...props }: AcquisitionFormProps) {
 
   if (meta.isPending) {
     return (
-      <div className="grid gap-6" aria-busy>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-40 w-full rounded-xl" />
-        ))}
-      </div>
+      <FormSectionsSkeleton />
     );
   }
 

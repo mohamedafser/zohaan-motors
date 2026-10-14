@@ -5,17 +5,27 @@ export type PushState = "unsupported" | "unconfigured" | "default" | "denied" | 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ?? "";
 
 function urlBase64ToUint8Array(base64: string) {
-  const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
+  const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4))
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
   const raw = atob(padded);
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
 function supported() {
-  return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  return (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window
+  );
 }
 
 async function registration() {
-  return (await navigator.serviceWorker.getRegistration("/")) ?? navigator.serviceWorker.register("/sw.js");
+  return (
+    (await navigator.serviceWorker.getRegistration("/")) ??
+    navigator.serviceWorker.register("/sw.js")
+  );
 }
 
 async function saveSubscription(subscription: PushSubscription) {
@@ -29,24 +39,24 @@ async function saveSubscription(subscription: PushSubscription) {
   if (!res.ok) throw new Error("Could not save the push subscription.");
 }
 
-/** Current push state for this browser. Re-saves an existing subscription so the server stays in sync. */
+/**
+ * Current push state for this browser. Re-saves the subscription so the server stays in
+ * sync, and, when permission was already granted (e.g. after signing out and back in),
+ * subscribes again without asking.
+ */
 export async function getPushState(): Promise<PushState> {
   if (!supported()) return "unsupported";
   if (!vapidPublicKey) return "unconfigured";
   if (Notification.permission === "denied") return "denied";
   if (Notification.permission !== "granted") return "default";
-  const existing = await (await registration()).pushManager.getSubscription();
-  if (!existing) return "default";
-  await saveSubscription(existing).catch(() => undefined);
-  return "subscribed";
+  try {
+    return await subscribe();
+  } catch {
+    return "default";
+  }
 }
 
-/** Asks for permission (must run from a user gesture) and subscribes this browser. */
-export async function enablePush(): Promise<PushState> {
-  if (!supported()) return "unsupported";
-  if (!vapidPublicKey) return "unconfigured";
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return permission === "denied" ? "denied" : "default";
+async function subscribe(): Promise<PushState> {
   const reg = await registration();
   await navigator.serviceWorker.ready;
   const subscription =
@@ -57,6 +67,15 @@ export async function enablePush(): Promise<PushState> {
     }));
   await saveSubscription(subscription);
   return "subscribed";
+}
+
+/** Asks for permission (must run from a user gesture) and subscribes this browser. */
+export async function enablePush(): Promise<PushState> {
+  if (!supported()) return "unsupported";
+  if (!vapidPublicKey) return "unconfigured";
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return permission === "denied" ? "denied" : "default";
+  return subscribe();
 }
 
 /** Removes this browser's subscription for the signed-in user (called before sign-out). */

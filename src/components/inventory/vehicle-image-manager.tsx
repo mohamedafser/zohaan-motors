@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { VehiclePhotoLightbox } from "@/components/inventory/vehicle-photo-lightbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PhotoManagerSkeleton } from "@/components/feedback/skeletons";
 import { usePermission } from "@/hooks/use-permission";
 import {
   useVehiclePhotoMutations,
@@ -793,7 +793,7 @@ function ManageManager({
     }
   }
 
-  if (query.isPending) return <Skeleton className="h-72 w-full rounded-xl" />;
+  if (query.isPending) return <PhotoManagerSkeleton />;
   if (query.isError) {
     return (
       <EmptyState

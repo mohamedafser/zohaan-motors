@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormFieldsSkeleton } from "@/components/feedback/skeletons";
 import { Textarea } from "@/components/ui/textarea";
 import { useInventoryMeta, useVehicleMutations } from "@/hooks/use-vehicles";
 import { transferVehicleSchema, type TransferVehicleValues } from "@/lib/validation/vehicle";
@@ -63,7 +63,7 @@ function TransferForm({ vehicle, onDone }: { vehicle: DialogVehicle; onDone: () 
     }
   }
 
-  if (meta.isPending) return <Skeleton className="h-40 w-full" aria-busy />;
+  if (meta.isPending) return <FormFieldsSkeleton fields={2} />;
 
   if (meta.isError) {
     return (

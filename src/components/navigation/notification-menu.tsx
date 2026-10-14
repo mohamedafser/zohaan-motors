@@ -21,7 +21,7 @@ export function NotificationMenu() {
   const t = useTranslations();
   const localeValue = useLocale();
   const locale = isAppLocale(localeValue) ? localeValue : appConfig.defaultLocale;
-  const { items, unreadCount, markRead, markAllRead } = useNotifications();
+  const { items, unreadCount, markRead, markAllRead, clearAll } = useNotifications();
   const text = useNotificationText();
 
   return (
@@ -51,9 +51,22 @@ export function NotificationMenu() {
               {t("notifications.unread", { count: unreadCount })}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={markAllRead} disabled={unreadCount === 0}>
-            {t("notifications.markAllRead")}
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            {unreadCount > 0 ? (
+              <Button variant="ghost" size="sm" onClick={markAllRead}>
+                {t("notifications.markAllRead")}
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={clearAll}
+              disabled={items.length === 0}
+            >
+              {t("notifications.clearAll")}
+            </Button>
+          </div>
         </div>
         <ul className="max-h-80 overflow-y-auto">
           {items.length === 0 ? (

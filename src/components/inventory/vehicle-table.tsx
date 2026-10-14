@@ -1,16 +1,16 @@
 "use client";
 
-import { GaugeIcon, ImageIcon, PencilIcon } from "lucide-react";
+import { GaugeIcon, LayersIcon, PencilIcon } from "lucide-react";
+import { VehiclePhotoPlaceholder } from "@/components/inventory/vehicle-photo-placeholder";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
-import { BookVehicleButton } from "@/components/inventory/book-vehicle-button";
 import { useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { QuantityBadge } from "@/components/inventory/quantity-badge";
 import { VehicleCard } from "@/components/inventory/vehicle-card";
 import { VehiclePrice } from "@/components/inventory/vehicle-price";
-import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
+import { VehicleSaleActions } from "@/components/inventory/vehicle-sale-actions";
+import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { ResponsiveTable, type TableColumn } from "@/components/tables/responsive-table";
 import { buttonVariants } from "@/components/ui/button";
 import { usePermission } from "@/hooks/use-permission";
@@ -52,9 +52,7 @@ export function VehicleTable({
                   loading="lazy"
                 />
               ) : (
-                <div className="bg-carbon text-sidebar-foreground/40 flex size-full items-center justify-center">
-                  <ImageIcon className="size-4" aria-hidden />
-                </div>
+                <VehiclePhotoPlaceholder size="sm" />
               )}
             </div>
             <div className="grid min-w-0 gap-1">
@@ -62,10 +60,28 @@ export function VehicleTable({
               <div className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 <span className="font-mono">{row.stockNumber}</span>
                 <MarketTypeBadge value={row.marketType} className="h-5 px-1.5 text-[11px]" />
-                <QuantityBadge quantity={row.quantity} className="h-5 px-1.5 text-[11px]" />
               </div>
             </div>
           </div>
+        ),
+      },
+      {
+        key: "units",
+        header: t("inventory.table.units"),
+        className: "whitespace-nowrap text-center tabular-nums",
+        cell: (row) => (
+          <span
+            className={cn(
+              "inline-flex min-w-10 items-center justify-center gap-1 rounded-md px-2 py-0.5 text-sm font-semibold",
+              row.quantity > 1
+                ? "bg-violet-500/10 text-violet-800 dark:text-violet-200"
+                : "text-muted-foreground font-medium",
+            )}
+            aria-label={t("inventory.quantity.units", { count: row.quantity })}
+          >
+            <LayersIcon className="size-3.5" aria-hidden />
+            {formatNumber(row.quantity, locale)}
+          </span>
         ),
       },
       {
@@ -75,7 +91,8 @@ export function VehicleTable({
         cell: (row) => (
           <span className="inline-flex items-center gap-1.5">
             <GaugeIcon className="text-muted-foreground size-3.5" aria-hidden />
-            {formatNumber(row.mileage, locale)} {t(`inventory.enums.mileageUnit.${row.mileageUnit}`)}
+            {formatNumber(row.mileage, locale)}{" "}
+            {t(`inventory.enums.mileageUnit.${row.mileageUnit}`)}
           </span>
         ),
       },
@@ -95,7 +112,7 @@ export function VehicleTable({
       {
         key: "status",
         header: t("inventory.table.status"),
-        cell: (row) => <VehicleStatusTrigger vehicle={row} variant="badge" />,
+        cell: (row) => <VehicleStatusBadge status={row.status} />,
       },
     ];
 
@@ -113,17 +130,20 @@ export function VehicleTable({
       header: <span className="sr-only">{t("inventory.table.actions")}</span>,
       className: "pe-4 text-end",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1" data-row-stop>
-          <BookVehicleButton vehicle={row} variant="ghost" compact />
+        <div className="flex items-center justify-end gap-1.5" data-row-stop>
+          <VehicleSaleActions vehicle={row} layout="row" />
           {can("vehicle.edit") ? (
             <Link
               href={vehicleHref(row.stockNumber, "/edit")}
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "text-muted-foreground",
+              )}
               aria-label={t("inventory.actions.edit")}
+              title={t("inventory.actions.edit")}
               onClick={(event) => event.stopPropagation()}
             >
               <PencilIcon className="size-4" aria-hidden />
-              <span className="sr-only sm:not-sr-only">{t("inventory.actions.edit")}</span>
             </Link>
           ) : null}
         </div>

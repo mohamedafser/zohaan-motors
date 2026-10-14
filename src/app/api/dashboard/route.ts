@@ -7,7 +7,7 @@ import { getDashboard } from "@/lib/dashboard/service";
  * Dashboard summary as application/json (not RSC / HTML).
  * Auth failures return JSON too — never redirects.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const context = await getUserContext();
 
   if (!context || context.status === "SUSPENDED" || context.status === "DISABLED") {
@@ -36,6 +36,6 @@ export async function GET() {
 
   return NextResponse.json({
     status: "success",
-    data: await getDashboard(context),
+    data: await getDashboard(context, new URL(request.url).searchParams.get("month")),
   });
 }

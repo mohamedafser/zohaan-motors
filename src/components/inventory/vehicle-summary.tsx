@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { KpiCard, type KpiTone } from "@/components/cards/kpi-card";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCardSkeleton } from "@/components/feedback/skeletons";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatPercent } from "@/lib/utils/currency";
@@ -47,7 +47,7 @@ export function VehicleSummary({ summary }: { summary?: InventorySummary }) {
               tone={summaryVisuals[key].tone}
             />
           ) : (
-            <Skeleton key={key} className="h-[104px] rounded-xl" />
+            <KpiCardSkeleton key={key} brand={key === "total"} />
           ),
         )}
       </section>

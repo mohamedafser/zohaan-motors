@@ -270,6 +270,7 @@
     "unread": "{count} غير مقروء",
     "markRead": "تعيين كمقروء",
     "markAllRead": "تعيين الكل كمقروء",
+    "clearAll": "مسح الكل",
     "open": "فتح",
     "types": {
       "bookingAutoCancelled": {
@@ -279,6 +280,19 @@
       "bookingBalanceOverdue": {
         "title": "تأخر سداد المبلغ كاملًا",
         "body": "لم يُسدَّد الحجز {number} للسيارة {vehicle} بالكامل خلال {duration}. المتبقي: {amount}."
+      },
+      "bookingCreated": {
+        "title": "حجز جديد",
+        "body": "حجز {actor} السيارة {vehicle} ({number}) للعميل {customer}."
+      },
+      "bookingCancelled": {
+        "title": "أُلغي الحجز",
+        "body": "ألغى {actor} الحجز {number} للسيارة {vehicle}.",
+        "reason": "السبب: {reason}"
+      },
+      "bookingSold": {
+        "title": "تم بيع السيارة",
+        "body": "باع {actor} السيارة {vehicle} ({number}) للعميل {customer}."
       }
     },
     "alert": {
@@ -295,7 +309,10 @@
       "enable": "تفعيل التنبيهات الفورية",
       "enabled": "التنبيهات الفورية مفعّلة على هذا الجهاز.",
       "blocked": "التنبيهات الفورية محظورة في إعدادات الموقع بهذا المتصفح.",
-      "failed": "تعذّر تفعيل التنبيهات الفورية."
+      "failed": "تعذّر تفعيل التنبيهات الفورية.",
+      "bannerTitle": "استلم تنبيهات الحجوزات على هذا الجهاز",
+      "bannerDescription": "فعّل التنبيهات الفورية لتعرف بالحجوزات الجديدة والملغاة والمباعة والدفعات المتأخرة، حتى عندما يكون التطبيق مغلقاً.",
+      "notNow": "ليس الآن"
     },
     "balanceAlert": {
       "title": "{count, plural, one {حجز لم يُسدَّد بالكامل} other {# حجوزات لم تُسدَّد بالكامل}}",
@@ -311,22 +328,22 @@
     "descriptionOwn": "حجوزاتك ومدفوعاتك ومبيعاتك، مع مخزون المعرض.",
     "viewAll": "عرض الكل",
     "kpis": {
-      "readyForSale": "جاهزة للبيع",
-      "readyHint": "{transit} قيد النقل · {booked} محجوزة",
-      "soldThisMonth": "مبيعات هذا الشهر",
-      "mySoldThisMonth": "مبيعاتي هذا الشهر",
       "soldUnits": "{count, plural, zero {لا سيارات مباعة} one {سيارة واحدة مباعة} two {سيارتان مباعتان} few {# سيارات مباعة} other {# سيارة مباعة}}",
       "soldChange": "{count, plural, zero {# سيارة} one {سيارة واحدة} two {سيارتان} few {# سيارات} other {# سيارة}} · {change} مقارنة بالشهر الماضي",
       "activeBookings": "الحجوزات النشطة",
       "activeValue": "قيمة محجوزة {value}",
       "toCollect": "المتبقي للتحصيل",
       "overdueCount": "{count, plural, one {سداد كامل متأخر} two {سدادان متأخران} few {# سدادات متأخرة} other {# سدادًا متأخرًا}}",
-      "awaitingDeposit": "{count, plural, =0 {لا عرابين معلقة} one {حجز بانتظار العربون} two {حجزان بانتظار العربون} few {# حجوزات بانتظار العربون} other {# حجزًا بانتظار العربون}}"
+      "awaitingDeposit": "{count, plural, =0 {لا عرابين معلقة} one {حجز بانتظار العربون} two {حجزان بانتظار العربون} few {# حجوزات بانتظار العربون} other {# حجزًا بانتظار العربون}}",
+      "sales": "المبيعات · {month}",
+      "mySales": "مبيعاتي · {month}",
+      "newBookings": "حجوزات جديدة",
+      "newBookingsHint": "قيمة محجوزة {value} · {cancelled} ملغاة"
     },
     "sales": {
       "title": "المبيعات حسب الشهر",
       "titleOwn": "مبيعاتي حسب الشهر",
-      "description": "قيمة الحجوزات المباعة خلال آخر 6 أشهر. مرّر على الشهر للتفاصيل.",
+      "description": "قيمة الحجوزات المباعة خلال 6 أشهر حتى {month}. مرّر على الشهر للتفاصيل.",
       "units": "{count, plural, zero {# سيارة} one {سيارة واحدة} two {سيارتان} few {# سيارات} other {# سيارة}}"
     },
     "attention": {
@@ -337,27 +354,13 @@
       "balance_overdue": "السداد الكامل متأخر منذ {date}",
       "balance_due_soon": "السداد الكامل مستحق قبل {date}"
     },
-    "recent": {
-      "title": "أحدث الحجوزات",
-      "empty": "لا توجد حجوزات بعد."
-    },
-    "stock": {
-      "title": "المخزون",
-      "askingValue": "{value} بسعر العرض"
-    },
     "outcomes": {
       "title": "نتائج الحجوزات",
-      "description": "الحجوزات خلال آخر 90 يومًا.",
+      "description": "الحجوزات التي تمت في {month} وما انتهت إليه.",
       "conversion": "مباعة",
       "sold": "مباعة",
       "active": "ما زالت نشطة",
       "cancelled": "ملغاة"
-    },
-    "leaders": {
-      "title": "مسؤولو المبيعات",
-      "description": "المبيعات هذا الشهر.",
-      "empty": "لا مبيعات هذا الشهر بعد.",
-      "detail": "{sold} مباعة · {active} نشطة"
     },
     "age": {
       "title": "عمر المخزون",
@@ -369,6 +372,52 @@
       "mid": "٣١–٦٠ يومًا",
       "aging": "٦١–٩٠ يومًا",
       "old": "٩٠+ يومًا"
+    },
+    "monthFilter": {
+      "label": "الشهر",
+      "thisMonth": "الشهر الحالي"
+    },
+    "team": {
+      "title": "نشاط فريق المبيعات",
+      "titleOwn": "نشاطي",
+      "description": "الحجوزات والمبيعات والإلغاءات في {month}. الحجوزات النشطة والمبالغ المتبقية حتى اليوم.",
+      "empty": "لا يوجد مسؤولو مبيعات بعد.",
+      "columns": {
+        "person": "مسؤول المبيعات",
+        "newBookings": "حجوزات جديدة",
+        "sold": "سيارات مباعة",
+        "revenue": "المبيعات",
+        "cancelled": "ملغاة",
+        "active": "نشطة الآن",
+        "toCollect": "المتبقي للتحصيل"
+      }
+    },
+    "company": {
+      "title": "مخزون الشركة ومبيعاتها",
+      "description": "المخزون حتى اليوم؛ المبيعات والمخزون الجديد لشهر {month}.",
+      "inStock": "السيارات في المخزون",
+      "inStockHint": "قيد النقل وجاهزة ومحجوزة",
+      "stockValue": "قيمة المخزون",
+      "stockValueHint": "بسعر العرض",
+      "added": "أُضيفت إلى المخزون",
+      "addedHint": "في {month}",
+      "averagePrice": "متوسط سعر البيع",
+      "averagePriceHint": "{count, plural, =0 {لا سيارات مباعة} one {لسيارة واحدة} two {لسيارتين} few {لـ # سيارات} other {لـ # سيارة}}",
+      "columns": {
+        "branch": "الفرع",
+        "sold": "مباعة",
+        "revenue": "المبيعات"
+      }
+    },
+    "activity": {
+      "title": "آخر النشاطات",
+      "description": "أحدث الحجوزات والمبيعات والإلغاءات في {month}.",
+      "empty": "لا نشاط في هذا الشهر.",
+      "emptyCurrent": "لا نشاط هذا الشهر بعد.",
+      "created": "حجز {person} السيارة {vehicle}",
+      "sold": "باع {person} السيارة {vehicle}",
+      "cancelled": "أُلغي حجز {person} للسيارة {vehicle}",
+      "autoCancelled": "أُلغي حجز {vehicle} لعدم استلام العربون ({person})"
     }
   },
   "modules": {
@@ -461,6 +510,33 @@
       "active": "نشط",
       "inactive": "غير نشط",
       "empty": "لا توجد فروع بعد.",
+      "emptyHint": "أضف أول معرض أو ساحة لبدء توزيع الموظفين والمخزون.",
+      "summary": {
+        "branches": "الفروع",
+        "branchesHint": "{count} نشط",
+        "inStock": "السيارات في المخزون",
+        "inStockHint": "في جميع الفروع",
+        "ready": "جاهزة للبيع",
+        "team": "أعضاء الفريق"
+      },
+      "stats": {
+        "inStock": "في المخزون",
+        "ready": "جاهزة",
+        "booked": "محجوزة",
+        "inTransit": "قيد الشحن",
+        "team": "{count, plural, one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضواً} other {# عضو}}",
+        "noStock": "لا توجد سيارات هنا بعد"
+      },
+      "viewInventory": "عرض المخزون",
+      "call": "اتصل بـ {name}",
+      "emailTo": "راسل {name}",
+      "searchPlaceholder": "ابحث في الفروع",
+      "filters": {
+        "all": "الكل",
+        "active": "نشطة",
+        "inactive": "غير نشطة"
+      },
+      "noMatches": "لا توجد فروع مطابقة لبحثك.",
       "emirates": {
         "abu_dhabi": "أبوظبي",
         "dubai": "دبي",
@@ -501,6 +577,30 @@
       "statusSuspended": "موقوف",
       "statusDisabled": "معطل",
       "invitedStatusHint": "تتغير الحالة بعد قبول الدعوة.",
+      "name": "الاسم",
+      "lastSignIn": "آخر تسجيل دخول",
+      "neverSignedIn": "لم يسجّل الدخول بعد",
+      "joinedOn": "انضم في {date}",
+      "editAria": "تعديل {name}",
+      "removeAria": "إزالة {name}",
+      "searchPlaceholder": "ابحث بالاسم أو البريد أو الدور",
+      "clearSearch": "مسح البحث",
+      "noMatches": "لا يوجد مستخدمون مطابقون لبحثك.",
+      "noMatchesHint": "جرّب اسماً أو بريداً أو تصفية أخرى.",
+      "kpis": {
+        "total": "إجمالي المستخدمين",
+        "active": "نشط",
+        "activeHint": "يمكنهم تسجيل الدخول الآن",
+        "invited": "دعوات معلّقة",
+        "invitedHint": "بانتظار القبول",
+        "admins": "المشرفون العامون"
+      },
+      "filters": {
+        "all": "الكل",
+        "active": "نشط",
+        "invited": "مدعو",
+        "inactive": "موقوف"
+      },
       "errors": {
         "inviteFailed": "تعذر إرسال الدعوة. حاول مرة أخرى.",
         "cannotChangeOwnStatus": "لا يمكنك تغيير حالتك.",
@@ -573,7 +673,27 @@
       "edit": "تعديل",
       "delete": "حذف",
       "cancel": "إلغاء",
-      "deleteConfirm": "حذف «{name}»؟"
+      "deleteConfirm": "حذف «{name}»؟",
+      "allBrands": "كل العلامات",
+      "searchIn": "ابحث في {list}",
+      "noMatches": "لا توجد نتائج.",
+      "count": "{count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصراً} other {# عنصر}}",
+      "pickBrand": "اختر علامة تجارية لعرض طرازاتها.",
+      "pickModel": "اختر طرازاً لعرض سنواته.",
+      "pickYear": "اختر سنة لعرض فئاتها.",
+      "newBrand": "اسم العلامة الجديدة",
+      "newBrandAr": "الاسم بالعربية (اختياري)",
+      "newModel": "طراز جديد لـ {brand}",
+      "newYear": "السنة، مثل 2025",
+      "newVariant": "فئة جديدة لسنة {year}",
+      "add": "إضافة",
+      "back": "رجوع",
+      "toggleActive": "{name}: يظهر في المخزون",
+      "more": "إجراءات أخرى لـ {name}",
+      "added": "تمت إضافة «{name}».",
+      "saved": "تم الحفظ.",
+      "deleted": "تم حذف «{name}».",
+      "inactiveHint": "مخفي من نماذج المخزون"
     },
     "paymentTerms": {
       "title": "شروط دفع الحجز",
@@ -851,6 +971,7 @@
       "vin": "VIN",
       "year": "السنة",
       "mileage": "المسافة",
+      "units": "الوحدات",
       "status": "الحالة",
       "branch": "الفرع",
       "location": "الموقع",
@@ -873,6 +994,7 @@
     "actions": {
       "add": "إضافة مركبة",
       "edit": "تعديل",
+      "bookNow": "احجز الآن",
       "changeStatus": "تغيير الحالة",
       "transfer": "نقل الفرع",
       "archive": "أرشفة",
@@ -2023,6 +2145,12 @@
     "panel": {
       "title": "التسعير والربحية"
     },
+    "salesView": {
+      "title": "التسعير",
+      "maxDiscount": "أقصى خصم",
+      "maxDiscountHint": "{percent} من سعر البيع المستهدف",
+      "notSet": "لم يُحدَّد بعد. تواصل مع المشرف العام."
+    },
     "sections": {
       "costBreakdown": "ملخص تكلفة المركبة",
       "profitability": "الربحية",
@@ -2162,6 +2290,10 @@
     "book": "احجز",
     "newTitle": "حجز جديد",
     "newDescription": "احجز سيارة جاهزة للبيع لعميل.",
+    "sellTitle": "تسجيل كمباعة",
+    "sellDescription": "سجّل مشتري السيارة ومسؤول المبيعات وسعر البيع.",
+    "sellAmountReceived": "المبلغ المستلم (سعر البيع كاملًا)",
+    "sellPaidInFull": "يدفع العميل سعر البيع كاملًا، وتُسجَّل السيارة كمباعة.",
     "create": "إنشاء الحجز",
     "created": "تم إنشاء الحجز.",
     "cancelled": "تم إلغاء الحجز.",
@@ -2351,7 +2483,7 @@
     "columns": {
       "customer": "العميل",
       "contact": "التواصل",
-      "location": "الموقع",
+      "branch": "الفرع",
       "salesperson": "مندوب المبيعات",
       "bookings": "الحجوزات",
       "added": "تاريخ الإضافة"

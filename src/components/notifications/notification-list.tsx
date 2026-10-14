@@ -17,7 +17,7 @@ export function NotificationList() {
   const t = useTranslations();
   const localeValue = useLocale();
   const locale = isAppLocale(localeValue) ? localeValue : appConfig.defaultLocale;
-  const { items, markRead, markAllRead, unreadCount } = useNotifications();
+  const { items, markRead, markAllRead, clearAll, unreadCount } = useNotifications();
   const text = useNotificationText();
 
   return (
@@ -30,6 +30,14 @@ export function NotificationList() {
             <PushPrompt />
             <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
               {t("notifications.markAllRead")}
+            </Button>
+            <Button
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={clearAll}
+              disabled={items.length === 0}
+            >
+              {t("notifications.clearAll")}
             </Button>
           </div>
         }

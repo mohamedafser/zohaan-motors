@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { jsonError, jsonOk, readJsonBody, requireApiUser } from "@/lib/api/http";
 import {
+  clearNotifications,
   listNotifications,
   markNotificationsRead,
   maybeRunBookingDeadlineSweep,
@@ -37,6 +38,16 @@ export async function PATCH(request: Request) {
   if (!parsed.success) return jsonError("validation", "Invalid request.", 400);
 
   const error = await markNotificationsRead(auth.context.userId, "all" in parsed.data ? "all" : parsed.data.ids);
+  if (error) return jsonError("db_error", error, 500);
+  return jsonOk({ ok: true });
+}
+
+/** Clear all: removes every notification of the signed-in user. */
+export async function DELETE() {
+  const auth = await requireApiUser("notification.view");
+  if ("response" in auth) return auth.response;
+
+  const error = await clearNotifications(auth.context.userId);
   if (error) return jsonError("db_error", error, 500);
   return jsonOk({ ok: true });
 }

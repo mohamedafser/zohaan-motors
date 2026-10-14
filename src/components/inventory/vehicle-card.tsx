@@ -1,15 +1,23 @@
 "use client";
 
-import { CalendarIcon, CogIcon, FuelIcon, GaugeIcon, ImageIcon, MapPinIcon, PencilIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CogIcon,
+  FuelIcon,
+  GaugeIcon,
+  LayersIcon,
+  MapPinIcon,
+  PencilIcon,
+} from "lucide-react";
+import { VehiclePhotoPlaceholder } from "@/components/inventory/vehicle-photo-placeholder";
 import { useTranslations } from "next-intl";
 
-import { BookVehicleButton } from "@/components/inventory/book-vehicle-button";
 import { enumLabel, useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
 import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { QuantityBadge } from "@/components/inventory/quantity-badge";
 import { VehiclePrice, listPrice } from "@/components/inventory/vehicle-price";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
-import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
+import { SoldRibbon, isSoldStatus } from "@/components/inventory/vehicle-sold-tag";
+import { VehicleSaleActions, useSaleActions } from "@/components/inventory/vehicle-sale-actions";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { usePermission } from "@/hooks/use-permission";
@@ -37,6 +45,9 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
   const { can } = usePermission();
   const showPrice = can("vehicle.price.view") && listPrice(vehicle) != null;
   const place = [vehicle.branchName, vehicle.locationName].filter(Boolean).join(" · ");
+  const sale = useSaleActions(vehicle);
+  const sold = isSoldStatus(vehicle.status);
+  const canEdit = can("vehicle.edit");
 
   const specs = [
     { icon: CalendarIcon, value: String(vehicle.year) },
@@ -66,40 +77,59 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               loading="lazy"
             />
           ) : (
-            <div className="bg-carbon text-sidebar-foreground/40 flex size-full items-center justify-center">
-              <ImageIcon className="size-8" aria-hidden />
-            </div>
+            <VehiclePhotoPlaceholder className="pt-8" />
           )}
           {/* Soft scrim behind the chips for extra separation on busy photos. */}
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/30 to-transparent"
             aria-hidden
           />
-          <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2">
-            <Chip>
-              <VehicleStatusBadge status={vehicle.status} />
-            </Chip>
-            <div className="flex flex-wrap justify-end gap-1.5">
+          {/* Sold cars get the corner ribbon instead of a status chip, so the condition
+              chip moves to the free corner. */}
+          {sold ? (
+            <>
+              <SoldRibbon size="md" />
+              <div className="absolute start-2.5 top-2.5">
+                <Chip>
+                  <MarketTypeBadge value={vehicle.marketType} />
+                </Chip>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2">
+              <Chip>
+                <VehicleStatusBadge status={vehicle.status} />
+              </Chip>
               <Chip>
                 <MarketTypeBadge value={vehicle.marketType} />
               </Chip>
-              {vehicle.quantity > 1 ? (
-                <Chip>
-                  <QuantityBadge quantity={vehicle.quantity} />
-                </Chip>
-              ) : null}
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col gap-3 p-4">
           <div className="min-w-0">
-            <p className="text-muted-foreground font-mono text-xs">{vehicle.stockNumber}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-muted-foreground font-mono text-xs">{vehicle.stockNumber}</p>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
+                  vehicle.quantity > 1
+                    ? "bg-violet-500/10 text-violet-800 dark:text-violet-200"
+                    : "bg-muted/60 text-muted-foreground",
+                )}
+              >
+                <LayersIcon className="size-3.5" aria-hidden />
+                {t("inventory.quantity.units", { count: vehicle.quantity })}
+              </span>
+            </div>
             <p className="group-hover/vehicle:text-brand truncate text-base font-semibold tracking-tight transition-colors">
               {vehicle.make} {vehicle.model}
             </p>
             {/* Always one line tall so titles line up across the row. */}
-            <p className="text-muted-foreground min-h-5 truncate text-sm">{vehicle.variant ?? " "}</p>
+            <p className="text-muted-foreground min-h-5 truncate text-sm">
+              {vehicle.variant ?? " "}
+            </p>
           </div>
 
           <ul className="flex flex-wrap gap-1.5">
@@ -130,25 +160,28 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
         </div>
       </Link>
 
-      {/* Each action renders nothing when unavailable; empty:hidden then drops the bar.
-          Buttons share the width evenly instead of wrapping onto a second line. */}
-      <div
-        className="bg-muted/30 flex gap-2 border-t px-3 py-2.5 empty:hidden [&>*]:min-w-0 [&>*]:flex-1 [&>span>button]:w-full"
-        data-row-stop
-      >
-        <VehicleStatusTrigger vehicle={vehicle} variant="button" />
-        {can("vehicle.edit") ? (
-          <Link
-            href={vehicleHref(vehicle.stockNumber, "/edit")}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <PencilIcon className="size-4" aria-hidden />
-            {t("inventory.actions.edit")}
-          </Link>
-        ) : null}
-        <BookVehicleButton vehicle={vehicle} variant="outline" />
-      </div>
+      {/* Book now and Mark as sold share the width; Edit is a compact icon beside them,
+          or a full button when it's the only action. No actions, no bar. */}
+      {sale.any || canEdit ? (
+        <div className="bg-muted/30 flex items-center gap-2 border-t px-3 py-2.5" data-row-stop>
+          <VehicleSaleActions vehicle={vehicle} layout="card" />
+          {canEdit ? (
+            <Link
+              href={vehicleHref(vehicle.stockNumber, "/edit")}
+              className={cn(
+                buttonVariants({ variant: "outline", size: sale.any ? "icon-sm" : "sm" }),
+                sale.any ? "size-9 shrink-0" : "h-9 flex-1",
+              )}
+              aria-label={t("inventory.actions.edit")}
+              title={t("inventory.actions.edit")}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <PencilIcon className="size-4" aria-hidden />
+              {sale.any ? null : t("inventory.actions.edit")}
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </Card>
   );
 }

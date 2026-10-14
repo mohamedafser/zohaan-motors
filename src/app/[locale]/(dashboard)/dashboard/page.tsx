@@ -9,7 +9,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("dashboard.title") };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const context = await requirePagePermission("dashboard.view");
-  return <DashboardView context={context} />;
+  const { month } = await searchParams;
+  return <DashboardView context={context} month={typeof month === "string" ? month : null} />;
 }

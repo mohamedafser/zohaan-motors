@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/permissions";
+import { isSalesExecutive } from "@/lib/permissions/roles";
 import type { UserContext } from "@/types/auth";
 import {
   maxDiscountPercentFrom,
@@ -289,6 +290,41 @@ export async function getVehiclePricingDetail(
     hasPermission(context.permissions, "pricing.view", context.roles);
   const breakdown = canCost ? await getVehicleCostBreakdown(vehicleId, context) : null;
   const history = await getVehiclePricingHistory(vehicleId, context);
+
+  // Sales executives only get the target selling price and the maximum discount.
+  if (isSalesExecutive(context.roles) && !hasPermission(context.permissions, "pricing.view", context.roles)) {
+    const p = profitability.data!;
+    return {
+      data: {
+        pricing: null,
+        profitability: {
+          ...p,
+          minimumSellingPrice: null,
+          advertisedPrice: null,
+          currentSellingPrice: null,
+          discountAmount: null,
+          discountPercent: null,
+          pricingStatus: null,
+          pricingNotes: null,
+          belowMinimum: false,
+          targetSellingPrice: p.targetSellingPrice ?? p.currentSellingPrice,
+        },
+        breakdown: null,
+        history: [],
+        vehicle: {
+          id: vehicleRow.id,
+          stockNumber: vehicleRow.stock_number,
+          make: vehicleRow.make,
+          model: vehicleRow.model,
+          year: vehicleRow.year,
+          status: vehicleRow.status,
+          branchId: vehicleRow.branch_id,
+          branchName,
+        },
+      },
+      error: null,
+    };
+  }
 
   return {
     data: {

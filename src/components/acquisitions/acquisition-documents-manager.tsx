@@ -22,7 +22,7 @@ import {
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DocumentRowsSkeleton } from "@/components/feedback/skeletons";
 import { usePermission } from "@/hooks/use-permission";
 import {
   useAcquisitionDocumentMutations,
@@ -493,8 +493,7 @@ function ManageManager({
           <CardTitle>{t("acquisitions.documents.title")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3" aria-busy>
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
+          <DocumentRowsSkeleton />
         </CardContent>
       </Card>
     );

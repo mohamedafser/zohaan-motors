@@ -23,7 +23,7 @@ const VISIBLE = 3;
 
 /**
  * Shown on every page until dismissed:
- * - Super Admins: bookings cancelled because no deposit arrived in time.
+ * - The sales executive and Super Admins: bookings cancelled because no deposit arrived in time.
  * - The sales executive and Super Admins: bookings not paid in full in time.
  */
 export function BookingPaymentAlerts() {

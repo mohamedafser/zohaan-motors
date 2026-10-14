@@ -11,6 +11,7 @@ import {
   boolean,
   timestamp,
   index,
+  integer,
   numeric,
   char,
   date,
@@ -88,6 +89,7 @@ export const reservations = pgTable(
     balanceReceived: numeric("balance_received", { precision: 14, scale: 2 }),
     soldAt: timestamp("sold_at", { withTimezone: true, mode: "string" }),
     soldBy: uuid("sold_by"),
+    units: integer(),
     notes: text(),
     createdBy: uuid("created_by"),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
@@ -172,6 +174,7 @@ export const reservations = pgTable(
     check("reservations_amount_non_negative", sql`amount >= (0)::numeric`),
     check("reservations_currency_format", sql`currency ~ '^[A-Z]{3}$'::text`),
     check("reservations_expires_after_reserved", sql`expires_at > reserved_at`),
+    check("reservations_units_positive", sql`(units IS NULL) OR (units > 0)`),
     check(
       "reservations_selling_price_non_negative",
       sql`(selling_price IS NULL) OR (selling_price >= (0)::numeric)`,

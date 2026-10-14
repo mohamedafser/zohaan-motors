@@ -50,3 +50,16 @@ export async function recordForUnits(
   if (result.error !== null) return { id: null, split: false, error: result.error };
   return { id: result.id, split: true, error: null };
 }
+
+/**
+ * Merges the Ready for sale records split from the same car back into one (e.g. after a
+ * booking on split units is cancelled). Returns the remaining record's id.
+ */
+export async function mergeReadySplitUnits(vehicleId: string): Promise<string> {
+  const { data, error } = await createServiceRoleClient().rpc(
+    "merge_ready_split_units" as never,
+    { p_vehicle_id: vehicleId } as never,
+  );
+  if (error) console.error("[vehicles] merge split units failed", error.message);
+  return (data as unknown as string | null) ?? vehicleId;
+}

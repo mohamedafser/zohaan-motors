@@ -8,7 +8,7 @@ import { ErrorState } from "@/components/feedback/error-state";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TimelineSkeleton } from "@/components/feedback/skeletons";
 import { useVehicleHistory } from "@/hooks/use-vehicles";
 import { formatDate } from "@/lib/utils/date";
 
@@ -24,10 +24,7 @@ export function VehicleHistory({ vehicleId }: { vehicleId: string }) {
 
   if (history.isPending) {
     return (
-      <div className="grid gap-3" aria-busy>
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-24 w-full rounded-xl" />
-      </div>
+      <TimelineSkeleton cards={2} />
     );
   }
 

@@ -22,7 +22,13 @@ type Row = {
 /** Where a notification leads when opened. */
 export function notificationHref(type: string, data: Record<string, unknown> | null): string {
   const number = typeof data?.bookingNumber === "string" ? data.bookingNumber : "";
-  if (type === "booking_auto_cancelled" || type === "booking_balance_overdue") {
+  if (
+    type === "booking_auto_cancelled" ||
+    type === "booking_balance_overdue" ||
+    type === "booking_created" ||
+    type === "booking_cancelled" ||
+    type === "booking_sold"
+  ) {
     return number ? bookingHref(number) : "/bookings";
   }
   return "/notifications";
@@ -64,6 +70,18 @@ export async function markNotificationsRead(userId: string, ids: string[] | "all
   return error ? error.message : null;
 }
 
+/**
+ * Deletes all of a user's notifications ("Clear all"). Users can't delete rows under RLS,
+ * so this runs with the service role, limited to the caller's own rows.
+ */
+export async function clearNotifications(userId: string) {
+  const { error } = await createServiceRoleClient()
+    .from("notifications")
+    .delete()
+    .eq("user_id", userId);
+  return error ? error.message : null;
+}
+
 // ---------------------------------------------------------------------------
 // Booking payment deadlines
 // ---------------------------------------------------------------------------
@@ -80,11 +98,82 @@ export async function runBookingDeadlineSweep() {
   if (deposit.error) console.error("[bookings] deposit sweep failed", deposit.error.message);
   const balance = await admin.rpc("notify_overdue_balances");
   if (balance.error) console.error("[bookings] balance sweep failed", balance.error.message);
+  await shareAutoCancelsWithSalespeople();
   const pushed = await deliverPendingPushes();
   return { cancelled: deposit.data ?? 0, balanceOverdue: balance.data ?? 0, pushed };
 }
 
-async function deliverPendingPushes() {
+/**
+ * The database only alerts Super Admins when a booking is cancelled for a missing deposit;
+ * this gives the booking's sales executive the same alert. Shared rows are flagged so the
+ * alert is copied once, even if someone clears their notifications.
+ */
+async function shareAutoCancelsWithSalespeople() {
+  const admin = createServiceRoleClient();
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await admin
+    .from("notifications")
+    .select("id, user_id, title, message, entity_type, entity_id, data")
+    .eq("type", "booking_auto_cancelled")
+    .gte("created_at", since)
+    .not("entity_id", "is", null)
+    .is("data->sharedWithSalesperson", null);
+  const alerts = (data ?? []) as {
+    id: string;
+    user_id: string;
+    title: string;
+    message: string;
+    entity_type: string | null;
+    entity_id: string;
+    data: Record<string, unknown> | null;
+  }[];
+  if (alerts.length === 0) return;
+
+  const bookingIds = [...new Set(alerts.map((alert) => alert.entity_id))];
+  const { data: bookings } = await admin
+    .from("reservations")
+    .select("id, salesperson_id")
+    .in("id", bookingIds);
+  const salespeople = new Map(
+    ((bookings ?? []) as { id: string; salesperson_id: string | null }[]).map((b) => [
+      b.id,
+      b.salesperson_id,
+    ]),
+  );
+
+  for (const bookingId of bookingIds) {
+    const forBooking = alerts.filter((alert) => alert.entity_id === bookingId);
+    const salespersonId = salespeople.get(bookingId);
+    const { title, message, entity_type, data: payload } = forBooking[0];
+    const shared = { ...payload, sharedWithSalesperson: true };
+    if (salespersonId && !forBooking.some((alert) => alert.user_id === salespersonId)) {
+      const { error } = await admin.from("notifications").insert({
+        user_id: salespersonId,
+        type: "booking_auto_cancelled",
+        title,
+        message,
+        entity_type,
+        entity_id: bookingId,
+        data: shared,
+      });
+      if (error) {
+        console.error("[bookings] could not alert the sales executive", error.message);
+        continue;
+      }
+    }
+    await Promise.all(
+      forBooking.map((alert) =>
+        admin
+          .from("notifications")
+          .update({ data: { ...alert.data, sharedWithSalesperson: true } })
+          .eq("id", alert.id),
+      ),
+    );
+  }
+}
+
+/** Pushes every notification not delivered yet (from the last 24 hours). */
+export async function deliverPendingPushes() {
   // Without VAPID keys, leave notifications unclaimed so they push once keys are added.
   if (!isPushConfigured()) return 0;
   const admin = createServiceRoleClient();
@@ -104,7 +193,7 @@ async function deliverPendingPushes() {
     message: string;
     data: Record<string, unknown> | null;
   }[];
-  await Promise.all(
+  const results = await Promise.all(
     rows.map((row) =>
       sendPushToUsers([row.user_id], {
         title: row.title,
@@ -114,7 +203,11 @@ async function deliverPendingPushes() {
       }),
     ),
   );
-  return rows.length;
+  // Release failed deliveries so the next sweep tries again (within the 24-hour window).
+  const failed = rows.filter((_, index) => !results[index]).map((row) => row.id);
+  if (failed.length > 0)
+    await admin.from("notifications").update({ pushed_at: null }).in("id", failed);
+  return rows.length - failed.length;
 }
 
 const SWEEP_INTERVAL_MS = 30 * 1000;
@@ -127,10 +220,14 @@ let nextDeadlineAt: number | null = null;
  * again right when it passes instead of waiting for the next poll.
  */
 export async function findNextBookingDeadline(): Promise<number | null> {
-  const terms = await getPaymentTerms();
-  const { data } = await createServiceRoleClient()
+  const admin = createServiceRoleClient();
+  // Read with the service role so this also works outside a request (the background loop).
+  const terms = await getPaymentTerms(admin);
+  const { data } = await admin
     .from("reservations")
-    .select("status, reserved_at, amount, selling_price, balance_received, balance_overdue_notified_at, vehicles(quantity)")
+    .select(
+      "status, reserved_at, amount, selling_price, balance_received, balance_overdue_notified_at, vehicles(quantity)",
+    )
     .in("status", ["active", "converted"])
     .limit(1000);
   type Row = {
@@ -185,4 +282,36 @@ export async function maybeRunBookingDeadlineSweep(): Promise<number | null> {
 export function invalidateBookingDeadlines() {
   nextDeadlineAt = null;
   lastSweepAt = 0;
+  wakeBookingDeadlineLoop?.();
+}
+
+const LOOP_IDLE_MS = 60 * 1000;
+let wakeBookingDeadlineLoop: (() => void) | null = null;
+
+/**
+ * Applies deadlines and sends pushes even when nobody has the app open: re-checks every
+ * minute, and right when the next known deadline passes. Started once per Node server
+ * from instrumentation.ts. Serverless hosts don't keep it alive, so there the cron route
+ * (/api/cron/booking-deadlines) still needs a scheduler.
+ */
+export function startBookingDeadlineLoop() {
+  const flag = globalThis as typeof globalThis & { __bookingDeadlineLoop?: boolean };
+  if (flag.__bookingDeadlineLoop) return;
+  flag.__bookingDeadlineLoop = true;
+
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const schedule = (next: number | null) => {
+    if (timer) clearTimeout(timer);
+    // Wake a second after the next deadline (or after a minute when none is close).
+    const delay =
+      next === null
+        ? LOOP_IDLE_MS
+        : Math.min(LOOP_IDLE_MS, Math.max(1000, next - Date.now() + 1000));
+    timer = setTimeout(() => void tick(), delay);
+    timer.unref?.();
+  };
+  const tick = async () => schedule(await maybeRunBookingDeadlineSweep());
+  wakeBookingDeadlineLoop = () => void tick();
+  console.info("[bookings] deadline loop started");
+  void tick();
 }

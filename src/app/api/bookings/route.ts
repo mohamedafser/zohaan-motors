@@ -15,7 +15,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApiUser("reservation.create");
+  // Booking needs reservation.create, selling straight away sale rights; the service checks which.
+  const auth = await requireApiUser();
   if ("response" in auth) return auth.response;
 
   const body = await request.json().catch(() => null);

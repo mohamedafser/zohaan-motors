@@ -1,19 +1,44 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { CheckIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CarFrontIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LayersIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PlusIcon,
+  SearchIcon,
+  Trash2Icon,
+  XIcon,
+  type LucideIcon,
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { FormField } from "@/components/forms/form-field";
-import { LoadingButton } from "@/components/shared/loading-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { usePermission } from "@/hooks/use-permission";
+import { cn } from "@/lib/utils";
 import type { CatalogMake, CatalogModel, CatalogModelYear, CatalogVariant } from "@/types/vehicle";
 
 type CatalogPayload = {
@@ -24,6 +49,7 @@ type CatalogPayload = {
 };
 
 type CatalogTable = "vehicle_makes" | "vehicle_models" | "vehicle_model_years" | "vehicle_variants";
+type Translate = ReturnType<typeof useTranslations<"settings.catalog">>;
 
 function slugify(value: string) {
   return value
@@ -35,7 +61,10 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-async function fetchCatalog(params: { makeId: string; modelId: string; modelYearId: string }) {
+type CatalogParams = { makeId: string; modelId: string; modelYearId: string };
+
+/** The lists plus the selection they were loaded for, so each column knows if it's current. */
+async function fetchCatalog(params: CatalogParams): Promise<CatalogPayload & { params: CatalogParams }> {
   const search = new URLSearchParams();
   if (params.makeId) search.set("makeId", params.makeId);
   if (params.modelId) search.set("modelId", params.modelId);
@@ -44,11 +73,15 @@ async function fetchCatalog(params: { makeId: string; modelId: string; modelYear
     credentials: "same-origin",
     headers: { Accept: "application/json" },
   });
-  const json = (await response.json()) as { status: string; data?: CatalogPayload; message?: string };
+  const json = (await response.json()) as {
+    status: string;
+    data?: CatalogPayload;
+    message?: string;
+  };
   if (json.status !== "success" || !json.data) {
     throw new Error(json.message ?? "Failed to load catalog");
   }
-  return json.data;
+  return { ...json.data, params };
 }
 
 async function postCatalog(body: Record<string, unknown>) {
@@ -64,6 +97,24 @@ async function postCatalog(body: Record<string, unknown>) {
   }
 }
 
+type EditValues = { name?: string; nameAr?: string | null; year?: number };
+
+type Item = {
+  id: string;
+  label: string;
+  /** Arabic name, shown under brands. */
+  sub?: string | null;
+  isActive: boolean;
+  value: string;
+  valueAr?: string | null;
+};
+
+type Level = 0 | 1 | 2 | 3;
+
+/**
+ * Brands → Models → Years → Variants as side-by-side columns: picking an entry opens the
+ * next column, each with its own search and quick add. Phones show one column at a time.
+ */
 export function VehicleCatalogManager() {
   const t = useTranslations("settings.catalog");
   const queryClient = useQueryClient();
@@ -73,24 +124,27 @@ export function VehicleCatalogManager() {
   const [makeId, setMakeId] = useState("");
   const [modelId, setModelId] = useState("");
   const [modelYearId, setModelYearId] = useState("");
+  /** The column shown on phones. */
+  const [level, setLevel] = useState<Level>(0);
   const [error, setError] = useState<string | null>(null);
-
-  const [brandName, setBrandName] = useState("");
-  const [brandNameAr, setBrandNameAr] = useState("");
-  const [modelName, setModelName] = useState("");
-  const [yearValue, setYearValue] = useState("");
-  const [variantName, setVariantName] = useState("");
 
   const query = useQuery({
     queryKey: ["settings-catalog", makeId, modelId, modelYearId],
     queryFn: () => fetchCatalog({ makeId, modelId, modelYearId }),
+    placeholderData: keepPreviousData,
   });
 
   const mutation = useMutation({
     mutationFn: postCatalog,
     onSuccess: async () => {
       setError(null);
-      for (const key of ["settings-catalog", "vehicle-brands", "vehicle-models", "vehicle-years", "vehicle-variants"]) {
+      for (const key of [
+        "settings-catalog",
+        "vehicle-brands",
+        "vehicle-models",
+        "vehicle-years",
+        "vehicle-variants",
+      ]) {
         await queryClient.invalidateQueries({ queryKey: [key] });
       }
       await queryClient.invalidateQueries({ queryKey: ["inventory", "meta"] });
@@ -98,468 +152,700 @@ export function VehicleCatalogManager() {
     onError: (err: Error) => setError(err.message),
   });
 
+  // While a new selection loads, the previous lists stay on screen. A column shows a
+  // skeleton only while the lists on screen belong to a different parent than the one
+  // now selected, so picking a model doesn't blank the Models column.
+  const shown = query.data?.params;
+  const waiting = (selected: string, loadedFor: string | undefined) =>
+    !!selected && selected !== loadedFor && !query.isError;
+  const modelsLoading = waiting(makeId, shown?.makeId);
+  const yearsLoading = waiting(modelId, shown?.modelId);
+  const variantsLoading = waiting(modelYearId, shown?.modelYearId);
   const makes = query.data?.makes ?? [];
   const models = query.data?.models ?? [];
   const years = query.data?.years ?? [];
   const variants = query.data?.variants ?? [];
 
-  const makeOptions = useMemo(() => makes.map((m) => ({ value: m.id, label: m.name })), [makes]);
-  const modelOptions = useMemo(() => models.map((m) => ({ value: m.id, label: m.name })), [models]);
-  const yearOptions = useMemo(
-    () => years.map((y) => ({ value: y.id, label: String(y.year) })),
-    [years],
-  );
+  const make = makes.find((m) => m.id === makeId) ?? null;
+  const model = models.find((m) => m.id === modelId) ?? null;
+  const year = years.find((y) => y.id === modelYearId) ?? null;
 
   function selectMake(next: string) {
     setMakeId(next);
     setModelId("");
     setModelYearId("");
+    if (next) setLevel(1);
   }
-
   function selectModel(next: string) {
     setModelId(next);
     setModelYearId("");
+    if (next) setLevel(2);
+  }
+  function selectYear(next: string) {
+    setModelYearId(next);
+    if (next) setLevel(3);
   }
 
-  function toggle(table: CatalogTable, id: string, isActive: boolean) {
-    mutation.mutate({ action: "setActive", table, id, isActive: !isActive });
-  }
-
-  function add(body: Record<string, unknown>, clear: () => void) {
-    mutation.mutate(body, { onSuccess: clear });
-  }
-
-  // Shared row actions for every tab; edit/delete render only for Super Admins.
-  function rowActions(table: CatalogTable) {
+  function actions(table: CatalogTable) {
     return {
-      onToggle: (id: string, isActive: boolean) => toggle(table, id, isActive),
+      onToggle: (item: Item) =>
+        mutation.mutate({ action: "setActive", table, id: item.id, isActive: !item.isActive }),
       onUpdate: isSuperAdmin
         ? (id: string, values: EditValues, done: () => void) =>
-            mutation.mutate({ action: "update", table, id, ...values }, { onSuccess: done })
+            mutation.mutate(
+              { action: "update", table, id, ...values },
+              {
+                onSuccess: () => {
+                  toast.success(t("saved"));
+                  done();
+                },
+              },
+            )
         : undefined,
       onDelete: isSuperAdmin
-        ? (id: string) => {
-            if (table === "vehicle_makes" && id === makeId) selectMake("");
-            if (table === "vehicle_models" && id === modelId) selectModel("");
-            if (table === "vehicle_model_years" && id === modelYearId) setModelYearId("");
-            mutation.mutate({ action: "delete", table, id });
+        ? (item: Item) => {
+            if (table === "vehicle_makes" && item.id === makeId) selectMake("");
+            if (table === "vehicle_models" && item.id === modelId) selectModel("");
+            if (table === "vehicle_model_years" && item.id === modelYearId) selectYear("");
+            mutation.mutate(
+              { action: "delete", table, id: item.id },
+              { onSuccess: () => toast.success(t("deleted", { name: item.label })) },
+            );
           }
         : undefined,
       busy: mutation.isPending,
-      editKind: table === "vehicle_model_years" ? ("year" as const) : table === "vehicle_makes" ? ("brand" as const) : ("name" as const),
-      emptyLabel: t("empty"),
-      t,
     };
   }
 
-  const brandSelect = (
-    <FormField label={t("selectBrand")} htmlFor="catalog-brand">
-      <SearchableSelect
-        id="catalog-brand"
-        value={makeId}
-        onValueChange={selectMake}
-        options={makeOptions}
-        optional={false}
-        placeholder={t("selectBrand")}
-      />
-    </FormField>
-  );
+  function add(body: Record<string, unknown>, name: string, done: () => void) {
+    mutation.mutate(body, {
+      onSuccess: () => {
+        toast.success(t("added", { name }));
+        done();
+      },
+    });
+  }
 
-  const modelSelect = (
-    <FormField label={t("selectModel")} htmlFor="catalog-model">
-      <SearchableSelect
-        id="catalog-model"
-        value={modelId}
-        onValueChange={selectModel}
-        options={modelOptions}
-        optional={false}
-        placeholder={t("selectModel")}
-        disabled={!makeId}
-      />
-    </FormField>
-  );
+  const path: { label: string; level: Level }[] = [
+    { label: t("allBrands"), level: 0 },
+    ...(make ? [{ label: make.name, level: 1 as Level }] : []),
+    ...(model ? [{ label: model.name, level: 2 as Level }] : []),
+    ...(year ? [{ label: String(year.year), level: 3 as Level }] : []),
+  ];
+
+  function goTo(target: Level) {
+    if (target === 0) selectMake("");
+    else if (target === 1) selectModel("");
+    else if (target === 2) selectYear("");
+    setLevel(target);
+  }
+
+  const columnClass = (index: Level) => cn(level === index ? "flex" : "hidden", "lg:flex");
 
   return (
     <div className="flex flex-col gap-4">
-      {error ? (
+      {error || query.error ? (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error ?? query.error?.message}</AlertDescription>
         </Alert>
       ) : null}
 
-      <Tabs defaultValue="brands">
-        <TabsList>
-          <TabsTrigger value="brands">{t("brands")}</TabsTrigger>
-          <TabsTrigger value="models">{t("models")}</TabsTrigger>
-          <TabsTrigger value="years">{t("years")}</TabsTrigger>
-          <TabsTrigger value="variants">{t("variants")}</TabsTrigger>
-        </TabsList>
+      {/* Where you are; each step jumps back to that level. */}
+      <nav
+        aria-label={t("title")}
+        className="bg-card flex min-w-0 items-center gap-1 overflow-x-auto rounded-xl border px-2 py-1.5 shadow-xs"
+      >
+        {path.map((step, index) => {
+          const last = index === path.length - 1;
+          return (
+            <span key={step.level} className="flex shrink-0 items-center gap-1">
+              {index > 0 ? (
+                <ChevronRightIcon
+                  className="text-muted-foreground size-4 rtl:rotate-180"
+                  aria-hidden
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={() => goTo(step.level)}
+                aria-current={last ? "location" : undefined}
+                className={cn(
+                  "rounded-md px-2 py-1 text-sm transition-colors",
+                  last
+                    ? "bg-brand-soft text-brand-strong dark:text-brand font-semibold"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {step.label}
+              </button>
+            </span>
+          );
+        })}
+      </nav>
 
-        <TabsContent value="brands">
-          <Panel
-            form={
-              <>
-                <FormField label={t("name")} htmlFor="catalog-brand-name">
-                  <Input id="catalog-brand-name" value={brandName} onChange={(e) => setBrandName(e.target.value)} />
-                </FormField>
-                <FormField label={t("nameAr")} htmlFor="catalog-brand-name-ar">
-                  <Input
-                    id="catalog-brand-name-ar"
-                    dir="rtl"
-                    value={brandNameAr}
-                    onChange={(e) => setBrandNameAr(e.target.value)}
-                  />
-                </FormField>
-                <LoadingButton
-                  type="button"
-                  loading={mutation.isPending}
-                  disabled={!brandName.trim()}
-                  onClick={() =>
+      <div className="grid gap-3 lg:grid-cols-4">
+        <Column
+          className={columnClass(0)}
+          icon={CarFrontIcon}
+          title={t("brands")}
+          items={makes.map((m) => ({
+            id: m.id,
+            label: m.name,
+            sub: m.nameAr,
+            isActive: m.isActive,
+            value: m.name,
+            valueAr: m.nameAr,
+          }))}
+          loading={query.isPending}
+          selectedId={makeId}
+          onSelect={selectMake}
+          editKind="brand"
+          add={{
+            placeholder: t("newBrand"),
+            withArabic: true,
+            submit: (name, nameAr, done) =>
+              add(
+                { action: "upsertMake", name, nameAr: nameAr || null, slug: slugify(name) },
+                name,
+                done,
+              ),
+          }}
+          t={t}
+          {...actions("vehicle_makes")}
+        />
+        <Column
+          className={columnClass(1)}
+          icon={LayersIcon}
+          title={t("models")}
+          context={make?.name}
+          items={
+            makeId
+              ? models.map((m) => ({
+                  id: m.id,
+                  label: m.name,
+                  isActive: m.isActive,
+                  value: m.name,
+                }))
+              : null
+          }
+          loading={modelsLoading}
+          pickText={t("pickBrand")}
+          selectedId={modelId}
+          onSelect={selectModel}
+          onBack={() => goTo(0)}
+          editKind="name"
+          add={
+            make
+              ? {
+                  placeholder: t("newModel", { brand: make.name }),
+                  submit: (name, _ar, done) =>
+                    add({ action: "upsertModel", makeId, name, slug: slugify(name) }, name, done),
+                }
+              : undefined
+          }
+          t={t}
+          {...actions("vehicle_models")}
+        />
+        <Column
+          className={columnClass(2)}
+          icon={CalendarIcon}
+          title={t("years")}
+          context={make && model ? `${make.name} ${model.name}` : undefined}
+          items={
+            modelId
+              ? years.map((y) => ({
+                  id: y.id,
+                  label: String(y.year),
+                  sub: y.market,
+                  isActive: y.isActive,
+                  value: String(y.year),
+                }))
+              : null
+          }
+          loading={yearsLoading}
+          pickText={t("pickModel")}
+          selectedId={modelYearId}
+          onSelect={selectYear}
+          onBack={() => goTo(1)}
+          editKind="year"
+          add={
+            model
+              ? {
+                  placeholder: t("newYear"),
+                  numeric: true,
+                  submit: (value, _ar, done) =>
                     add(
-                      {
-                        action: "upsertMake",
-                        name: brandName.trim(),
-                        nameAr: brandNameAr.trim() || null,
-                        slug: slugify(brandName),
-                      },
-                      () => {
-                        setBrandName("");
-                        setBrandNameAr("");
-                      },
-                    )
-                  }
-                >
-                  {t("addBrand")}
-                </LoadingButton>
-              </>
-            }
-            items={makes.map((m) => ({ id: m.id, label: m.name, isActive: m.isActive, value: m.name, valueAr: m.nameAr }))}
-            {...rowActions("vehicle_makes")}
-          />
-        </TabsContent>
-
-        <TabsContent value="models">
-          <Panel
-            form={
-              <>
-                {brandSelect}
-                <FormField label={t("name")} htmlFor="catalog-model-name">
-                  <Input
-                    id="catalog-model-name"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                    disabled={!makeId}
-                  />
-                </FormField>
-                <LoadingButton
-                  type="button"
-                  loading={mutation.isPending}
-                  disabled={!makeId || !modelName.trim()}
-                  onClick={() =>
+                      { action: "upsertYear", modelId, year: Number(value), market: "UAE" },
+                      value,
+                      done,
+                    ),
+                }
+              : undefined
+          }
+          t={t}
+          {...actions("vehicle_model_years")}
+        />
+        <Column
+          className={columnClass(3)}
+          icon={LayersIcon}
+          title={t("variants")}
+          context={model && year ? `${model.name} ${year.year}` : undefined}
+          items={
+            modelYearId
+              ? variants.map((v) => ({
+                  id: v.id,
+                  label: v.name,
+                  isActive: v.isActive,
+                  value: v.name,
+                }))
+              : null
+          }
+          loading={variantsLoading}
+          pickText={t("pickYear")}
+          onBack={() => goTo(2)}
+          editKind="name"
+          add={
+            year
+              ? {
+                  placeholder: t("newVariant", {
+                    year: `${model?.name ?? ""} ${year.year}`.trim(),
+                  }),
+                  submit: (name, _ar, done) =>
                     add(
-                      { action: "upsertModel", makeId, name: modelName.trim(), slug: slugify(modelName) },
-                      () => setModelName(""),
-                    )
-                  }
-                >
-                  {t("addModel")}
-                </LoadingButton>
-              </>
-            }
-            items={makeId ? models.map((m) => ({ id: m.id, label: m.name, isActive: m.isActive, value: m.name })) : null}
-            {...rowActions("vehicle_models")}
-            pickFirstLabel={t("selectBrand")}
-          />
-        </TabsContent>
-
-        <TabsContent value="years">
-          <Panel
-            form={
-              <>
-                {brandSelect}
-                {modelSelect}
-                <FormField label={t("year")} htmlFor="catalog-year">
-                  <Input
-                    id="catalog-year"
-                    type="number"
-                    inputMode="numeric"
-                    min={1980}
-                    max={2100}
-                    value={yearValue}
-                    onChange={(e) => setYearValue(e.target.value)}
-                    disabled={!modelId}
-                  />
-                </FormField>
-                <LoadingButton
-                  type="button"
-                  loading={mutation.isPending}
-                  disabled={!modelId || !/^\d{4}$/.test(yearValue)}
-                  onClick={() =>
-                    add({ action: "upsertYear", modelId, year: Number(yearValue), market: "UAE" }, () =>
-                      setYearValue(""),
-                    )
-                  }
-                >
-                  {t("addYear")}
-                </LoadingButton>
-              </>
-            }
-            items={
-              modelId
-                ? years.map((y) => ({
-                    id: y.id,
-                    label: `${y.year} (${y.market})`,
-                    isActive: y.isActive,
-                    value: String(y.year),
-                  }))
-                : null
-            }
-            {...rowActions("vehicle_model_years")}
-            pickFirstLabel={t("selectModel")}
-          />
-        </TabsContent>
-
-        <TabsContent value="variants">
-          <Panel
-            form={
-              <>
-                {brandSelect}
-                {modelSelect}
-                <FormField label={t("selectYear")} htmlFor="catalog-variant-year">
-                  <SearchableSelect
-                    id="catalog-variant-year"
-                    value={modelYearId}
-                    onValueChange={setModelYearId}
-                    options={yearOptions}
-                    optional={false}
-                    placeholder={t("selectYear")}
-                    disabled={!modelId}
-                  />
-                </FormField>
-                <FormField label={t("name")} htmlFor="catalog-variant-name">
-                  <Input
-                    id="catalog-variant-name"
-                    value={variantName}
-                    onChange={(e) => setVariantName(e.target.value)}
-                    disabled={!modelYearId}
-                  />
-                </FormField>
-                <LoadingButton
-                  type="button"
-                  loading={mutation.isPending}
-                  disabled={!modelYearId || !variantName.trim()}
-                  onClick={() =>
-                    add(
-                      {
-                        action: "upsertVariant",
-                        modelYearId,
-                        name: variantName.trim(),
-                        slug: slugify(variantName),
-                      },
-                      () => setVariantName(""),
-                    )
-                  }
-                >
-                  {t("addVariant")}
-                </LoadingButton>
-              </>
-            }
-            items={
-              modelYearId
-                ? variants.map((v) => ({ id: v.id, label: v.name, isActive: v.isActive, value: v.name }))
-                : null
-            }
-            {...rowActions("vehicle_variants")}
-            pickFirstLabel={t("selectYear")}
-          />
-        </TabsContent>
-      </Tabs>
+                      { action: "upsertVariant", modelYearId, name, slug: slugify(name) },
+                      name,
+                      done,
+                    ),
+                }
+              : undefined
+          }
+          t={t}
+          {...actions("vehicle_variants")}
+        />
+      </div>
     </div>
   );
 }
 
-type EditValues = { name?: string; nameAr?: string | null; year?: number };
-
-type PanelItem = {
-  id: string;
-  label: string;
-  isActive: boolean;
-  value: string;
-  valueAr?: string | null;
+type AddConfig = {
+  placeholder: string;
+  withArabic?: boolean;
+  numeric?: boolean;
+  submit: (value: string, valueAr: string, done: () => void) => void;
 };
 
-function Panel({
-  form,
+function Column({
+  className,
+  icon: Icon,
+  title,
+  context,
   items,
+  loading = false,
+  pickText,
+  selectedId,
+  onSelect,
+  onBack,
+  add,
+  editKind,
   onToggle,
   onUpdate,
   onDelete,
   busy,
-  editKind,
-  emptyLabel,
-  pickFirstLabel,
   t,
 }: {
-  form: React.ReactNode;
-  items: PanelItem[] | null;
-  onToggle: (id: string, isActive: boolean) => void;
-  onUpdate?: (id: string, values: EditValues, done: () => void) => void;
-  onDelete?: (id: string) => void;
-  busy: boolean;
+  className?: string;
+  icon: LucideIcon;
+  title: string;
+  /** What this column belongs to, e.g. the brand for Models. */
+  context?: string;
+  /** null until the previous column has a selection. */
+  items: Item[] | null;
+  loading?: boolean;
+  pickText?: string;
+  selectedId?: string;
+  onSelect?: (id: string) => void;
+  onBack?: () => void;
+  add?: AddConfig;
   editKind: "brand" | "name" | "year";
-  emptyLabel: string;
-  pickFirstLabel?: string;
-  t: ReturnType<typeof useTranslations<"settings.catalog">>;
+  onToggle: (item: Item) => void;
+  onUpdate?: (id: string, values: EditValues, done: () => void) => void;
+  onDelete?: (item: Item) => void;
+  busy: boolean;
+  t: Translate;
 }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const [draftAr, setDraftAr] = useState("");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!items || !term) return items;
+    return items.filter((item) => `${item.label} ${item.sub ?? ""}`.toLowerCase().includes(term));
+  }, [items, search]);
+  const locked = items === null;
 
-  function startEdit(item: PanelItem) {
-    setDeletingId(null);
-    setEditingId(item.id);
-    setDraft(item.value);
-    setDraftAr(item.valueAr ?? "");
-  }
+  return (
+    <section
+      className={cn(
+        "bg-card ring-foreground/[0.07] h-[max(26rem,calc(100svh-19rem))] min-w-0 flex-col overflow-hidden rounded-xl shadow-xs ring-1",
+        locked && "lg:bg-muted/30",
+        className,
+      )}
+      aria-label={title}
+    >
+      <header className="grid gap-3 border-b p-3">
+        <div className="flex items-center gap-2.5">
+          {onBack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="lg:hidden"
+              onClick={onBack}
+              aria-label={t("back")}
+            >
+              <ChevronLeftIcon className="rtl:rotate-180" />
+            </Button>
+          ) : null}
+          <span
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-lg",
+              locked ? "bg-muted text-muted-foreground" : "bg-brand-soft text-brand",
+            )}
+          >
+            <Icon className="size-4" aria-hidden />
+          </span>
+          <div className="grid min-w-0 flex-1">
+            <h2 className="font-heading truncate text-sm font-semibold">{title}</h2>
+            <p className="text-muted-foreground truncate text-xs">
+              {items && !loading ? t("count", { count: items.length }) : (context ?? " ")}
+              {items && !loading && context ? ` · ${context}` : null}
+            </p>
+          </div>
+        </div>
+        {!locked ? (
+          <InputGroup className="h-8">
+            <InputGroupAddon>
+              <SearchIcon />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t("searchIn", { list: title.toLowerCase() })}
+              aria-label={t("searchIn", { list: title.toLowerCase() })}
+            />
+            {search ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  onClick={() => setSearch("")}
+                  aria-label={t("cancel")}
+                >
+                  <XIcon />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
+          </InputGroup>
+        ) : null}
+      </header>
 
-  const draftValid = editKind === "year" ? /^\d{4}$/.test(draft) : draft.trim().length > 0;
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="grid gap-1 p-2" aria-busy="true">
+            {Array.from({ length: 7 }, (_, index) => (
+              <Skeleton key={index} className="h-10 rounded-lg" />
+            ))}
+          </div>
+        ) : locked ? (
+          <div className="text-muted-foreground grid h-full place-items-center p-6 text-center text-sm">
+            <div className="grid justify-items-center gap-2">
+              <Icon className="size-8 opacity-30" aria-hidden />
+              {pickText}
+            </div>
+          </div>
+        ) : visible && visible.length > 0 ? (
+          <ul className="grid gap-0.5 p-2">
+            {visible.map((item) => (
+              <Row
+                key={item.id}
+                item={item}
+                selected={item.id === selectedId}
+                onSelect={onSelect}
+                editKind={editKind}
+                onToggle={onToggle}
+                onUpdate={onUpdate}
+                onDelete={onDelete}
+                busy={busy}
+                t={t}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground p-6 text-center text-sm">
+            {search ? t("noMatches") : t("empty")}
+          </p>
+        )}
+      </div>
 
-  function save(id: string) {
-    if (!onUpdate || !draftValid) return;
-    const values: EditValues =
-      editKind === "year"
-        ? { year: Number(draft) }
-        : editKind === "brand"
-          ? { name: draft.trim(), nameAr: draftAr.trim() || null }
-          : { name: draft.trim() };
-    onUpdate(id, values, () => setEditingId(null));
+      {add ? <AddBar config={add} busy={busy} t={t} /> : null}
+    </section>
+  );
+}
+
+/** Quick add at the bottom of a column: type and press Enter. */
+function AddBar({ config, busy, t }: { config: AddConfig; busy: boolean; t: Translate }) {
+  const [value, setValue] = useState("");
+  const [valueAr, setValueAr] = useState("");
+  const valid = config.numeric ? /^\d{4}$/.test(value) : value.trim().length > 0;
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!valid || busy) return;
+    config.submit(value.trim(), valueAr.trim(), () => {
+      setValue("");
+      setValueAr("");
+    });
   }
 
   return (
-    <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,20rem)_1fr]">
-      <section className="flex flex-col gap-3 self-start rounded-xl border border-border bg-card p-4">
-        {form}
-      </section>
-      <section className="self-start overflow-hidden rounded-xl border border-border bg-card">
-        {items === null ? (
-          <p className="text-muted-foreground p-4 text-sm">{pickFirstLabel}</p>
-        ) : items.length === 0 ? (
-          <p className="text-muted-foreground p-4 text-sm">{emptyLabel}</p>
-        ) : (
-          // Fits below the page header and tabs so the list's bottom edge stays on screen.
-          <ul className="max-h-[max(16rem,calc(100svh-24rem))] divide-y divide-border overflow-y-auto">
-            {items.map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                {editingId === item.id ? (
-                  <form
-                    className="flex flex-1 flex-wrap items-center gap-2"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      save(item.id);
-                    }}
-                  >
-                    <Input
-                      autoFocus
-                      aria-label={editKind === "year" ? t("year") : t("name")}
-                      type={editKind === "year" ? "number" : "text"}
-                      inputMode={editKind === "year" ? "numeric" : undefined}
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      className="h-8 min-w-0 flex-1 basis-40"
-                    />
-                    {editKind === "brand" ? (
-                      <Input
-                        aria-label={t("nameAr")}
-                        placeholder={t("nameAr")}
-                        dir="rtl"
-                        value={draftAr}
-                        onChange={(e) => setDraftAr(e.target.value)}
-                        className="h-8 min-w-0 flex-1 basis-40"
-                      />
-                    ) : null}
-                    <Button type="submit" size="sm" disabled={busy || !draftValid}>
-                      <CheckIcon />
-                      {t("save")}
-                    </Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                      <XIcon />
-                      {t("cancel")}
-                    </Button>
-                  </form>
-                ) : deletingId === item.id ? (
-                  <>
-                    <span className="font-medium">{t("deleteConfirm", { name: item.label })}</span>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        disabled={busy}
-                        onClick={() => {
-                          onDelete?.(item.id);
-                          setDeletingId(null);
-                        }}
-                      >
-                        <Trash2Icon />
-                        {t("delete")}
-                      </Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => setDeletingId(null)}>
-                        {t("cancel")}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className={item.isActive ? "" : "text-muted-foreground line-through"}>
-                      {item.label}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={item.isActive ? "default" : "secondary"}>
-                        {item.isActive ? t("active") : t("inactive")}
-                      </Badge>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onToggle(item.id, item.isActive)}
-                      >
-                        {item.isActive ? t("deactivate") : t("activate")}
-                      </Button>
-                      {onUpdate ? (
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label={t("edit")}
-                          onClick={() => startEdit(item)}
-                        >
-                          <PencilIcon />
-                        </Button>
-                      ) : null}
-                      {onDelete ? (
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          aria-label={t("delete")}
-                          onClick={() => {
-                            setEditingId(null);
-                            setDeletingId(item.id);
-                          }}
-                        >
-                          <Trash2Icon />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+    <form onSubmit={submit} className="bg-muted/30 grid gap-2 border-t p-2">
+      <div className="flex gap-2">
+        <Input
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={config.placeholder}
+          aria-label={config.placeholder}
+          type={config.numeric ? "number" : "text"}
+          inputMode={config.numeric ? "numeric" : undefined}
+          min={config.numeric ? 1980 : undefined}
+          max={config.numeric ? 2100 : undefined}
+          className="bg-card h-9 min-w-0 flex-1"
+        />
+        <Button
+          type="submit"
+          variant="brand"
+          size="sm"
+          className="h-9 shrink-0"
+          disabled={!valid || busy}
+        >
+          <PlusIcon />
+          <span className="sr-only sm:not-sr-only">{t("add")}</span>
+        </Button>
+      </div>
+      {/* The Arabic name only appears once a brand name is typed. */}
+      {config.withArabic && value.trim() ? (
+        <Input
+          value={valueAr}
+          onChange={(event) => setValueAr(event.target.value)}
+          placeholder={t("newBrandAr")}
+          aria-label={t("newBrandAr")}
+          dir="rtl"
+          className="bg-card animate-rise h-9"
+        />
+      ) : null}
+    </form>
+  );
+}
+
+function Row({
+  item,
+  selected,
+  onSelect,
+  editKind,
+  onToggle,
+  onUpdate,
+  onDelete,
+  busy,
+  t,
+}: {
+  item: Item;
+  selected: boolean;
+  onSelect?: (id: string) => void;
+  editKind: "brand" | "name" | "year";
+  onToggle: (item: Item) => void;
+  onUpdate?: (id: string, values: EditValues, done: () => void) => void;
+  onDelete?: (item: Item) => void;
+  busy: boolean;
+  t: Translate;
+}) {
+  const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
+  const [draft, setDraft] = useState(item.value);
+  const [draftAr, setDraftAr] = useState(item.valueAr ?? "");
+  const draftValid = editKind === "year" ? /^\d{4}$/.test(draft) : draft.trim().length > 0;
+
+  if (mode === "edit" && onUpdate) {
+    return (
+      <li className="bg-brand-soft/50 ring-brand/30 rounded-lg p-2 ring-1">
+        <form
+          className="grid gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!draftValid) return;
+            const values: EditValues =
+              editKind === "year"
+                ? { year: Number(draft) }
+                : editKind === "brand"
+                  ? { name: draft.trim(), nameAr: draftAr.trim() || null }
+                  : { name: draft.trim() };
+            onUpdate(item.id, values, () => setMode("view"));
+          }}
+        >
+          <Input
+            autoFocus
+            aria-label={editKind === "year" ? t("year") : t("name")}
+            type={editKind === "year" ? "number" : "text"}
+            inputMode={editKind === "year" ? "numeric" : undefined}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            className="bg-card h-8"
+          />
+          {editKind === "brand" ? (
+            <Input
+              aria-label={t("nameAr")}
+              placeholder={t("nameAr")}
+              dir="rtl"
+              value={draftAr}
+              onChange={(event) => setDraftAr(event.target.value)}
+              className="bg-card h-8"
+            />
+          ) : null}
+          <div className="flex justify-end gap-1.5">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setMode("view")}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" size="sm" variant="brand" disabled={busy || !draftValid}>
+              <CheckIcon />
+              {t("save")}
+            </Button>
+          </div>
+        </form>
+      </li>
+    );
+  }
+
+  if (mode === "delete" && onDelete) {
+    return (
+      <li className="bg-destructive/8 ring-destructive/30 grid gap-2 rounded-lg p-2.5 ring-1">
+        <p className="text-sm font-medium">{t("deleteConfirm", { name: item.label })}</p>
+        <div className="flex justify-end gap-1.5">
+          <Button type="button" size="sm" variant="ghost" onClick={() => setMode("view")}>
+            {t("cancel")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive"
+            disabled={busy}
+            onClick={() => {
+              onDelete(item);
+              setMode("view");
+            }}
+          >
+            <Trash2Icon />
+            {t("delete")}
+          </Button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li
+      className={cn(
+        "group/row relative flex items-center gap-1 rounded-lg transition-colors",
+        selected ? "bg-brand-soft ring-brand/40 ring-1" : "hover:bg-muted/70",
+      )}
+    >
+      {selected ? (
+        <span className="bg-gold absolute inset-y-1.5 start-0 w-0.5 rounded-full" aria-hidden />
+      ) : null}
+      <button
+        type="button"
+        disabled={!onSelect}
+        onClick={() => onSelect?.(item.id)}
+        aria-pressed={onSelect ? selected : undefined}
+        className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2 text-start disabled:cursor-default"
+      >
+        <span className="grid min-w-0 flex-1">
+          <span
+            className={cn(
+              "truncate text-sm",
+              selected && "font-semibold",
+              !item.isActive && "text-muted-foreground",
+            )}
+          >
+            {item.label}
+          </span>
+          {item.sub ? (
+            <span className="text-muted-foreground truncate text-xs" dir="auto">
+              {item.sub}
+            </span>
+          ) : null}
+        </span>
+        {!item.isActive ? (
+          <span
+            className="bg-muted text-muted-foreground shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+            title={t("inactiveHint")}
+          >
+            {t("inactive")}
+          </span>
+        ) : null}
+      </button>
+
+      <div className="flex shrink-0 items-center gap-0.5 pe-1.5">
+        <Switch
+          size="sm"
+          checked={item.isActive}
+          disabled={busy}
+          onCheckedChange={() => onToggle(item)}
+          aria-label={t("toggleActive", { name: item.label })}
+          title={item.isActive ? t("deactivate") : t("activate")}
+        />
+        {onUpdate || onDelete ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className="text-muted-foreground opacity-100 lg:opacity-0 lg:group-hover/row:opacity-100 lg:focus-visible:opacity-100 lg:data-popup-open:opacity-100"
+                  aria-label={t("more", { name: item.label })}
+                />
+              }
+            >
+              <MoreHorizontalIcon />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-36">
+              {onUpdate ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setDraft(item.value);
+                    setDraftAr(item.valueAr ?? "");
+                    setMode("edit");
+                  }}
+                >
+                  <PencilIcon />
+                  {t("edit")}
+                </DropdownMenuItem>
+              ) : null}
+              {onDelete ? (
+                <DropdownMenuItem variant="destructive" onClick={() => setMode("delete")}>
+                  <Trash2Icon />
+                  {t("delete")}
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+        {onSelect ? (
+          <ChevronRightIcon
+            className={cn(
+              "size-4 shrink-0 rtl:rotate-180",
+              selected ? "text-brand" : "text-muted-foreground/50",
+            )}
+            aria-hidden
+          />
+        ) : null}
+      </div>
+    </li>
   );
 }

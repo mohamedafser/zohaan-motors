@@ -57,7 +57,8 @@ function targetBlocked(target: StatusUpdateTarget, vehicle: StatusUpdateVehicle,
       if (!can("reservation.create")) return "noPermission";
       return vehicle.hasMinimumPrice ? null : "noMinimumPrice";
     case "sold":
-      return can("vehicle.status.change") ? null : "noPermission";
+      if (!can("sale.create") && !can("vehicle.status.change")) return "noPermission";
+      return vehicle.hasMinimumPrice ? null : "noMinimumPrice";
   }
 }
 
@@ -250,29 +251,29 @@ function ReviewStep({
   onDone,
 }: {
   vehicle: StatusUpdateVehicle;
-  /** Booked goes to the booking form instead of this review. */
-  target: Exclude<StatusUpdateTarget, "reserved">;
+  /** Booked and Sold go to the booking / sale form instead of this review. */
+  target: "ready_for_sale";
   units: number;
   onBack: () => void;
   onDone: () => void;
 }) {
   const t = useTranslations();
   const { can } = usePermission();
-  const { changeStatus, markReadyForSale } = useVehicleMutations(vehicle.id);
+  const { markReadyForSale } = useVehicleMutations(vehicle.id);
   const [note, setNote] = useState("");
   const [override, setOverride] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
   const [overrideError, setOverrideError] = useState<string | undefined>();
 
-  const eligibility = useReadyForSaleEligibility(vehicle.id, target === "ready_for_sale");
-  const blockers = target === "ready_for_sale" ? (eligibility.data?.blockers ?? []) : [];
+  const eligibility = useReadyForSaleEligibility(vehicle.id, true);
+  const blockers = eligibility.data?.blockers ?? [];
   const canOverride =
     blockers.length > 0 &&
     Boolean(eligibility.data?.canOverride) &&
     can("vehicle.ready_for_sale.override");
   const blocked = blockers.length > 0 && !(canOverride && override);
-  const loadingChecks = target === "ready_for_sale" && eligibility.isPending;
-  const pending = changeStatus.isPending || markReadyForSale.isPending;
+  const loadingChecks = eligibility.isPending;
+  const pending = markReadyForSale.isPending;
 
   async function confirm() {
     if (override && !overrideReason.trim()) {
@@ -283,15 +284,12 @@ function ReviewStep({
     // Only multi-unit records send a quantity; fewer than all splits them server-side.
     const quantity = vehicle.quantity > 1 ? units : undefined;
     try {
-      const updated =
-        target === "ready_for_sale"
-          ? await markReadyForSale.mutateAsync({
-              reason,
-              quantity,
-              override: blockers.length > 0 && override,
-              overrideReason: override ? overrideReason.trim() : null,
-            })
-          : await changeStatus.mutateAsync({ status: target, reason: reason ?? "", quantity });
+      const updated = await markReadyForSale.mutateAsync({
+        reason,
+        quantity,
+        override: blockers.length > 0 && override,
+        overrideReason: override ? overrideReason.trim() : null,
+      });
       const status = t(`inventory.status.${target}`);
       toast.success(
         updated.id !== vehicle.id
@@ -397,12 +395,12 @@ function ReviewStep({
 function StatusUpdateFlow({
   vehicle,
   onDone,
-  onBook,
+  onHandOff,
 }: {
   vehicle: StatusUpdateVehicle;
   onDone: () => void;
-  /** Booked: hand over to the booking form with the chosen number of units. */
-  onBook: (units: number) => void;
+  /** Booked / Sold: hand over to the booking or sale form with the chosen number of units. */
+  onHandOff: (target: "reserved" | "sold", units: number) => void;
 }) {
   const t = useTranslations();
   const options = useStatusUpdateTargets(vehicle);
@@ -419,7 +417,7 @@ function StatusUpdateFlow({
   const multiUnit = vehicle.quantity > 1;
   const unitsOk = !multiUnit || validUnits(vehicle, units);
 
-  if (step === "review" && selected && selected !== "reserved") {
+  if (step === "review" && selected === "ready_for_sale") {
     return (
       <ReviewStep
         vehicle={vehicle}
@@ -433,8 +431,8 @@ function StatusUpdateFlow({
 
   function next() {
     if (!selected || !unitsOk) return;
-    if (selected === "reserved") onBook(multiUnit ? Number(units) : 1);
-    else setStep("review");
+    if (selected === "ready_for_sale") setStep("review");
+    else onHandOff(selected, multiUnit ? Number(units) : 1);
   }
 
   return (
@@ -480,8 +478,11 @@ export function VehicleStatusUpdateDialog({
   const t = useTranslations();
   const { can } = usePermission();
   const queryClient = useQueryClient();
-  // Booked opens the booking form in place, prefilled with this car and the units chosen.
-  const [booking, setBooking] = useState<{ units: number; key: number } | null>(null);
+  // Booked / Sold open the booking form in place (in sale mode for Sold), prefilled with
+  // this car and the units chosen, so the customer, sales executive and price are recorded.
+  const [booking, setBooking] = useState<{ sell: boolean; units: number; key: number } | null>(
+    null,
+  );
 
   return (
     <>
@@ -501,9 +502,9 @@ export function VehicleStatusUpdateDialog({
               key={vehicle.status}
               vehicle={vehicle}
               onDone={() => onOpenChange(false)}
-              onBook={(units) => {
+              onHandOff={(target, units) => {
                 onOpenChange(false);
-                setBooking({ units, key: Date.now() });
+                setBooking({ sell: target === "sold", units, key: Date.now() });
               }}
             />
           ) : null}
@@ -518,6 +519,7 @@ export function VehicleStatusUpdateDialog({
           }}
           initialVehicleId={vehicle.id}
           initialQuantity={booking.units}
+          sell={booking.sell}
           canCreateCustomer={can("customer.create")}
           onCreated={() => void queryClient.invalidateQueries({ queryKey: vehicleKeys.all })}
         />

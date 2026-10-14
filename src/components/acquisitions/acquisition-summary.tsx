@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { KpiCard } from "@/components/cards/kpi-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCardSkeleton } from "@/components/feedback/skeletons";
 import { formatNumber } from "@/lib/utils/currency";
 import type { AcquisitionSummary as Summary } from "@/types/acquisition";
 
@@ -36,7 +36,7 @@ export function AcquisitionSummary({ summary }: { summary?: Summary }) {
             value={formatNumber(summary[key], locale)}
           />
         ) : (
-          <Skeleton key={key} className="h-[104px] rounded-xl" />
+          <KpiCardSkeleton key={key} />
         ),
       )}
     </section>

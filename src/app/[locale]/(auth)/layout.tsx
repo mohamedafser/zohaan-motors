@@ -48,7 +48,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
             width={112}
             height={112}
             priority
-            className="animate-float mb-8 size-28 rounded-[1.75rem] drop-shadow-[0_18px_40px_color-mix(in_oklch,var(--sidebar-primary)_45%,transparent)]"
+            className="animate-float mb-8 size-28 rounded-lg drop-shadow-[0_18px_40px_color-mix(in_oklch,var(--sidebar-primary)_45%,transparent)]"
           />
           <p className="text-sidebar-primary border-sidebar-primary/30 bg-sidebar-primary/10 inline-flex rounded-full border px-3 py-1 text-xs font-medium tracking-[0.14em] uppercase">
             {t("app.region")}

@@ -37,7 +37,7 @@ export function FormField({
   const message = useTranslatedMessage()(error);
 
   return (
-    <div className="grid gap-2">
+    <div className="grid content-start gap-2">
       <Label htmlFor={htmlFor}>
         {label}
         {required ? (
