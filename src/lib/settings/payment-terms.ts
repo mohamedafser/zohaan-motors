@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/server";
 import {
   DEFAULT_PAYMENT_TERMS,
@@ -14,9 +16,12 @@ const toMinutes = (value: unknown, fallback: number) => {
   return Number.isInteger(n) && n >= 1 && n <= MAX_TERM_MINUTES ? n : fallback;
 };
 
-/** Booking payment deadlines from Settings (same fallbacks as public.booking_term_minutes()). */
-export async function getPaymentTerms(): Promise<PaymentTerms> {
-  const supabase = await createClient();
+/**
+ * Booking payment deadlines from Settings (same fallbacks as public.booking_term_minutes()).
+ * Pass a client to read outside a request (e.g. the service-role client in background jobs).
+ */
+export async function getPaymentTerms(client?: SupabaseClient): Promise<PaymentTerms> {
+  const supabase = client ?? (await createClient());
   const { data } = await supabase
     .from("system_settings")
     .select("key, value")

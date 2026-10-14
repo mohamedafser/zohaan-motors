@@ -1,9 +1,9 @@
 "use client";
 
 import {
+  Building2Icon,
   CalendarCheckIcon,
   MailIcon,
-  MapPinIcon,
   PhoneIcon,
   PlusIcon,
   SearchIcon,
@@ -42,7 +42,6 @@ export function CustomersPageClient({
   canCreateBooking: boolean;
 }) {
   const t = useTranslations("customers");
-  const tEmirate = useTranslations("modules.branches.emirates");
   const locale = useAppLocale();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -77,18 +76,6 @@ export function CustomersPageClient({
       );
     });
   }, [customers, filter, query]);
-
-  // "Dubai, Dubai" reads badly — drop the city when it just repeats the emirate.
-  // The city may be typed in English while the emirate label is translated, so compare
-  // against both the label and the emirate key ("Abu Dhabi" ~ "abu_dhabi").
-  const place = (c: CustomerListItem) => {
-    const emirate = c.emirate ? tEmirate(c.emirate as Parameters<typeof tEmirate>[0]) : null;
-    const cityKey = c.city?.trim().toLowerCase();
-    const repeatsEmirate =
-      !!cityKey && (cityKey === emirate?.toLowerCase() || cityKey.replace(/[\s-]+/g, "_") === c.emirate);
-    const city = cityKey && !repeatsEmirate ? c.city : null;
-    return [city, emirate].filter(Boolean).join(locale === "ar" ? "، " : ", ");
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -219,16 +206,9 @@ export function CustomersPageClient({
               ),
             },
             {
-              key: "location",
-              header: t("columns.location"),
-              cell: (c) => (
-                <div className="grid max-w-48 gap-0.5">
-                  <span className="truncate">{place(c) || "—"}</span>
-                  {c.branchName ? (
-                    <span className="text-muted-foreground truncate text-xs">{c.branchName}</span>
-                  ) : null}
-                </div>
-              ),
+              key: "branch",
+              header: t("columns.branch"),
+              cell: (c) => <span className="block max-w-48 truncate">{c.branchName ?? "—"}</span>,
               className: "hidden xl:table-cell",
             },
             {
@@ -279,10 +259,10 @@ export function CustomersPageClient({
                     <span className="truncate">{c.email}</span>
                   </a>
                 ) : null}
-                {place(c) ? (
+                {c.branchName ? (
                   <span className="flex min-w-0 items-center gap-2">
-                    <MapPinIcon className="size-3.5 shrink-0" aria-hidden />
-                    <span className="truncate">{place(c)}</span>
+                    <Building2Icon className="size-3.5 shrink-0" aria-hidden />
+                    <span className="truncate">{c.branchName}</span>
                   </span>
                 ) : null}
               </div>

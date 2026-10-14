@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { InventoryPageClient } from "@/components/inventory/inventory-page-client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InventoryListSkeleton } from "@/components/feedback/skeletons";
 import { requirePagePermission } from "@/lib/auth/authorize";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,7 +15,7 @@ export default async function Page() {
   await requirePagePermission("vehicle.view");
 
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+    <Suspense fallback={<InventoryListSkeleton />}>
       <InventoryPageClient />
     </Suspense>
   );

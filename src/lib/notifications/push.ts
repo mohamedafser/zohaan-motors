@@ -26,9 +26,12 @@ export function isPushConfigured() {
   return (configured = true);
 }
 
-/** Sends a push to every browser the users subscribed from. Dead subscriptions are removed. */
+/**
+ * Sends a push to every browser the users subscribed from. Dead subscriptions are removed.
+ * Returns false when a delivery failed for a reason worth retrying (e.g. network error).
+ */
 export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
-  if (userIds.length === 0 || !isPushConfigured()) return;
+  if (userIds.length === 0 || !isPushConfigured()) return true;
   const admin = createServiceRoleClient();
   const { data } = await admin
     .from("push_subscriptions")
@@ -38,6 +41,7 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
 
   const body = JSON.stringify(payload);
   const gone: string[] = [];
+  let delivered = true;
   await Promise.all(
     subscriptions.map(async (sub) => {
       try {
@@ -49,9 +53,13 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) gone.push(sub.id);
-        else console.error("[push] delivery failed", status ?? error);
+        else {
+          delivered = false;
+          console.error("[push] delivery failed", status ?? error);
+        }
       }
     }),
   );
   if (gone.length > 0) await admin.from("push_subscriptions").delete().in("id", gone);
+  return delivered;
 }

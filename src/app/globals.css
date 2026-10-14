@@ -156,13 +156,16 @@
     0 2px 4px hsl(var(--shadow-color) / 0.04), 0 8px 20px -4px hsl(var(--shadow-color) / 0.1);
   --shadow-lg:
     0 4px 8px hsl(var(--shadow-color) / 0.05), 0 18px 40px -8px hsl(var(--shadow-color) / 0.16);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  /* One corner radius across the app: every rounded-* size resolves to --radius (4px).
+     rounded-full stays round for avatars, dots, pills and switches. */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
 }
 
 :root {
@@ -198,7 +201,7 @@
   --chart-3: oklch(0.62 0.13 160);
   --chart-4: oklch(0.66 0.15 45);
   --chart-5: oklch(0.6 0.04 250);
-  --radius: 0.75rem;
+  --radius: 4px;
   --shadow-color: 260 15% 12%;
   --sidebar: oklch(0.165 0.006 265);
   --sidebar-foreground: oklch(0.93 0.004 255);

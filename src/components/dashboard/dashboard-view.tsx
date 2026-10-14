@@ -4,8 +4,8 @@ import { hasPermission } from "@/lib/permissions";
 import type { UserContext } from "@/types/auth";
 
 /** Loads the dashboard figures (scoped to what the user may see) and renders them. */
-export async function DashboardView({ context }: { context: UserContext }) {
-  const data = await getDashboard(context);
+export async function DashboardView({ context, month }: { context: UserContext; month?: string | null }) {
+  const data = await getDashboard(context, month);
   return (
     <DashboardClient
       data={data}

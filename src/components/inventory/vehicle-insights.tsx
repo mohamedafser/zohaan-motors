@@ -11,7 +11,6 @@ import {
   FuelIcon,
   GaugeIcon,
   HandCoinsIcon,
-  ImageIcon,
   MapPinIcon,
   RouteIcon,
   ShipIcon,
@@ -21,13 +20,18 @@ import {
   ZapIcon,
   type LucideIcon,
 } from "lucide-react";
+import { VehiclePhotoPlaceholder } from "@/components/inventory/vehicle-photo-placeholder";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { bodyTypeLabel, enumLabel, useAppLocale, vehicleTitle } from "@/components/inventory/inventory-utils";
-import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { QuantityBadge } from "@/components/inventory/quantity-badge";
-import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
+import {
+  bodyTypeLabel,
+  enumLabel,
+  useAppLocale,
+  vehicleTitle,
+} from "@/components/inventory/inventory-utils";
+import { NewCarBadge } from "@/components/inventory/market-type-badge";
+import { ReadyForSaleTag, SoldRibbon, isSoldStatus } from "@/components/inventory/vehicle-sold-tag";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/currency";
@@ -61,18 +65,39 @@ export function VehicleHero({ vehicle }: { vehicle: VehicleDetail }) {
         unit: t(`inventory.enums.mileageUnit.${vehicle.mileageUnit}`),
       }),
     },
-    { icon: CogIcon, label: t("inventory.fields.transmission"), value: enumLabel(t, "transmission", vehicle.transmission) },
-    { icon: FuelIcon, label: t("inventory.fields.fuelType"), value: enumLabel(t, "fuel", vehicle.fuelType) },
-    { icon: CarFrontIcon, label: t("inventory.fields.bodyType"), value: bodyTypeLabel(t, vehicle.bodyType) },
+    {
+      icon: CogIcon,
+      label: t("inventory.fields.transmission"),
+      value: enumLabel(t, "transmission", vehicle.transmission),
+    },
+    {
+      icon: FuelIcon,
+      label: t("inventory.fields.fuelType"),
+      value: enumLabel(t, "fuel", vehicle.fuelType),
+    },
+    {
+      icon: CarFrontIcon,
+      label: t("inventory.fields.bodyType"),
+      value: bodyTypeLabel(t, vehicle.bodyType),
+    },
     {
       icon: ZapIcon,
       label: t("inventory.fields.engineSize"),
       value:
-        [vehicle.engineSize, vehicle.engineCylinders ? t("inventory.insights.cylinders", { count: vehicle.engineCylinders }) : null]
+        [
+          vehicle.engineSize,
+          vehicle.engineCylinders
+            ? t("inventory.insights.cylinders", { count: vehicle.engineCylinders })
+            : null,
+        ]
           .filter(Boolean)
           .join(" · ") || null,
     },
-    { icon: RouteIcon, label: t("inventory.fields.driveType"), value: enumLabel(t, "drive", vehicle.driveType) },
+    {
+      icon: RouteIcon,
+      label: t("inventory.fields.driveType"),
+      value: enumLabel(t, "drive", vehicle.driveType),
+    },
     {
       icon: ArmchairIcon,
       label: t("inventory.insights.seatsDoors"),
@@ -101,17 +126,19 @@ export function VehicleHero({ vehicle }: { vehicle: VehicleDetail }) {
               className="absolute inset-0 size-full object-cover"
             />
           ) : (
-            <div className="bg-carbon text-sidebar-foreground/50 absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <ImageIcon className="size-10" aria-hidden />
-              <span className="text-xs">{t("inventory.insights.noPhoto")}</span>
-            </div>
+            <VehiclePhotoPlaceholder
+              size="lg"
+              label={t("inventory.insights.noPhoto")}
+              className="absolute inset-0"
+            />
           )}
           <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-black/0 to-transparent" />
-          <div className="bg-background/90 absolute start-3 top-3 flex flex-wrap gap-1.5 rounded-full p-1 shadow-sm backdrop-blur">
-            <VehicleStatusBadge status={vehicle.status} />
-            <MarketTypeBadge value={vehicle.marketType} />
-            <QuantityBadge quantity={vehicle.quantity} />
-          </div>
+          {isSoldStatus(vehicle.status) ? <SoldRibbon /> : null}
+          {vehicle.marketType === "new" ? <NewCarBadge className="absolute start-3 top-3" /> : null}
+          {/* Ready for sale uses the corner the Sold ribbon takes on sold cars. */}
+          {vehicle.status === "ready_for_sale" ? (
+            <ReadyForSaleTag className="absolute end-3 top-3" />
+          ) : null}
           {place ? (
             <p className="absolute start-4 bottom-4 flex items-center gap-1.5 text-sm font-medium text-white drop-shadow">
               <MapPinIcon className="size-4" aria-hidden />
@@ -137,7 +164,7 @@ export function VehicleHero({ vehicle }: { vehicle: VehicleDetail }) {
                 </span>
                 <span
                   className={cn(
-                    "text-sm font-semibold leading-tight",
+                    "text-sm leading-tight font-semibold",
                     !spec.value && "text-muted-foreground font-normal",
                   )}
                 >
@@ -171,7 +198,9 @@ const DETOURS: Partial<Record<VehicleStatus, number>> = {
 export function LifecycleStepper({ status }: { status: VehicleStatus }) {
   const t = useTranslations();
   // Delivery isn't tracked: Sold is the last step, and older "delivered" cars show as Sold.
-  const onPath = JOURNEY.findIndex((step) => step.status === (status === "delivered" ? "sold" : status));
+  const onPath = JOURNEY.findIndex(
+    (step) => step.status === (status === "delivered" ? "sold" : status),
+  );
   const current = onPath >= 0 ? onPath : (DETOURS[status] ?? -1);
   const detour = onPath < 0 && current >= 0;
   const offPath = current < 0; // returned / archived
@@ -195,7 +224,10 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
           </span>
         ) : null}
       </div>
-      <ol className="relative grid" style={{ gridTemplateColumns: `repeat(${JOURNEY.length}, minmax(0, 1fr))` }}>
+      <ol
+        className="relative grid"
+        style={{ gridTemplateColumns: `repeat(${JOURNEY.length}, minmax(0, 1fr))` }}
+      >
         {/* Track and animated fill, drawn between the first and last dot. */}
         <span
           className="bg-border absolute top-4 h-0.5 rounded-full"
@@ -204,7 +236,11 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
         />
         <span
           className="bg-gold animate-grow-x absolute top-4 h-0.5 rounded-full ltr:origin-left rtl:origin-right"
-          style={{ insetInlineStart: `${edge}%`, width: `${(progress / 100) * span}%`, animationDelay: "200ms" }}
+          style={{
+            insetInlineStart: `${edge}%`,
+            width: `${(progress / 100) * span}%`,
+            animationDelay: "200ms",
+          }}
           aria-hidden
         />
         {JOURNEY.map((step, index) => {
@@ -219,7 +255,7 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
               <span
                 className={cn(
                   "flex size-8 items-center justify-center rounded-full border-2 transition-colors",
-                  done && "bg-gold border-transparent text-brand-foreground",
+                  done && "bg-gold text-brand-foreground border-transparent",
                   active && "border-brand bg-card text-brand shadow-[0_0_0_4px_var(--brand-soft)]",
                   !done && !active && "bg-card text-muted-foreground border-border",
                 )}
@@ -233,7 +269,9 @@ export function LifecycleStepper({ status }: { status: VehicleStatus }) {
               <span
                 className={cn(
                   "text-[11px] leading-tight",
-                  !offPath && index === current ? "text-foreground font-semibold" : "text-muted-foreground",
+                  !offPath && index === current
+                    ? "text-foreground font-semibold"
+                    : "text-muted-foreground",
                 )}
               >
                 {t(`inventory.status.${step.status}`)}
@@ -264,12 +302,27 @@ export function PriceProfitCard({ vehicle }: { vehicle: VehicleDetail }) {
 
   const bars = [
     { key: "cost", label: t("inventory.fields.acquisitionCost"), value: cost, color: "bg-chart-2" },
-    { key: "minimum", label: t("inventory.fields.minimumPrice"), value: minimum, color: "bg-chart-4" },
+    {
+      key: "minimum",
+      label: t("inventory.fields.minimumPrice"),
+      value: minimum,
+      color: "bg-chart-4",
+    },
     { key: "selling", label: t("inventory.fields.sellingPrice"), value: selling, color: "bg-gold" },
     ...(agreed != null && agreed !== selling
-      ? [{ key: "agreed", label: t("inventory.insights.agreedPrice"), value: agreed, color: "bg-chart-3" }]
+      ? [
+          {
+            key: "agreed",
+            label: t("inventory.insights.agreedPrice"),
+            value: agreed,
+            color: "bg-chart-3",
+          },
+        ]
       : []),
-  ].filter((bar): bar is { key: string; label: string; value: number; color: string } => bar.value != null && bar.value > 0);
+  ].filter(
+    (bar): bar is { key: string; label: string; value: number; color: string } =>
+      bar.value != null && bar.value > 0,
+  );
 
   if (bars.length === 0) return null;
   const max = Math.max(...bars.map((bar) => bar.value));
@@ -297,8 +350,14 @@ export function PriceProfitCard({ vehicle }: { vehicle: VehicleDetail }) {
               </div>
               <div className="bg-muted h-2.5 overflow-hidden rounded-full">
                 <div
-                  className={cn(bar.color, "animate-grow-x h-full rounded-full ltr:origin-left rtl:origin-right")}
-                  style={{ width: `${(bar.value / max) * 100}%`, animationDelay: `${150 + index * 120}ms` }}
+                  className={cn(
+                    bar.color,
+                    "animate-grow-x h-full rounded-full ltr:origin-left rtl:origin-right",
+                  )}
+                  style={{
+                    width: `${(bar.value / max) * 100}%`,
+                    animationDelay: `${150 + index * 120}ms`,
+                  }}
                 />
               </div>
             </li>
@@ -320,7 +379,15 @@ export function PriceProfitCard({ vehicle }: { vehicle: VehicleDetail }) {
   );
 }
 
-function MarginGauge({ margin, profit, positive }: { margin: number; profit: string; positive: boolean }) {
+function MarginGauge({
+  margin,
+  profit,
+  positive,
+}: {
+  margin: number;
+  profit: string;
+  positive: boolean;
+}) {
   const t = useTranslations();
   const locale = useAppLocale();
   // Semicircle: 0% margin at the left end, 40%+ fills it.
@@ -329,7 +396,13 @@ function MarginGauge({ margin, profit, positive }: { margin: number; profit: str
   return (
     <figure className="mx-auto grid w-44 justify-items-center gap-1 text-center">
       <svg viewBox="0 0 120 70" className="w-full overflow-visible rtl:-scale-x-100" aria-hidden>
-        <path d="M10 62 A50 50 0 0 1 110 62" fill="none" className="stroke-muted" strokeWidth="10" strokeLinecap="round" />
+        <path
+          d="M10 62 A50 50 0 0 1 110 62"
+          fill="none"
+          className="stroke-muted"
+          strokeWidth="10"
+          strokeLinecap="round"
+        />
         <path
           d="M10 62 A50 50 0 0 1 110 62"
           fill="none"
@@ -342,7 +415,12 @@ function MarginGauge({ margin, profit, positive }: { margin: number; profit: str
         />
       </svg>
       <figcaption className="-mt-9 grid gap-0.5">
-        <span className={cn("font-heading text-2xl font-semibold tabular-nums", !positive && "text-destructive")}>
+        <span
+          className={cn(
+            "font-heading text-2xl font-semibold tabular-nums",
+            !positive && "text-destructive",
+          )}
+        >
           {formatPercent(margin, locale)}
         </span>
         <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
@@ -367,10 +445,25 @@ function MarginGauge({ margin, profit, positive }: { margin: number; profit: str
 /* ----------------------------------------------------------- stock age */
 
 const AGE_BANDS = [
-  { max: 30, key: "fresh", ring: "stroke-emerald-500", chip: "bg-emerald-600/10 text-emerald-700 dark:text-emerald-300" },
+  {
+    max: 30,
+    key: "fresh",
+    ring: "stroke-emerald-500",
+    chip: "bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
+  },
   { max: 60, key: "mid", ring: "stroke-[var(--brand)]", chip: "bg-brand-soft text-brand" },
-  { max: 90, key: "aging", ring: "stroke-orange-500", chip: "bg-orange-500/12 text-orange-700 dark:text-orange-300" },
-  { max: Infinity, key: "old", ring: "stroke-rose-500", chip: "bg-rose-500/12 text-rose-700 dark:text-rose-300" },
+  {
+    max: 90,
+    key: "aging",
+    ring: "stroke-orange-500",
+    chip: "bg-orange-500/12 text-orange-700 dark:text-orange-300",
+  },
+  {
+    max: Infinity,
+    key: "old",
+    ring: "stroke-rose-500",
+    chip: "bg-rose-500/12 text-rose-700 dark:text-rose-300",
+  },
 ] as const;
 
 /** Ring gauge of how long the car has been in stock, coloured by the dashboard aging bands. */
@@ -412,7 +505,9 @@ export function StockAgeCard({ vehicle }: { vehicle: VehicleDetail }) {
           </svg>
           <div className="absolute inset-0 grid place-content-center text-center">
             <span className="font-heading text-3xl font-semibold tabular-nums">{days}</span>
-            <span className="text-muted-foreground text-xs">{t("inventory.insights.days", { count: days })}</span>
+            <span className="text-muted-foreground text-xs">
+              {t("inventory.insights.days", { count: days })}
+            </span>
           </div>
         </div>
         <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", band.chip)}>
@@ -441,9 +536,21 @@ export function BookingProgressCard({ vehicle }: { vehicle: VehicleDetail }) {
   const date = (value: string) => formatDate(value, locale, "medium");
 
   const segments = [
-    { key: "deposit", label: t("bookings.payment.deposit"), value: booking.deposit, color: "bg-gold" },
+    {
+      key: "deposit",
+      label: t("bookings.payment.deposit"),
+      value: booking.deposit,
+      color: "bg-gold",
+    },
     ...(received > 0
-      ? [{ key: "balance", label: t("bookings.payment.balanceReceived"), value: received, color: "bg-emerald-500" }]
+      ? [
+          {
+            key: "balance",
+            label: t("bookings.payment.balanceReceived"),
+            value: received,
+            color: "bg-emerald-500",
+          },
+        ]
       : []),
   ];
 
@@ -452,7 +559,9 @@ export function BookingProgressCard({ vehicle }: { vehicle: VehicleDetail }) {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           {t("inventory.booking.title")}
-          <span className="text-muted-foreground font-mono text-xs font-normal">{booking.number}</span>
+          <span className="text-muted-foreground font-mono text-xs font-normal">
+            {booking.number}
+          </span>
         </CardTitle>
         <CardDescription>
           {t(`bookings.statuses.${booking.status}`)} · {date(booking.reservedAt)}
@@ -461,8 +570,20 @@ export function BookingProgressCard({ vehicle }: { vehicle: VehicleDetail }) {
       </CardHeader>
       <CardContent className="grid gap-5">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Person label={t("bookings.customer")} name={booking.customer?.name ?? null} sub={booking.customer?.phone} />
-          <Person label={t("bookings.salesperson")} name={booking.salesperson} sub={booking.bookedBy ? t("inventory.insights.bookedBy", { name: booking.bookedBy }) : undefined} />
+          <Person
+            label={t("bookings.customer")}
+            name={booking.customer?.name ?? null}
+            sub={booking.customer?.phone}
+          />
+          <Person
+            label={t("bookings.salesperson")}
+            name={booking.salesperson}
+            sub={
+              booking.bookedBy
+                ? t("inventory.insights.bookedBy", { name: booking.bookedBy })
+                : undefined
+            }
+          />
         </div>
 
         {total != null ? (
@@ -474,12 +595,22 @@ export function BookingProgressCard({ vehicle }: { vehicle: VehicleDetail }) {
                 <span className="text-muted-foreground"> / {money(total)}</span>
               </span>
             </div>
-            <div className="bg-muted flex h-3 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`${money(paid)} / ${money(total)}`}>
+            <div
+              className="bg-muted flex h-3 gap-0.5 overflow-hidden rounded-full"
+              role="img"
+              aria-label={`${money(paid)} / ${money(total)}`}
+            >
               {segments.map((segment, index) => (
                 <div
                   key={segment.key}
-                  className={cn(segment.color, "animate-grow-x h-full first:rounded-s-full last:rounded-e-full ltr:origin-left rtl:origin-right")}
-                  style={{ width: `${pct(segment.value)}%`, animationDelay: `${200 + index * 200}ms` }}
+                  className={cn(
+                    segment.color,
+                    "animate-grow-x h-full first:rounded-s-full last:rounded-e-full ltr:origin-left rtl:origin-right",
+                  )}
+                  style={{
+                    width: `${pct(segment.value)}%`,
+                    animationDelay: `${200 + index * 200}ms`,
+                  }}
                 />
               ))}
             </div>
@@ -495,7 +626,9 @@ export function BookingProgressCard({ vehicle }: { vehicle: VehicleDetail }) {
                 <li className="flex items-center gap-1.5">
                   <span className="bg-muted-foreground/30 size-2.5 rounded-full" aria-hidden />
                   <span className="text-muted-foreground">
-                    {booking.status === "converted" ? t("bookings.payment.outstanding") : t("bookings.payment.balanceDue")}
+                    {booking.status === "converted"
+                      ? t("bookings.payment.outstanding")
+                      : t("bookings.payment.balanceDue")}
                   </span>
                   <span className="font-medium tabular-nums">{money(remaining)}</span>
                 </li>
@@ -526,7 +659,9 @@ function Person({ label, name, sub }: { label: string; name: string | null; sub?
         {initials}
       </span>
       <div className="min-w-0">
-        <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">{label}</p>
+        <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
+          {label}
+        </p>
         <p className="truncate text-sm font-semibold">{name ?? "—"}</p>
         {sub ? (
           <p className="text-muted-foreground truncate text-xs" dir="auto">
@@ -550,7 +685,11 @@ export function KeyDatesCard({ vehicle }: { vehicle: VehicleDetail }) {
   const events = [
     { key: "purchased", label: t("inventory.fields.purchaseDate"), at: vehicle.purchaseDate },
     { key: "added", label: t("inventory.insights.addedToStock"), at: vehicle.createdAt },
-    { key: "registered", label: t("inventory.fields.registrationDate"), at: vehicle.registrationDate },
+    {
+      key: "registered",
+      label: t("inventory.fields.registrationDate"),
+      at: vehicle.registrationDate,
+    },
     { key: "booked", label: t("inventory.booking.bookedOn"), at: booking?.reservedAt ?? null },
     { key: "sold", label: t("inventory.booking.soldOn"), at: booking?.soldAt ?? null },
   ]
@@ -575,7 +714,12 @@ export function KeyDatesCard({ vehicle }: { vehicle: VehicleDetail }) {
       </CardHeader>
       <CardContent className="grid gap-4">
         {expiry && daysLeft != null ? (
-          <div className={cn("flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm", expiryTone)}>
+          <div
+            className={cn(
+              "flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm",
+              expiryTone,
+            )}
+          >
             <span className="font-medium">{t("inventory.fields.registrationExpiry")}</span>
             <span className="text-end">
               <span className="block font-semibold">{formatDate(expiry, locale, "medium")}</span>
@@ -589,18 +733,25 @@ export function KeyDatesCard({ vehicle }: { vehicle: VehicleDetail }) {
         ) : null}
         {events.length > 0 ? (
           <ol className="stagger relative grid gap-4 ps-6 [--stagger:60ms]">
-            <span className="bg-border absolute inset-y-1.5 start-[7px] w-0.5 rounded-full" aria-hidden />
+            <span
+              className="bg-border absolute inset-y-1.5 start-[7px] w-0.5 rounded-full"
+              aria-hidden
+            />
             {events.map((event, index) => (
               <li key={event.key} className="relative grid gap-0.5">
                 <span
                   className={cn(
-                    "absolute -start-6 top-1 size-4 rounded-full border-[3px] border-card",
-                    index === events.length - 1 ? "bg-gold shadow-[0_0_0_3px_var(--brand-soft)]" : "bg-muted-foreground/40",
+                    "border-card absolute -start-6 top-1 size-4 rounded-full border-[3px]",
+                    index === events.length - 1
+                      ? "bg-gold shadow-[0_0_0_3px_var(--brand-soft)]"
+                      : "bg-muted-foreground/40",
                   )}
                   aria-hidden
                 />
                 <span className="text-sm font-medium">{event.label}</span>
-                <span className="text-muted-foreground text-xs">{formatDate(event.at, locale, "medium")}</span>
+                <span className="text-muted-foreground text-xs">
+                  {formatDate(event.at, locale, "medium")}
+                </span>
               </li>
             ))}
           </ol>
@@ -631,8 +782,18 @@ export function AcquisitionCostChart({
   const money = (value: number) => formatCurrency(value, locale, currency ?? undefined);
   const extras = Math.max(0, totalCost - purchasePrice);
   const parts = [
-    { key: "purchase", label: t("inventory.fields.purchasePrice"), value: Math.min(purchasePrice, totalCost), color: "var(--chart-2)" },
-    { key: "extras", label: t("inventory.insights.otherCosts"), value: extras, color: "var(--brand)" },
+    {
+      key: "purchase",
+      label: t("inventory.fields.purchasePrice"),
+      value: Math.min(purchasePrice, totalCost),
+      color: "var(--chart-2)",
+    },
+    {
+      key: "extras",
+      label: t("inventory.insights.otherCosts"),
+      value: extras,
+      color: "var(--brand)",
+    },
   ];
   const r = 42;
   let offset = 0;
@@ -668,7 +829,9 @@ export function AcquisitionCostChart({
           <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             {t("inventory.insights.totalCost")}
           </span>
-          <span className="font-heading text-xs font-semibold tabular-nums">{money(totalCost)}</span>
+          <span className="font-heading text-xs font-semibold tabular-nums">
+            {money(totalCost)}
+          </span>
         </div>
       </div>
       <ul className="grid gap-3">
@@ -676,7 +839,11 @@ export function AcquisitionCostChart({
           <li key={part.key} className="grid gap-1">
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="flex items-center gap-2">
-                <span className="size-2.5 rounded-full" style={{ background: part.color }} aria-hidden />
+                <span
+                  className="size-2.5 rounded-full"
+                  style={{ background: part.color }}
+                  aria-hidden
+                />
                 {part.label}
               </span>
               <span className="font-semibold tabular-nums">{money(part.value)}</span>

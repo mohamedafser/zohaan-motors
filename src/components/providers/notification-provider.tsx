@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import type { AppNotification } from "@/types/notification";
 
@@ -13,6 +14,8 @@ type NotificationState = {
   markRead: (id: string) => void;
   markManyRead: (ids: string[]) => void;
   markAllRead: () => void;
+  /** Removes every notification. */
+  clearAll: () => void;
 };
 
 const NotificationContext = createContext<NotificationState | null>(null);
@@ -43,6 +46,11 @@ async function patchRead(body: { ids: string[] } | { all: true }) {
   if (!res.ok) throw new Error("Could not update notifications.");
 }
 
+async function deleteAll() {
+  const res = await fetch("/api/notifications", { method: "DELETE", credentials: "same-origin" });
+  if (!res.ok) throw new Error("Could not clear notifications.");
+}
+
 export function NotificationProvider({
   enabled = true,
   children,
@@ -52,6 +60,7 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { data, dataUpdatedAt, refetch } = useQuery({
     queryKey: notificationKeys.all,
     queryFn: fetchNotifications,
@@ -62,14 +71,25 @@ export function NotificationProvider({
   const items = useMemo(() => data?.items ?? [], [data]);
 
   // Check again the moment the next booking deadline passes, so its alert appears live.
+  // That check applies the deadline on the server (e.g. cancels an unpaid booking), so
+  // every screen then reloads its data: cars go back to Ready for sale straight away.
   const nextCheckAt = data?.nextCheckAt ?? null;
   useEffect(() => {
     if (!enabled || !nextCheckAt) return;
     const wait = new Date(nextCheckAt).getTime() - Date.now() + DEADLINE_GRACE_MS;
     if (wait > MAX_SCHEDULE_MS) return;
-    const timer = window.setTimeout(() => void refetch(), Math.max(wait, 0));
+    const timer = window.setTimeout(
+      async () => {
+        await refetch();
+        void queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] !== notificationKeys.all[0],
+        });
+        router.refresh();
+      },
+      Math.max(wait, 0),
+    );
     return () => window.clearTimeout(timer);
-  }, [enabled, nextCheckAt, refetch]);
+  }, [enabled, nextCheckAt, refetch, queryClient, router]);
 
   const { mutate } = useMutation({
     mutationFn: patchRead,
@@ -81,9 +101,27 @@ export function NotificationProvider({
         current
           ? {
               ...current,
-              items: current.items.map((item) => (!ids || ids.has(item.id) ? { ...item, read: true } : item)),
+              items: current.items.map((item) =>
+                !ids || ids.has(item.id) ? { ...item, read: true } : item,
+              ),
             }
           : current,
+      );
+      return { previous };
+    },
+    onError: (_error, _body, context) => {
+      if (context?.previous) queryClient.setQueryData(notificationKeys.all, context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+  });
+
+  const { mutate: clear } = useMutation({
+    mutationFn: deleteAll,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: notificationKeys.all });
+      const previous = queryClient.getQueryData<NotificationFeed>(notificationKeys.all);
+      queryClient.setQueryData<NotificationFeed>(notificationKeys.all, (current) =>
+        current ? { ...current, items: [] } : current,
       );
       return { previous };
     },
@@ -113,8 +151,11 @@ export function NotificationProvider({
       markAllRead: () => {
         if (unreadCount > 0) mutate({ all: true });
       },
+      clearAll: () => {
+        if (items.length > 0) clear();
+      },
     }),
-    [items, dataUpdatedAt, unreadCount, markManyRead, mutate],
+    [items, dataUpdatedAt, unreadCount, markManyRead, mutate, clear],
   );
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

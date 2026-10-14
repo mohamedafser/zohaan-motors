@@ -23,6 +23,8 @@ export type SearchableSelectOption = {
   icon?: ReactNode;
   /** When set, options are rendered under labeled groups. */
   group?: string;
+  /** Optional trailing tag (e.g. a role), shown in the list and on the selected value. */
+  badge?: ReactNode;
 };
 
 export type SearchableSelectProps = {
@@ -55,7 +57,11 @@ function OptionIcon({ icon }: { icon?: ReactNode }) {
       </span>
     );
   }
-  return <span className="text-muted-foreground flex size-4 shrink-0 items-center justify-center [&_svg]:size-4">{icon}</span>;
+  return (
+    <span className="text-muted-foreground flex size-4 shrink-0 items-center justify-center [&_svg]:size-4">
+      {icon}
+    </span>
+  );
 }
 
 export function SearchableSelect({
@@ -133,6 +139,7 @@ export function SearchableSelect({
         <span className="flex min-w-0 flex-1 items-center gap-2 text-start">
           {selected ? <OptionIcon icon={selected.icon} /> : null}
           <span className="truncate">{selected?.label ?? emptyLabel}</span>
+          {selected?.badge ? <span className="shrink-0">{selected.badge}</span> : null}
         </span>
         <span className="flex shrink-0 items-center gap-0.5">
           {optional && hasValue ? (
@@ -155,9 +162,7 @@ export function SearchableSelect({
       </PopoverTrigger>
       <PopoverContent align="start" sideOffset={4} className="w-(--anchor-width) min-w-48 p-0">
         <Command>
-          {searchable ? (
-            <CommandInput placeholder={searchPlaceholder ?? t("search")} />
-          ) : null}
+          {searchable ? <CommandInput placeholder={searchPlaceholder ?? t("search")} /> : null}
           <CommandList>
             <CommandEmpty>{emptyText ?? t("noResults")}</CommandEmpty>
             {optional ? (
@@ -177,11 +182,7 @@ export function SearchableSelect({
             {grouped.map((group) => (
               <CommandGroup
                 key={group.key || "default"}
-                heading={
-                  group.key
-                    ? groupLabel?.(group.key) ?? group.key
-                    : undefined
-                }
+                heading={group.key ? (groupLabel?.(group.key) ?? group.key) : undefined}
               >
                 {group.options.map((option) => {
                   const checked = option.value === value;
@@ -197,6 +198,9 @@ export function SearchableSelect({
                     >
                       <OptionIcon icon={option.icon} />
                       <span className="truncate">{option.label}</span>
+                      {option.badge ? (
+                        <span className="ms-auto shrink-0">{option.badge}</span>
+                      ) : null}
                     </CommandItem>
                   );
                 })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, PencilLineIcon, ShieldAlertIcon, TrendingDownIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { BadgePercentIcon, CheckIcon, PencilLineIcon, TargetIcon, ShieldAlertIcon, TrendingDownIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PricingForm } from "@/components/pricing/pricing-form";
@@ -12,19 +12,24 @@ import {
   PriceHistoryChart,
   PricingKpis,
 } from "@/components/pricing/pricing-visuals";
+import { KpiCard } from "@/components/cards/kpi-card";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PricingPanelSkeleton } from "@/components/feedback/skeletons";
 import { usePermission } from "@/hooks/use-permission";
 import { usePricingMutations, useVehiclePricing } from "@/hooks/use-pricing";
+import { isSalesExecutive } from "@/lib/permissions/roles";
 import { cn } from "@/lib/utils";
+import { formatCurrency, formatPercent } from "@/lib/utils/currency";
+import { useAppLocale } from "@/components/inventory/inventory-utils";
+import type { VehicleProfitability } from "@/types/pricing";
 import { toast } from "sonner";
 
 export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
   const t = useTranslations();
-  const { can } = usePermission();
+  const { can, user } = usePermission();
   const canView =
     can("pricing.view") || can("vehicle.price.view") || can("vehicle.profit.view");
   const canEdit =
@@ -32,6 +37,8 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
   const canApprove = can("pricing.approve") || can("pricing.discount.approve");
   const canCost = can("vehicle.cost.view") || can("pricing.view");
   const canProfit = can("vehicle.profit.view") || can("pricing.view");
+  // Sales executives see just what they negotiate with: the target price and maximum discount.
+  const salesView = isSalesExecutive(user.roles) && !can("pricing.view");
 
   const query = useVehiclePricing(vehicleId, canView);
   const { approve } = usePricingMutations(vehicleId);
@@ -45,7 +52,7 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
     );
   }
 
-  if (query.isPending) return <Skeleton className="h-72 w-full rounded-xl" />;
+  if (query.isPending) return <PricingPanelSkeleton />;
   if (query.isError || !query.data) {
     return (
       <EmptyState
@@ -62,6 +69,7 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
 
   const detail = query.data;
   const p = detail.profitability;
+  if (salesView) return <SalesPricingView p={p} />;
   const breakdown = detail.breakdown;
   const purchaseCost = breakdown?.purchaseCost ?? p.purchaseCost;
   const acquisitionExpenses = breakdown?.acquisitionExpenses ?? p.acquisitionExpenses;
@@ -190,6 +198,43 @@ export function VehiclePricingPanel({ vehicleId }: { vehicleId: string }) {
           </CardContent>
         </Card>
       ) : null}
+    </div>
+  );
+}
+
+function SalesPricingView({ p }: { p: VehicleProfitability }) {
+  const t = useTranslations();
+  const locale = useAppLocale();
+  const money = (value: number | null) => (value == null ? "—" : formatCurrency(value, locale, p.currency));
+  const percent =
+    p.maximumDiscountPercent != null && p.maximumDiscountPercent > 0
+      ? formatPercent(p.maximumDiscountPercent / 100, locale)
+      : undefined;
+  return (
+    <div className="grid gap-4">
+      <h2 className="font-heading text-base font-semibold">{t("pricing.salesView.title")}</h2>
+      <section className="grid gap-3 sm:grid-cols-2">
+        <KpiCard
+          label={t("pricing.fields.target")}
+          value={money(p.targetSellingPrice)}
+          hint={p.targetSellingPrice == null ? t("pricing.salesView.notSet") : undefined}
+          icon={TargetIcon}
+          tone="brand"
+        />
+        <KpiCard
+          label={t("pricing.salesView.maxDiscount")}
+          value={money(p.maximumDiscountAmount)}
+          hint={
+            p.maximumDiscountAmount == null
+              ? t("pricing.salesView.notSet")
+              : percent
+                ? t("pricing.salesView.maxDiscountHint", { percent })
+                : undefined
+          }
+          icon={BadgePercentIcon}
+          tone="warning"
+        />
+      </section>
     </div>
   );
 }

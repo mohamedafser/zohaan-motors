@@ -270,6 +270,7 @@
     "unread": "{count} unread",
     "markRead": "Mark as read",
     "markAllRead": "Mark all as read",
+    "clearAll": "Clear all",
     "open": "Open",
     "types": {
       "bookingAutoCancelled": {
@@ -279,6 +280,19 @@
       "bookingBalanceOverdue": {
         "title": "Full payment overdue",
         "body": "Booking {number} for {vehicle} has not been paid in full within {duration}. Outstanding: {amount}."
+      },
+      "bookingCreated": {
+        "title": "New booking",
+        "body": "{actor} booked {vehicle} ({number}) for {customer}."
+      },
+      "bookingCancelled": {
+        "title": "Booking cancelled",
+        "body": "{actor} cancelled booking {number} for {vehicle}.",
+        "reason": "Reason: {reason}"
+      },
+      "bookingSold": {
+        "title": "Car sold",
+        "body": "{actor} sold {vehicle} ({number}) to {customer}."
       }
     },
     "alert": {
@@ -295,7 +309,10 @@
       "enable": "Turn on push alerts",
       "enabled": "Push alerts are on for this device.",
       "blocked": "Push alerts are blocked in this browser's site settings.",
-      "failed": "Push alerts could not be turned on."
+      "failed": "Push alerts could not be turned on.",
+      "bannerTitle": "Get booking alerts on this device",
+      "bannerDescription": "Turn on push alerts to hear about new, cancelled and sold bookings and missed payments, even when the app is closed.",
+      "notNow": "Not now"
     },
     "balanceAlert": {
       "title": "{count, plural, one {A booking is not paid in full} other {# bookings are not paid in full}}",
@@ -311,22 +328,22 @@
     "descriptionOwn": "Your bookings, payments and sales, with the showroom's stock.",
     "viewAll": "View all",
     "kpis": {
-      "readyForSale": "Ready for sale",
-      "readyHint": "{transit} in transit · {booked} booked",
-      "soldThisMonth": "Sales this month",
-      "mySoldThisMonth": "My sales this month",
       "soldUnits": "{count, plural, one {# car sold} other {# cars sold}}",
       "soldChange": "{count, plural, one {# car} other {# cars}} · {change} vs last month",
       "activeBookings": "Active bookings",
       "activeValue": "{value} booked value",
       "toCollect": "Still to collect",
       "overdueCount": "{count, plural, one {# full payment overdue} other {# full payments overdue}}",
-      "awaitingDeposit": "{count, plural, =0 {No deposits pending} one {# awaiting deposit} other {# awaiting deposit}}"
+      "awaitingDeposit": "{count, plural, =0 {No deposits pending} one {# awaiting deposit} other {# awaiting deposit}}",
+      "sales": "Sales · {month}",
+      "mySales": "My sales · {month}",
+      "newBookings": "New bookings",
+      "newBookingsHint": "{value} booked · {cancelled} cancelled"
     },
     "sales": {
       "title": "Sales by month",
       "titleOwn": "My sales by month",
-      "description": "Value of bookings marked sold, last 6 months. Hover a month for details.",
+      "description": "Value of bookings marked sold, 6 months up to {month}. Hover a month for details.",
       "units": "{count, plural, one {# car} other {# cars}}"
     },
     "attention": {
@@ -337,27 +354,13 @@
       "balance_overdue": "Full payment overdue since {date}",
       "balance_due_soon": "Full payment due by {date}"
     },
-    "recent": {
-      "title": "Latest bookings",
-      "empty": "No bookings yet."
-    },
-    "stock": {
-      "title": "Stock",
-      "askingValue": "{value} at asking price"
-    },
     "outcomes": {
       "title": "Booking outcomes",
-      "description": "Bookings made in the last 90 days.",
+      "description": "Bookings made in {month}, by what happened to them.",
       "conversion": "sold",
       "sold": "Sold",
       "active": "Still active",
       "cancelled": "Cancelled"
-    },
-    "leaders": {
-      "title": "Sales executives",
-      "description": "Sold this month.",
-      "empty": "No sales this month yet.",
-      "detail": "{sold} sold · {active} active"
     },
     "age": {
       "title": "Stock age",
@@ -369,6 +372,52 @@
       "mid": "31–60 days",
       "aging": "61–90 days",
       "old": "90+ days"
+    },
+    "monthFilter": {
+      "label": "Month",
+      "thisMonth": "This month"
+    },
+    "team": {
+      "title": "Sales team activity",
+      "titleOwn": "My activity",
+      "description": "Bookings, sales and cancellations in {month}. Active bookings and amounts to collect are as of today.",
+      "empty": "No sales executives yet.",
+      "columns": {
+        "person": "Sales executive",
+        "newBookings": "New bookings",
+        "sold": "Cars sold",
+        "revenue": "Sales",
+        "cancelled": "Cancelled",
+        "active": "Active now",
+        "toCollect": "To collect"
+      }
+    },
+    "company": {
+      "title": "Company stock and sales",
+      "description": "Stock as of today; sales and new stock for {month}.",
+      "inStock": "Cars in stock",
+      "inStockHint": "In transit, ready and booked",
+      "stockValue": "Stock value",
+      "stockValueHint": "At asking price",
+      "added": "Added to stock",
+      "addedHint": "In {month}",
+      "averagePrice": "Average sale price",
+      "averagePriceHint": "{count, plural, =0 {No cars sold} one {Across # car} other {Across # cars}}",
+      "columns": {
+        "branch": "Branch",
+        "sold": "Sold",
+        "revenue": "Sales"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "description": "Latest bookings, sales and cancellations in {month}.",
+      "empty": "No activity in this month.",
+      "emptyCurrent": "No activity this month yet.",
+      "created": "{person} booked {vehicle}",
+      "sold": "{person} sold {vehicle}",
+      "cancelled": "{person}'s booking for {vehicle} was cancelled",
+      "autoCancelled": "{vehicle} booking cancelled: no deposit ({person})"
     }
   },
   "modules": {
@@ -461,6 +510,33 @@
       "active": "Active",
       "inactive": "Inactive",
       "empty": "No branches yet.",
+      "emptyHint": "Add your first showroom or yard to start assigning staff and stock.",
+      "summary": {
+        "branches": "Branches",
+        "branchesHint": "{count} active",
+        "inStock": "Cars in stock",
+        "inStockHint": "Across all branches",
+        "ready": "Ready for sale",
+        "team": "Team members"
+      },
+      "stats": {
+        "inStock": "In stock",
+        "ready": "Ready",
+        "booked": "Booked",
+        "inTransit": "In transit",
+        "team": "{count, plural, one {# team member} other {# team members}}",
+        "noStock": "No cars here yet"
+      },
+      "viewInventory": "View inventory",
+      "call": "Call {name}",
+      "emailTo": "Email {name}",
+      "searchPlaceholder": "Search branches",
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "noMatches": "No branches match your search.",
       "emirates": {
         "abu_dhabi": "Abu Dhabi",
         "dubai": "Dubai",
@@ -501,6 +577,30 @@
       "statusSuspended": "Suspended",
       "statusDisabled": "Disabled",
       "invitedStatusHint": "Status changes once they accept the invite.",
+      "name": "Name",
+      "lastSignIn": "Last sign-in",
+      "neverSignedIn": "Never signed in",
+      "joinedOn": "Joined {date}",
+      "editAria": "Edit {name}",
+      "removeAria": "Remove {name}",
+      "searchPlaceholder": "Search by name, email or role",
+      "clearSearch": "Clear search",
+      "noMatches": "No users match your search.",
+      "noMatchesHint": "Try another name, email or filter.",
+      "kpis": {
+        "total": "Total users",
+        "active": "Active",
+        "activeHint": "Can sign in now",
+        "invited": "Pending invites",
+        "invitedHint": "Waiting to accept",
+        "admins": "Super Admins"
+      },
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "invited": "Invited",
+        "inactive": "Suspended"
+      },
       "errors": {
         "inviteFailed": "Could not send the invitation. Try again.",
         "cannotChangeOwnStatus": "You can't change your own status.",
@@ -573,7 +673,27 @@
       "edit": "Edit",
       "delete": "Delete",
       "cancel": "Cancel",
-      "deleteConfirm": "Delete “{name}”?"
+      "deleteConfirm": "Delete “{name}”?",
+      "allBrands": "All brands",
+      "searchIn": "Search {list}",
+      "noMatches": "No matches.",
+      "count": "{count, plural, one {# item} other {# items}}",
+      "pickBrand": "Pick a brand to see its models.",
+      "pickModel": "Pick a model to see its years.",
+      "pickYear": "Pick a year to see its variants.",
+      "newBrand": "New brand name",
+      "newBrandAr": "Arabic name (optional)",
+      "newModel": "New model for {brand}",
+      "newYear": "Year, e.g. 2025",
+      "newVariant": "New variant for {year}",
+      "add": "Add",
+      "back": "Back",
+      "toggleActive": "{name}: shown in Inventory",
+      "more": "More actions for {name}",
+      "added": "“{name}” added.",
+      "saved": "Saved.",
+      "deleted": "“{name}” deleted.",
+      "inactiveHint": "Hidden from Inventory forms"
     },
     "paymentTerms": {
       "title": "Booking payment terms",
@@ -856,6 +976,7 @@
       "vin": "VIN",
       "year": "Year",
       "mileage": "Mileage",
+      "units": "Units",
       "marketType": "Condition",
       "status": "Status",
       "branch": "Branch",
@@ -878,6 +999,7 @@
     "actions": {
       "add": "Add vehicle",
       "edit": "Edit",
+      "bookNow": "Book now",
       "changeStatus": "Change status",
       "transfer": "Move branch",
       "archive": "Archive",
@@ -2028,6 +2150,12 @@
     "panel": {
       "title": "Pricing & profitability"
     },
+    "salesView": {
+      "title": "Pricing",
+      "maxDiscount": "Maximum discount",
+      "maxDiscountHint": "{percent} of the target price",
+      "notSet": "Not set yet. Ask a Super Admin."
+    },
     "sections": {
       "costBreakdown": "Vehicle cost summary",
       "profitability": "Profitability",
@@ -2167,6 +2295,10 @@
     "book": "Book",
     "newTitle": "New booking",
     "newDescription": "Hold a Ready-for-sale car for a customer.",
+    "sellTitle": "Mark as sold",
+    "sellDescription": "Record who bought the car, their sales executive and the selling price.",
+    "sellAmountReceived": "Amount received (full selling price)",
+    "sellPaidInFull": "The customer pays the entire selling price; the car is marked sold.",
     "create": "Create booking",
     "created": "Booking created.",
     "cancelled": "Booking cancelled.",
@@ -2356,7 +2488,7 @@
     "columns": {
       "customer": "Customer",
       "contact": "Contact",
-      "location": "Location",
+      "branch": "Branch",
       "salesperson": "Sales executive",
       "bookings": "Bookings",
       "added": "Added"

@@ -16,7 +16,7 @@ import { AcquisitionTable } from "@/components/acquisitions/acquisition-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { ListPagination } from "@/components/tables/list-pagination";
-import { ListSkeleton } from "@/components/tables/list-skeleton";
+import { ListSkeleton } from "@/components/feedback/skeletons";
 import { ViewModeToggle } from "@/components/tables/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useAcquisitionList } from "@/hooks/use-acquisitions";

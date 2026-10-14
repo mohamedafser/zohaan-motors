@@ -28,12 +28,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  SearchableSelect,
-  type SearchableSelectOption,
-} from "@/components/ui/searchable-select";
+import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSectionsSkeleton } from "@/components/feedback/skeletons";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/use-permission";
 import { useInventoryMeta } from "@/hooks/use-vehicles";
@@ -239,13 +236,18 @@ function VehicleFormBody({
   const branchId = useWatch({ control: form.control, name: "branchId" });
   const initialStatus = useWatch({ control: form.control, name: "initialStatus" });
   const quantity = toPrice(useWatch({ control: form.control, name: "quantity" }));
-  const minimumSellingPrice = toPrice(useWatch({ control: form.control, name: "minimumSellingPrice" }));
-  const targetSellingPrice = toPrice(useWatch({ control: form.control, name: "targetSellingPrice" }));
+  const minimumSellingPrice = toPrice(
+    useWatch({ control: form.control, name: "minimumSellingPrice" }),
+  );
+  const targetSellingPrice = toPrice(
+    useWatch({ control: form.control, name: "targetSellingPrice" }),
+  );
 
   useEffect(() => {
     onTotalsChange?.({ quantity: quantity ?? 1, minimumSellingPrice, targetSellingPrice });
   }, [onTotalsChange, quantity, minimumSellingPrice, targetSellingPrice]);
-  const inTransit = mode === "create" ? initialStatus === "acquired" : vehicle?.status === "acquired";
+  const inTransit =
+    mode === "create" ? initialStatus === "acquired" : vehicle?.status === "acquired";
   const showStaffVisibility = (user?.roles.includes("super_admin") ?? false) && inTransit;
 
   // Resolve catalog ids from legacy text snapshots when FKs are missing.
@@ -592,7 +594,11 @@ function VehicleFormBody({
             label: t(`inventory.enums.transmission.${type}`),
             icon: TRANSMISSION_ICONS[type],
           })),
-          { nullable: true, searchable: false, placeholder: t("inventory.fields.selectPlaceholder") },
+          {
+            nullable: true,
+            searchable: false,
+            placeholder: t("inventory.fields.selectPlaceholder"),
+          },
         )}
         {selectField(
           "fuelType",
@@ -602,7 +608,11 @@ function VehicleFormBody({
             label: t(`inventory.enums.fuel.${type}`),
             icon: FUEL_ICONS[type],
           })),
-          { nullable: true, searchable: false, placeholder: t("inventory.fields.selectPlaceholder") },
+          {
+            nullable: true,
+            searchable: false,
+            placeholder: t("inventory.fields.selectPlaceholder"),
+          },
         )}
         {textField("engineSize", t("inventory.fields.engineSize"))}
         {textField("engineCylinders", t("inventory.fields.engineCylinders"), {
@@ -618,7 +628,11 @@ function VehicleFormBody({
             label: t(`inventory.enums.drive.${type}`),
             icon: DRIVE_ICONS[type],
           })),
-          { nullable: true, searchable: false, placeholder: t("inventory.fields.selectPlaceholder") },
+          {
+            nullable: true,
+            searchable: false,
+            placeholder: t("inventory.fields.selectPlaceholder"),
+          },
         )}
         {textField("seats", t("inventory.fields.seats"), {
           type: "number",
@@ -686,7 +700,11 @@ function VehicleFormBody({
             label: t(`inventory.enums.origin.${type}`),
             icon: ORIGIN_ICONS[type],
           })),
-          { nullable: true, searchable: false, placeholder: t("inventory.fields.selectPlaceholder") },
+          {
+            nullable: true,
+            searchable: false,
+            placeholder: t("inventory.fields.selectPlaceholder"),
+          },
         )}
         {selectField(
           "countryOfOrigin",
@@ -754,41 +772,41 @@ function VehicleFormBody({
       {extraSections}
 
       {!hideActions ? (
-      <div className="bg-background/95 supports-backdrop-filter:bg-background/80 sticky bottom-0 z-10 -mx-1 border-t px-1 py-3 backdrop-blur">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground min-h-5 text-xs">
-            {mode === "edit" && !isDirty && !submitting
-              ? t("inventory.actions.noChangesHint")
-              : null}
-          </p>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Link
-              href={cancelHref}
-              className={cn(buttonVariants({ variant: "outline" }), "h-11 sm:h-9")}
-            >
-              {t("inventory.actions.cancel")}
-            </Link>
-            <LoadingButton
-              type="submit"
-              variant="brand"
-              className="h-11 sm:h-9"
-              loading={submitting}
-              disabled={mode === "edit" && !isDirty && !allowSubmitWhenClean}
-              title={
-                mode === "edit" && !isDirty && !allowSubmitWhenClean
-                  ? t("inventory.actions.noChangesHint")
-                  : undefined
-              }
-            >
-              {submitting
-                ? (submittingLabel ?? t("inventory.actions.updating"))
-                : mode === "create"
-                  ? t("inventory.actions.createSubmit")
-                  : t("inventory.actions.updateSubmit")}
-            </LoadingButton>
+        <div className="bg-background/95 supports-backdrop-filter:bg-background/80 sticky bottom-0 z-10 -mx-1 border-t px-1 py-3 backdrop-blur">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-muted-foreground min-h-5 text-xs">
+              {mode === "edit" && !isDirty && !submitting
+                ? t("inventory.actions.noChangesHint")
+                : null}
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Link
+                href={cancelHref}
+                className={cn(buttonVariants({ variant: "outline" }), "h-11 sm:h-9")}
+              >
+                {t("inventory.actions.cancel")}
+              </Link>
+              <LoadingButton
+                type="submit"
+                variant="brand"
+                className="h-11 sm:h-9"
+                loading={submitting}
+                disabled={mode === "edit" && !isDirty && !allowSubmitWhenClean}
+                title={
+                  mode === "edit" && !isDirty && !allowSubmitWhenClean
+                    ? t("inventory.actions.noChangesHint")
+                    : undefined
+                }
+              >
+                {submitting
+                  ? (submittingLabel ?? t("inventory.actions.updating"))
+                  : mode === "create"
+                    ? t("inventory.actions.createSubmit")
+                    : t("inventory.actions.updateSubmit")}
+              </LoadingButton>
+            </div>
           </div>
         </div>
-      </div>
       ) : null}
     </form>
   );
@@ -800,11 +818,7 @@ export function VehicleForm({ ref, ...props }: VehicleFormProps) {
 
   if (meta.isPending) {
     return (
-      <div className="grid gap-6" aria-busy>
-        {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-40 w-full rounded-xl" />
-        ))}
-      </div>
+      <FormSectionsSkeleton />
     );
   }
 

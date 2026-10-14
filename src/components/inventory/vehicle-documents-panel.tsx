@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailCardSkeleton, DocumentsPanelSkeleton } from "@/components/feedback/skeletons";
 import { useVehicleDocuments } from "@/hooks/use-vehicle-documents";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils/currency";
@@ -137,7 +137,7 @@ export function VehicleDocumentsPanel({ vehicleId }: { vehicleId: string }) {
     return all.filter((item) => item.source === filter);
   }, [filter, query.data?.documents.items]);
 
-  if (query.isPending) return <Skeleton className="h-72 w-full rounded-xl" />;
+  if (query.isPending) return <DocumentsPanelSkeleton />;
   if (query.isError) {
     return (
       <EmptyState
@@ -260,7 +260,7 @@ export function VehicleCostsPanel({ vehicleId }: { vehicleId: string }) {
   const locale = useAppLocale();
   const query = useVehicleDocuments(vehicleId);
 
-  if (query.isPending) return <Skeleton className="h-48 w-full rounded-xl" />;
+  if (query.isPending) return <DetailCardSkeleton />;
   if (query.isError || !query.data?.costs) {
     return (
       <EmptyState

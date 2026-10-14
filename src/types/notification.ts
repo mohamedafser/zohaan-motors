@@ -28,4 +28,7 @@ export type BookingPaymentData = {
   total?: number;
   paid?: number;
   outstanding?: number;
+  /** booking_created / booking_cancelled / booking_sold: who acted, and the cancel reason. */
+  actorName?: string | null;
+  reason?: string | null;
 };

@@ -14,7 +14,7 @@ import {
   TagsIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -40,10 +40,9 @@ import {
   StockAgeCard,
   VehicleHero,
 } from "@/components/inventory/vehicle-insights";
-import { MarketTypeBadge } from "@/components/inventory/market-type-badge";
-import { QuantityBadge } from "@/components/inventory/quantity-badge";
-import { VehicleStatusBadge } from "@/components/inventory/vehicle-status-badge";
-import { VehicleStatusTrigger } from "@/components/inventory/vehicle-status-trigger";
+import { VehicleSaleActions } from "@/components/inventory/vehicle-sale-actions";
+import { SoldTag, isSoldStatus } from "@/components/inventory/vehicle-sold-tag";
+import { usePermission } from "@/hooks/use-permission";
 import { VehicleTransferDialog } from "@/components/inventory/vehicle-transfer-dialog";
 import { VehiclePricingPanel } from "@/components/pricing/vehicle-pricing-panel";
 import { PageHeader } from "@/components/layout/page-header";
@@ -56,7 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { VehicleDetailSkeleton } from "@/components/feedback/skeletons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVehicle } from "@/hooks/use-vehicles";
 import { Link } from "@/lib/i18n/navigation";
@@ -310,6 +309,18 @@ export function VehicleDetailClient({
 }) {
   const t = useTranslations();
   const query = useVehicle(vehicleId);
+  const { user } = usePermission();
+  // Once the header scrolls away, Book now / Mark as sold move into the sticky tab bar.
+  const [headerEnd, setHeaderEnd] = useState<HTMLDivElement | null>(null);
+  const [tabsStuck, setTabsStuck] = useState(false);
+  useEffect(() => {
+    if (!headerEnd) return;
+    const observer = new IntersectionObserver(([entry]) =>
+      setTabsStuck(!entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 200),
+    );
+    observer.observe(headerEnd);
+    return () => observer.disconnect();
+  }, [headerEnd]);
   const [transferOpen, setTransferOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
 
@@ -331,15 +342,7 @@ export function VehicleDetailClient({
     [t],
   );
 
-  if (query.isPending) {
-    return (
-      <div className="flex flex-col gap-6" aria-busy>
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <Skeleton className="h-12 w-full rounded-2xl" />
-        <Skeleton className="h-72 w-full rounded-2xl" />
-      </div>
-    );
-  }
+  if (query.isPending) return <VehicleDetailSkeleton />;
 
   if (query.isError) {
     return (
@@ -363,6 +366,7 @@ export function VehicleDetailClient({
 
   const vehicle = query.data;
   const isArchived = vehicle.status === "archived";
+  const isSuperAdmin = user.roles.includes("super_admin");
   const meta = [vehicle.stockNumber, vehicle.vin].filter(Boolean).join(" · ");
 
   return (
@@ -372,13 +376,11 @@ export function VehicleDetailClient({
         description={meta || undefined}
         actions={
           <>
-            {/* The hero photo already shows these on phones. */}
-            <div className="hidden flex-wrap items-center gap-2 sm:flex">
-              <VehicleStatusBadge status={vehicle.status} />
-              <MarketTypeBadge value={vehicle.marketType} />
-              <QuantityBadge quantity={vehicle.quantity} />
-            </div>
-            <VehicleStatusTrigger vehicle={vehicle} variant="button" className="h-10 flex-1 sm:flex-none md:h-9" />
+            {isSoldStatus(vehicle.status) ? (
+              <SoldTag soldAt={vehicle.booking?.status === "converted" ? vehicle.booking.soldAt : null} />
+            ) : (
+              <VehicleSaleActions vehicle={vehicle} />
+            )}
             {!isArchived ? (
               <PermissionGate permission="vehicle.edit">
                 <Link
@@ -390,7 +392,8 @@ export function VehicleDetailClient({
                 </Link>
               </PermissionGate>
             ) : null}
-            {!isArchived || canArchiveStatus(vehicle.status) ? (
+            {/* More actions (move branch, archive) are for Super Admins only. */}
+            {isSuperAdmin && (!isArchived || canArchiveStatus(vehicle.status)) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
@@ -428,17 +431,20 @@ export function VehicleDetailClient({
         }
       />
 
+      {/* Leaves the screen when the tab bar sticks to the top. */}
+      <div ref={setHeaderEnd} aria-hidden className="-mt-5 h-px" />
+
       <Tabs defaultValue={resolvedTab} className="gap-4">
         <div
           className={cn(
-            "bg-background/95 supports-backdrop-filter:bg-background/90 sticky z-10 border-b backdrop-blur-md",
+            "bg-background/95 supports-backdrop-filter:bg-background/90 sticky z-20 flex items-center gap-2 border-b backdrop-blur-md",
             // Cancel #main py-5 / lg:py-8 so the bar sits flush under the app header.
             "-top-5 -mx-4 px-4 py-2 md:-mx-6 md:px-6 lg:-top-8 lg:-mx-8 lg:px-8",
           )}
         >
           {/* The list is wider than a phone, so it scrolls sideways inside its own box
               instead of stretching the whole page. */}
-          <div className="bg-muted/40 overflow-x-auto overscroll-x-contain rounded-2xl border p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="bg-muted/40 min-w-0 flex-1 overflow-x-auto overscroll-x-contain rounded-2xl border p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsList
               variant="default"
               className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0"
@@ -466,6 +472,11 @@ export function VehicleDetailClient({
               })}
             </TabsList>
           </div>
+          {tabsStuck ? (
+            <div className="animate-in fade-in slide-in-from-right-2 flex shrink-0 items-center gap-2 duration-200 rtl:slide-in-from-left-2">
+              <VehicleSaleActions vehicle={vehicle} layout="bar" />
+            </div>
+          ) : null}
         </div>
 
         <TabsContent value="overview" className="outline-none">

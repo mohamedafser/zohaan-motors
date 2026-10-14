@@ -32,7 +32,7 @@ import { LoadingButton } from "@/components/shared/loading-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { VehicleFormSkeleton } from "@/components/feedback/skeletons";
 import { useAcquisition, useAcquisitionMutations } from "@/hooks/use-acquisitions";
 import { usePermission } from "@/hooks/use-permission";
 import { useVehicle, useVehicleMutations } from "@/hooks/use-vehicles";
@@ -155,7 +155,10 @@ function AfterPurchase({
             },
             ...(showPricing
               ? [
-                  { label: t("inventory.fields.minimumSellingPrice"), unitPrice: vehicle.minimumSellingPrice },
+                  {
+                    label: t("inventory.fields.minimumSellingPrice"),
+                    unitPrice: vehicle.minimumSellingPrice,
+                  },
                   { label: t("pricing.fields.target"), unitPrice: vehicle.targetSellingPrice },
                 ]
               : []),
@@ -531,120 +534,120 @@ function CreateVehicle() {
               currentId={stepId}
               onStepSelect={(id) => setStepId(id as CreateStepId)}
             />
+            <div className="max-h-[calc(100vh-500px)] overflow-auto">
+              {uploadingMedia ? (
+                <div
+                  className="bg-muted/40 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Loader2Icon className="text-primary size-5 shrink-0 animate-spin" aria-hidden />
+                  <p className="font-medium">{t("inventory.acquisition.uploadingMedia")}</p>
+                </div>
+              ) : null}
+              {createdVehicleId && hasFailedMedia && !uploadingMedia ? (
+                <div className="border-destructive/40 bg-destructive/5 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm">
+                  <p>{t("inventory.acquisition.partialUpload")}</p>
+                  <Button type="button" onClick={() => void retryFailedUploads()} disabled={busy}>
+                    {t("inventory.photos.retryUpload")}
+                  </Button>
+                </div>
+              ) : null}
 
-            {uploadingMedia ? (
-              <div
-                className="bg-muted/40 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm"
-                role="status"
-                aria-live="polite"
-              >
-                <Loader2Icon className="text-primary size-5 shrink-0 animate-spin" aria-hidden />
-                <p className="font-medium">{t("inventory.acquisition.uploadingMedia")}</p>
-              </div>
-            ) : null}
-            {createdVehicleId && hasFailedMedia && !uploadingMedia ? (
-              <div className="border-destructive/40 bg-destructive/5 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm">
-                <p>{t("inventory.acquisition.partialUpload")}</p>
-                <Button type="button" onClick={() => void retryFailedUploads()} disabled={busy}>
-                  {t("inventory.photos.retryUpload")}
-                </Button>
-              </div>
-            ) : null}
+              {errors.formError ? (
+                <div className="border-destructive/40 bg-destructive/5 rounded-xl border px-4 py-3 text-sm">
+                  {errors.formError}
+                </div>
+              ) : null}
 
-            {errors.formError ? (
-              <div className="border-destructive/40 bg-destructive/5 rounded-xl border px-4 py-3 text-sm">
-                {errors.formError}
-              </div>
-            ) : null}
-
-            <div className={cn(stepId === "vehicle" ? "block" : "hidden")}>
-              <VehicleForm
-                ref={vehicleRef}
-                mode="create"
-                submitting={busy}
-                fieldErrors={errors.fieldErrors}
-                formError={null}
-                cancelHref="/inventory"
-                hideActions
-                onSubmit={async () => undefined}
-                pricingContainer={pricingSlot}
-                onTotalsChange={setVehicleTotals}
-              />
-            </div>
-
-            {showAcquisition ? (
-              <div className={cn(stepId === "acquisition" ? "block" : "hidden")}>
-                <AcquisitionForm
-                  ref={acquisitionRef}
-                  embedded
+              <div className={cn(stepId === "vehicle" ? "block" : "hidden")}>
+                <VehicleForm
+                  ref={vehicleRef}
                   mode="create"
-                  afterPurchase={
-                    <AfterPurchase
-                      showPricing={can("vehicle.price.edit")}
-                      onPricingSlot={setPricingSlot}
-                      vehicle={vehicleTotals}
-                      purchase={purchase}
-                    />
-                  }
-                  onPurchaseChange={setPurchase}
-                  unitCount={vehicleTotals?.quantity ?? 1}
                   submitting={busy}
                   fieldErrors={errors.fieldErrors}
                   formError={null}
-                  onDirtyChange={(dirty) => {
-                    setAcquisitionDirty(dirty);
-                    if (dirty) setAcquisitionSkipped(false);
-                  }}
-                  extraSections={
-                    can("document.create") || can("document.view") ? (
-                      createdAcquisitionId && createdVehicleId ? (
-                        <AcquisitionDocumentsManager
-                          mode="manage"
-                          acquisitionId={createdAcquisitionId}
-                          vehicleId={createdVehicleId}
-                          readOnly={busy || !can("document.create")}
-                        />
-                      ) : can("document.create") ? (
-                        <AcquisitionDocumentsManager
-                          mode="draft"
-                          documents={pendingDocuments}
-                          onChange={(docs) => {
-                            setPendingDocuments(docs);
-                            if (docs.length > 0) setAcquisitionSkipped(false);
-                          }}
-                          disabled={busy}
-                        />
-                      ) : null
-                    ) : null
-                  }
+                  cancelHref="/inventory"
+                  hideActions
+                  onSubmit={async () => undefined}
+                  pricingContainer={pricingSlot}
+                  onTotalsChange={setVehicleTotals}
                 />
               </div>
-            ) : null}
 
-            <div className={cn(stepId === "photos" ? "block" : "hidden")}>
-              <VehicleImageManager
-                mode="draft"
-                photos={pendingPhotos}
-                onChange={setPendingPhotos}
-                disabled={busy}
-              />
+              {showAcquisition ? (
+                <div className={cn(stepId === "acquisition" ? "block" : "hidden")}>
+                  <AcquisitionForm
+                    ref={acquisitionRef}
+                    embedded
+                    mode="create"
+                    afterPurchase={
+                      <AfterPurchase
+                        showPricing={can("vehicle.price.edit")}
+                        onPricingSlot={setPricingSlot}
+                        vehicle={vehicleTotals}
+                        purchase={purchase}
+                      />
+                    }
+                    onPurchaseChange={setPurchase}
+                    unitCount={vehicleTotals?.quantity ?? 1}
+                    submitting={busy}
+                    fieldErrors={errors.fieldErrors}
+                    formError={null}
+                    onDirtyChange={(dirty) => {
+                      setAcquisitionDirty(dirty);
+                      if (dirty) setAcquisitionSkipped(false);
+                    }}
+                    extraSections={
+                      can("document.create") || can("document.view") ? (
+                        createdAcquisitionId && createdVehicleId ? (
+                          <AcquisitionDocumentsManager
+                            mode="manage"
+                            acquisitionId={createdAcquisitionId}
+                            vehicleId={createdVehicleId}
+                            readOnly={busy || !can("document.create")}
+                          />
+                        ) : can("document.create") ? (
+                          <AcquisitionDocumentsManager
+                            mode="draft"
+                            documents={pendingDocuments}
+                            onChange={(docs) => {
+                              setPendingDocuments(docs);
+                              if (docs.length > 0) setAcquisitionSkipped(false);
+                            }}
+                            disabled={busy}
+                          />
+                        ) : null
+                      ) : null
+                    }
+                  />
+                </div>
+              ) : null}
+
+              <div className={cn(stepId === "photos" ? "block" : "hidden")}>
+                <VehicleImageManager
+                  mode="draft"
+                  photos={pendingPhotos}
+                  onChange={setPendingPhotos}
+                  disabled={busy}
+                />
+              </div>
+
+              {stepId === "review" ? (
+                <CreateVehicleReview
+                  vehicle={reviewVehicle}
+                  acquisition={acquisitionSnapshot}
+                  acquisitionIncluded={acquisitionIncluded}
+                  documents={pendingDocuments}
+                  photos={pendingPhotos}
+                  showAcquisition={showAcquisition}
+                  onEditVehicle={() => setStepId("vehicle")}
+                  onEditAcquisition={() => setStepId("acquisition")}
+                  onEditPhotos={() => setStepId("photos")}
+                />
+              ) : null}
             </div>
-
-            {stepId === "review" ? (
-              <CreateVehicleReview
-                vehicle={reviewVehicle}
-                acquisition={acquisitionSnapshot}
-                acquisitionIncluded={acquisitionIncluded}
-                documents={pendingDocuments}
-                photos={pendingPhotos}
-                showAcquisition={showAcquisition}
-                onEditVehicle={() => setStepId("vehicle")}
-                onEditAcquisition={() => setStepId("acquisition")}
-                onEditPhotos={() => setStepId("photos")}
-              />
-            ) : null}
           </div>
-
           <div className="bg-background shrink-0 border-t px-4 py-2.5 sm:px-6">
             <div className="flex items-center justify-end gap-2">
               <Button
@@ -664,7 +667,11 @@ function CreateVehicle() {
                   variant="secondary"
                   size="sm"
                   className="min-w-24"
-                  onClick={stepId === "acquisition" ? () => void skipAcquisition() : () => setStepId("review")}
+                  onClick={
+                    stepId === "acquisition"
+                      ? () => void skipAcquisition()
+                      : () => setStepId("review")
+                  }
                   disabled={busy}
                 >
                   {t("inventory.stepper.skip")}
@@ -881,12 +888,7 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
   }
 
   if (query.isPending || (linkedAcquisitionId && acquisitionQuery.isPending)) {
-    return (
-      <div className="flex flex-col gap-6" aria-busy>
-        <Skeleton className="h-16 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </div>
-    );
+    return <VehicleFormSkeleton />;
   }
 
   if (query.isError) {
@@ -926,114 +928,114 @@ function EditVehicle({ vehicleId }: { vehicleId: string }) {
               currentId={stepId}
               onStepSelect={(id) => setStepId(id as EditStepId)}
             />
+            <div className="max-h-[calc(100vh-500px)] overflow-auto">
+              {errors.formError ? (
+                <div className="border-destructive/40 bg-destructive/5 rounded-xl border px-4 py-3 text-sm">
+                  {errors.formError}
+                </div>
+              ) : null}
 
-            {errors.formError ? (
-              <div className="border-destructive/40 bg-destructive/5 rounded-xl border px-4 py-3 text-sm">
-                {errors.formError}
+              <div className={cn(stepId === "vehicle" ? "block" : "hidden")}>
+                <VehicleForm
+                  ref={vehicleRef}
+                  mode="edit"
+                  vehicle={query.data}
+                  submitting={busy}
+                  fieldErrors={errors.fieldErrors}
+                  formError={null}
+                  cancelHref={`/inventory/${vehicleId}`}
+                  hideActions
+                  onSubmit={async () => undefined}
+                  allowSubmitWhenClean
+                  pricingContainer={pricingSlot}
+                  onTotalsChange={setVehicleTotals}
+                />
               </div>
-            ) : null}
 
-            <div className={cn(stepId === "vehicle" ? "block" : "hidden")}>
-              <VehicleForm
-                ref={vehicleRef}
-                mode="edit"
-                vehicle={query.data}
-                submitting={busy}
-                fieldErrors={errors.fieldErrors}
-                formError={null}
-                cancelHref={`/inventory/${vehicleId}`}
-                hideActions
-                onSubmit={async () => undefined}
-                allowSubmitWhenClean
-                pricingContainer={pricingSlot}
-                onTotalsChange={setVehicleTotals}
-              />
-            </div>
+              {showAcquisition ? (
+                <div className={cn(stepId === "acquisition" ? "grid gap-6" : "hidden")}>
+                  {query.data.acquisitionSharedFrom ? (
+                    <Alert>
+                      <AlertDescription>
+                        {t("inventory.acquisition.sharedEdit", {
+                          stock: query.data.acquisitionSharedFrom.stockNumber,
+                        })}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                  {acquisitionMode === "edit" && acquisitionQuery.data ? (
+                    <AcquisitionForm
+                      key={acquisitionQuery.data.id}
+                      ref={acquisitionRef}
+                      embedded
+                      mode="edit"
+                      acquisition={acquisitionQuery.data}
+                      afterPurchase={
+                        <AfterPurchase
+                          showPricing={can("vehicle.price.edit")}
+                          onPricingSlot={setPricingSlot}
+                          vehicle={vehicleTotals}
+                          purchase={purchase}
+                        />
+                      }
+                      onPurchaseChange={setPurchase}
+                      unitCount={vehicleTotals?.quantity ?? 1}
+                      branchId={query.data.branchId}
+                      submitting={busy}
+                      fieldErrors={errors.fieldErrors}
+                      formError={null}
+                      onDirtyChange={setAcquisitionDirty}
+                      extraSections={
+                        can("document.view") || can("document.create") ? (
+                          <AcquisitionDocumentsManager
+                            mode="manage"
+                            acquisitionId={acquisitionQuery.data.id}
+                            vehicleId={vehicleId}
+                            readOnly={busy || !can("document.create")}
+                          />
+                        ) : null
+                      }
+                    />
+                  ) : can("acquisition.create") ? (
+                    <AcquisitionForm
+                      ref={acquisitionRef}
+                      embedded
+                      mode="create"
+                      branchId={query.data.branchId}
+                      afterPurchase={
+                        <AfterPurchase
+                          showPricing={can("vehicle.price.edit")}
+                          onPricingSlot={setPricingSlot}
+                          vehicle={vehicleTotals}
+                          purchase={purchase}
+                        />
+                      }
+                      onPurchaseChange={setPurchase}
+                      unitCount={vehicleTotals?.quantity ?? 1}
+                      submitting={busy}
+                      fieldErrors={errors.fieldErrors}
+                      formError={null}
+                      onDirtyChange={setAcquisitionDirty}
+                      extraSections={
+                        can("document.create") ? (
+                          <AcquisitionDocumentsManager
+                            mode="draft"
+                            documents={pendingDocuments}
+                            onChange={setPendingDocuments}
+                            disabled={busy}
+                          />
+                        ) : null
+                      }
+                    />
+                  ) : null}
+                </div>
+              ) : null}
 
-            {showAcquisition ? (
-              <div className={cn(stepId === "acquisition" ? "grid gap-6" : "hidden")}>
-                {query.data.acquisitionSharedFrom ? (
-                  <Alert>
-                    <AlertDescription>
-                      {t("inventory.acquisition.sharedEdit", {
-                        stock: query.data.acquisitionSharedFrom.stockNumber,
-                      })}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-                {acquisitionMode === "edit" && acquisitionQuery.data ? (
-                  <AcquisitionForm
-                    key={acquisitionQuery.data.id}
-                    ref={acquisitionRef}
-                    embedded
-                    mode="edit"
-                    acquisition={acquisitionQuery.data}
-                    afterPurchase={
-                      <AfterPurchase
-                        showPricing={can("vehicle.price.edit")}
-                        onPricingSlot={setPricingSlot}
-                        vehicle={vehicleTotals}
-                        purchase={purchase}
-                      />
-                    }
-                    onPurchaseChange={setPurchase}
-                    unitCount={vehicleTotals?.quantity ?? 1}
-                    branchId={query.data.branchId}
-                    submitting={busy}
-                    fieldErrors={errors.fieldErrors}
-                    formError={null}
-                    onDirtyChange={setAcquisitionDirty}
-                    extraSections={
-                      can("document.view") || can("document.create") ? (
-                        <AcquisitionDocumentsManager
-                          mode="manage"
-                          acquisitionId={acquisitionQuery.data.id}
-                          vehicleId={vehicleId}
-                          readOnly={busy || !can("document.create")}
-                        />
-                      ) : null
-                    }
-                  />
-                ) : can("acquisition.create") ? (
-                  <AcquisitionForm
-                    ref={acquisitionRef}
-                    embedded
-                    mode="create"
-                    branchId={query.data.branchId}
-                    afterPurchase={
-                      <AfterPurchase
-                        showPricing={can("vehicle.price.edit")}
-                        onPricingSlot={setPricingSlot}
-                        vehicle={vehicleTotals}
-                        purchase={purchase}
-                      />
-                    }
-                    onPurchaseChange={setPurchase}
-                    unitCount={vehicleTotals?.quantity ?? 1}
-                    submitting={busy}
-                    fieldErrors={errors.fieldErrors}
-                    formError={null}
-                    onDirtyChange={setAcquisitionDirty}
-                    extraSections={
-                      can("document.create") ? (
-                        <AcquisitionDocumentsManager
-                          mode="draft"
-                          documents={pendingDocuments}
-                          onChange={setPendingDocuments}
-                          disabled={busy}
-                        />
-                      ) : null
-                    }
-                  />
-                ) : null}
+              <div className={cn(stepId === "photos" ? "block" : "hidden")}>
+                <VehicleImageManager mode="manage" vehicleId={vehicleId} />
               </div>
-            ) : null}
-
-            <div className={cn(stepId === "photos" ? "block" : "hidden")}>
-              <VehicleImageManager mode="manage" vehicleId={vehicleId} />
             </div>
           </div>
-
           <div className="bg-background shrink-0 border-t px-4 py-2.5 sm:px-6">
             <div className="flex items-center justify-end gap-2">
               <Button

@@ -36,6 +36,8 @@ export const createBookingSchema = z
       .min(1, { error: validationMessages.number })
       .optional(),
     notes: z.string().trim().max(1000).optional(),
+    /** Sell the car now (paid in full) instead of booking it. */
+    sell: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.customerMode === "existing") {

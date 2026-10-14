@@ -155,7 +155,7 @@ function UploadForm({ onDone, onUploaded }: { onDone: () => void; onUploaded: ()
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
+        <div className="grid content-start gap-1.5">
           <Label htmlFor="document-category">{t("category")}</Label>
           <NativeSelect
             id="document-category"
@@ -169,7 +169,7 @@ function UploadForm({ onDone, onUploaded }: { onDone: () => void; onUploaded: ()
             ))}
           </NativeSelect>
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid content-start gap-1.5">
           <Label htmlFor="document-expires">
             {t("expiresOn")}
             <span className="text-muted-foreground font-normal">({tRoot("common.optional")})</span>
@@ -178,7 +178,7 @@ function UploadForm({ onDone, onUploaded }: { onDone: () => void; onUploaded: ()
         </div>
       </div>
 
-      <div className="grid gap-1.5">
+      <div className="grid content-start gap-1.5">
         <Label htmlFor="document-title">{t("titleLabel")}</Label>
         <Input
           id="document-title"
@@ -191,7 +191,7 @@ function UploadForm({ onDone, onUploaded }: { onDone: () => void; onUploaded: ()
         {errors.title ? <p className="text-destructive text-xs">{msg(errors.title)}</p> : null}
       </div>
 
-      <div className="grid gap-1.5">
+      <div className="grid content-start gap-1.5">
         <Label htmlFor="document-notes">
           {t("notes")}
           <span className="text-muted-foreground font-normal">({tRoot("common.optional")})</span>

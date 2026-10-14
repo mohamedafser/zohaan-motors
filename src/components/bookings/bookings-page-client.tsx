@@ -314,6 +314,7 @@ export function BookingsPageClient({
           onOpenChange={setDialogOpen}
           initialVehicleId={initialVehicleId}
           canCreateCustomer={canCreateCustomer}
+          depositMinutes={depositMinutes}
           onCreated={refresh}
         />
       ) : null}
