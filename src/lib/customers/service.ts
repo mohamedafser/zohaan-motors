@@ -1,5 +1,16 @@
 import { customerOwners, profileNames, type BookingStatus } from "@/lib/bookings/service";
+import {
+  CUSTOMER_FILTERS,
+  CUSTOMER_SORTERS,
+  inCustomerFilter,
+  matchesCustomerSearch,
+  monthKey,
+  type CustomerFilter,
+  type CustomerListPage,
+  type CustomerListQuery,
+} from "@/lib/customers/list-query";
 import { canViewAllBookings } from "@/lib/permissions/roles";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { createClient } from "@/lib/supabase/server";
 import type { UserContext } from "@/types/auth";
 
@@ -33,36 +44,46 @@ type CustomerRow = {
 
 type BookingRow = { customer_id: string; status: BookingStatus; reserved_at: string };
 
+const CUSTOMER_SELECT =
+  "id, customer_code, display_name, phone, email, emirate, city, created_at, created_by, branches(name)";
+
 /**
- * Customers visible to the caller. Reads use the caller's session, so RLS scopes rows by
- * branch. Roles that only see their own bookings (everyone but Super Admins and
- * Accountants) likewise only see customers they own or created.
+ * Every customer visible to the caller, with booking stats and owner ids (names are
+ * looked up separately, for just the customers that get shown). Reads use the caller's
+ * session, so RLS scopes rows by branch. Roles that only see their own bookings
+ * (everyone but Super Admins and Accountants) likewise only see customers they own or
+ * created.
  */
-export async function listCustomers(context: UserContext) {
+async function loadCustomers(context: UserContext) {
   const supabase = await createClient();
   const [customers, bookings, owners] = await Promise.all([
-    supabase
-      .from("customers")
-      .select(
-        "id, customer_code, display_name, phone, email, emirate, city, created_at, created_by, branches(name)",
-      )
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(2000),
-    supabase.from("reservations").select("customer_id, status, reserved_at"),
+    fetchAllRows<CustomerRow>((from, to) =>
+      supabase
+        .from("customers")
+        .select(CUSTOMER_SELECT)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to),
+    ),
+    fetchAllRows<BookingRow>((from, to) =>
+      supabase
+        .from("reservations")
+        .select("customer_id, status, reserved_at")
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
     customerOwners(),
   ]);
-  if (customers.error) {
-    return { data: null, error: { code: customers.error.code ?? "db_error", message: customers.error.message } };
-  }
+  if (customers.error) return { data: null, error: customers.error };
 
   const ownOnly = !canViewAllBookings(context.roles);
-  const rows = ((customers.data ?? []) as unknown as CustomerRow[]).filter(
+  const rows = customers.data.filter(
     (c) => !ownOnly || owners.get(c.id) === context.userId || c.created_by === context.userId,
   );
 
   const stats = new Map<string, CustomerListItem["bookings"]>();
-  for (const b of (bookings.data ?? []) as unknown as BookingRow[]) {
+  for (const b of bookings.data) {
     const s = stats.get(b.customer_id) ?? { total: 0, active: 0, lastAt: null };
     s.total += 1;
     if (b.status === "active") s.active += 1;
@@ -70,10 +91,7 @@ export async function listCustomers(context: UserContext) {
     stats.set(b.customer_id, s);
   }
 
-  const ownerIds = [...new Set(rows.map((c) => owners.get(c.id)).filter((id): id is string => !!id))];
-  const names = await profileNames(ownerIds);
-
-  const data: CustomerListItem[] = rows.map((c) => {
+  const items: CustomerListItem[] = rows.map((c) => {
     const ownerId = owners.get(c.id);
     const branch = Array.isArray(c.branches) ? c.branches[0] : c.branches;
     return {
@@ -86,10 +104,60 @@ export async function listCustomers(context: UserContext) {
       city: c.city,
       branchName: branch?.name ?? null,
       createdAt: c.created_at,
-      salesperson: ownerId ? { id: ownerId, name: names.get(ownerId) ?? "—" } : null,
+      // Name filled in by withOwnerNames for the customers actually shown.
+      salesperson: ownerId ? { id: ownerId, name: "" } : null,
       bookings: stats.get(c.id) ?? { total: 0, active: 0, lastAt: null },
     };
   });
+  return { data: { items, ownOnly }, error: null };
+}
 
-  return { data: { customers: data, ownOnly }, error: null };
+async function withOwnerNames(items: CustomerListItem[]) {
+  const ids = [...new Set(items.flatMap((c) => (c.salesperson ? [c.salesperson.id] : [])))];
+  const names = await profileNames(ids);
+  return items.map((c) =>
+    c.salesperson ? { ...c, salesperson: { ...c.salesperson, name: names.get(c.salesperson.id) ?? "—" } } : c,
+  );
+}
+
+/**
+ * One page of the Customers screen. Ownership and booking counts come from bookings, so
+ * the server derives them for every visible customer, then filters, searches, counts and
+ * sorts here and returns only the requested page.
+ */
+export async function listCustomersPage(context: UserContext, query: CustomerListQuery) {
+  const result = await loadCustomers(context);
+  if (!result.data) return { data: null, error: result.error };
+  const { items: all, ownOnly } = result.data;
+  const thisMonth = monthKey(new Date());
+
+  const counts = Object.fromEntries(
+    CUSTOMER_FILTERS.map((key) => [
+      key,
+      all.filter((c) => inCustomerFilter(c, key, thisMonth)).length,
+    ]),
+  ) as Record<CustomerFilter, number>;
+  // Sales executives own every customer they see, so "unassigned" doesn't apply to them.
+  const filter = ownOnly && query.filter === "unassigned" ? "all" : query.filter;
+
+  const matching = all
+    .filter((c) => inCustomerFilter(c, filter, thisMonth) && matchesCustomerSearch(c, query.q))
+    .sort(CUSTOMER_SORTERS[query.sort]);
+  // Past the last page (e.g. after a search narrows the list): show the last page instead.
+  const pages = Math.max(1, Math.ceil(matching.length / query.pageSize));
+  const page = Math.min(query.page, pages);
+  const items = await withOwnerNames(
+    matching.slice((page - 1) * query.pageSize, page * query.pageSize),
+  );
+
+  const data: CustomerListPage = {
+    items,
+    total: matching.length,
+    page,
+    pageSize: query.pageSize,
+    counts,
+    totalBookings: all.reduce((sum, c) => sum + c.bookings.total, 0),
+    ownOnly,
+  };
+  return { data, error: null };
 }

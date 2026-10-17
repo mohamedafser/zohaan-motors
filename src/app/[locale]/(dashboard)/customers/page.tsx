@@ -5,7 +5,8 @@ import { CustomersPageClient } from "@/components/customers/customers-page-clien
 import { ErrorState } from "@/components/feedback/error-state";
 import { requirePagePermission } from "@/lib/auth/authorize";
 import { getUserContext } from "@/lib/auth/session";
-import { listCustomers } from "@/lib/customers/service";
+import { readCustomerListQuery } from "@/lib/customers/list-query";
+import { listCustomersPage } from "@/lib/customers/service";
 import { hasPermission } from "@/lib/permissions";
 import { canViewAllBookings } from "@/lib/permissions/roles";
 
@@ -17,16 +18,29 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const context = await requirePagePermission("customer.view");
-  const result = await listCustomers(context);
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) {
+    if (typeof value === "string") params.set(key, value);
+  }
+  const query = readCustomerListQuery(params);
+  const result = await listCustomersPage(context, query);
 
-  if (!result.data) return <ErrorState />;
+  // Never show a failed load as an empty list: that hides the problem from staff.
+  if (!result.data) {
+    console.error("[customers] list failed:", result.error?.code, result.error?.message);
+    return <ErrorState />;
+  }
 
   return (
     <CustomersPageClient
-      customers={result.data.customers}
-      ownOnly={result.data.ownOnly}
+      initialPage={result.data}
+      initialQuery={query}
       canCreateBooking={hasPermission(context.permissions, "reservation.create", context.roles)}
     />
   );

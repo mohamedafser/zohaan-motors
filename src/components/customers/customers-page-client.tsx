@@ -1,9 +1,14 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import {
+  ArrowUpDownIcon,
   Building2Icon,
   CalendarCheckIcon,
+  CalendarPlusIcon,
+  HistoryIcon,
   MailIcon,
+  MessageCircleIcon,
   PhoneIcon,
   PlusIcon,
   SearchIcon,
@@ -12,16 +17,32 @@ import {
   UsersIcon,
   XIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { KpiCard } from "@/components/cards/kpi-card";
 import { EmptyState } from "@/components/feedback/empty-state";
+import { NativeSelect } from "@/components/inventory/native-select";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
 import { PageHeader } from "@/components/layout/page-header";
-import { ResponsiveTable } from "@/components/tables/responsive-table";
-import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { ListPagination } from "@/components/tables/list-pagination";
+import {
+  CUSTOMER_PAGE_SIZES,
+  CUSTOMER_SORTS,
+  DEFAULT_CUSTOMER_PAGE_SIZE,
+  monthKey,
+  type CustomerFilter,
+  type CustomerListPage,
+  type CustomerListQuery,
+  type CustomerSort,
+} from "@/lib/customers/list-query";
 import type { CustomerListItem } from "@/lib/customers/service";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -29,53 +50,104 @@ import { formatNumber } from "@/lib/utils/currency";
 import { formatDate, formatRelativeTime } from "@/lib/utils/date";
 import { formatUaePhone } from "@/lib/utils/phone";
 
-type Filter = "all" | "active" | "none";
+type Filter = CustomerFilter;
+type Sort = CustomerSort;
+
+const customerListKey = (query: CustomerListQuery) => ["customers", "list", query] as const;
+
+async function fetchCustomerPage(query: CustomerListQuery): Promise<CustomerListPage> {
+  const params = new URLSearchParams({
+    filter: query.filter,
+    sort: query.sort,
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+  });
+  if (query.q) params.set("q", query.q);
+  const res = await fetch(`/api/customers?${params}`, { credentials: "same-origin", cache: "no-store" });
+  const json = await res.json().catch(() => null);
+  if (json?.status !== "success") throw new Error(json?.message ?? "Could not load customers.");
+  return json.data;
+}
 
 export function CustomersPageClient({
-  customers,
-  ownOnly,
+  initialPage,
+  initialQuery,
   canCreateBooking,
 }: {
-  customers: CustomerListItem[];
-  /** Roles that only see their own bookings also only see their own customers. */
-  ownOnly: boolean;
+  /** The first page, rendered on the server for the query in the URL. */
+  initialPage: CustomerListPage;
+  initialQuery: CustomerListQuery;
   canCreateBooking: boolean;
 }) {
   const t = useTranslations("customers");
   const locale = useAppLocale();
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState(initialQuery.q);
+  // Search waits for a pause in typing before asking the server.
+  const [searchTerm, setSearchTerm] = useState(initialQuery.q);
+  const [filter, setFilterState] = useState<Filter>(initialQuery.filter);
+  const [sort, setSortState] = useState<Sort>(initialQuery.sort);
+  const [page, setPage] = useState(initialPage.page);
+  const [pageSize, setPageSize] = useState(initialQuery.pageSize);
+  useEffect(() => {
+    const term = query.trim();
+    if (term === searchTerm) return;
+    const timer = window.setTimeout(() => {
+      setSearchTerm(term);
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query, searchTerm]);
+  const setFilter = (next: Filter) => {
+    setFilterState(next);
+    setPage(1);
+  };
+  const setSort = (next: Sort) => {
+    setSortState(next);
+    setPage(1);
+  };
 
-  const counts = useMemo(() => {
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-    return {
-      all: customers.length,
-      active: customers.filter((c) => c.bookings.active > 0).length,
-      none: customers.filter((c) => c.bookings.total === 0).length,
-      newThisMonth: customers.filter((c) => new Date(c.createdAt) >= monthStart).length,
-      unassigned: customers.filter((c) => !c.salesperson).length,
-      bookings: customers.reduce((sum, c) => sum + c.bookings.total, 0),
-    };
-  }, [customers]);
+  const listQuery: CustomerListQuery = { filter, sort, q: searchTerm, page, pageSize };
+  const isInitialQuery =
+    filter === initialQuery.filter &&
+    sort === initialQuery.sort &&
+    searchTerm === initialQuery.q &&
+    page === initialPage.page &&
+    pageSize === initialQuery.pageSize;
+  const { data = initialPage, isFetching } = useQuery({
+    queryKey: customerListKey(listQuery),
+    queryFn: () => fetchCustomerPage(listQuery),
+    initialData: isInitialQuery ? initialPage : undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 15_000,
+  });
+  const { counts, ownOnly, totalBookings } = data;
+  const visible = data.items;
+  // The server moves past-the-end requests to the last page; follow it.
+  if (data.page !== page && !isFetching) setPage(data.page);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    // Phone numbers are stored in E.164; compare digits so "050 123" matches "+97150123…".
-    const digits = q.replace(/\D/g, "");
-    return customers.filter((c) => {
-      if (filter === "active" && c.bookings.active === 0) return false;
-      if (filter === "none" && c.bookings.total > 0) return false;
-      if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        (c.email?.toLowerCase().includes(q) ?? false) ||
-        (digits.length >= 3 && c.phone.replace(/\D/g, "").includes(digits.replace(/^0/, "")))
-      );
-    });
-  }, [customers, filter, query]);
+  // Keep the tab, sort, search and page in the address so reloads and links land here.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const set = (key: string, value: string | null) =>
+      value ? params.set(key, value) : params.delete(key);
+    set("filter", filter === "all" ? null : filter);
+    set("sort", sort === "newest" ? null : sort);
+    set("q", searchTerm || null);
+    set("page", page > 1 ? String(page) : null);
+    set("pageSize", pageSize === DEFAULT_CUSTOMER_PAGE_SIZE ? null : String(pageSize));
+    const next = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, "", next);
+    }
+  }, [filter, sort, searchTerm, page, pageSize]);
+
+  // Sales executives see only their own customers, so "Unassigned" means nothing to them.
+  const filters: Filter[] = ownOnly
+    ? ["all", "active", "new", "none"]
+    : ["all", "active", "new", "none", "unassigned"];
+
+  const number = (value: number) => formatNumber(value, locale);
+  const thisMonth = monthKey(new Date());
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,40 +164,65 @@ export function CustomersPageClient({
         }
       />
 
-      <section className="stagger grid grid-cols-2 gap-3 [--stagger:80ms] lg:grid-cols-4 lg:gap-4">
-        <KpiCard label={t("kpis.total")} value={formatNumber(counts.all, locale)} icon={UsersIcon} tone="brand" />
-        <KpiCard
-          label={t("kpis.active")}
-          value={formatNumber(counts.active, locale)}
-          icon={CalendarCheckIcon}
-          tone="success"
-        />
-        <KpiCard
-          label={t("kpis.new")}
-          value={formatNumber(counts.newThisMonth, locale)}
-          icon={UserPlusIcon}
-          tone="info"
-        />
-        {ownOnly ? (
-          <KpiCard
-            label={t("kpis.bookings")}
-            value={formatNumber(counts.bookings, locale)}
+      {counts.all > 0 ? (
+        <section className="stagger grid grid-cols-2 gap-3 [--stagger:60ms] lg:grid-cols-4">
+          <SummaryTile
+            icon={UsersIcon}
+            tone="brand"
+            label={t("kpis.total")}
+            value={number(counts.all)}
+            hint={t("kpis.totalHint", { count: totalBookings, formatted: number(totalBookings) })}
+            selected={filter === "all"}
+            onSelect={() => setFilter("all")}
+          />
+          <SummaryTile
             icon={CalendarCheckIcon}
-            tone="violet"
+            tone="success"
+            label={t("kpis.active")}
+            value={number(counts.active)}
+            hint={t("kpis.activeHint")}
+            selected={filter === "active"}
+            onSelect={() => setFilter("active")}
           />
-        ) : (
-          <KpiCard
-            label={t("kpis.unassigned")}
-            value={formatNumber(counts.unassigned, locale)}
-            icon={UserRoundXIcon}
-            tone={counts.unassigned > 0 ? "warning" : "neutral"}
+          <SummaryTile
+            icon={UserPlusIcon}
+            tone="info"
+            label={t("kpis.new")}
+            value={number(counts.new)}
+            hint={t("kpis.newHint")}
+            selected={filter === "new"}
+            onSelect={() => setFilter("new")}
           />
-        )}
-      </section>
+          {ownOnly ? (
+            <SummaryTile
+              icon={HistoryIcon}
+              tone="neutral"
+              label={t("kpis.none")}
+              value={number(counts.none)}
+              hint={t("kpis.noneHint")}
+              selected={filter === "none"}
+              onSelect={() => setFilter("none")}
+            />
+          ) : (
+            <SummaryTile
+              icon={UserRoundXIcon}
+              tone={counts.unassigned > 0 ? "warning" : "neutral"}
+              label={t("kpis.unassigned")}
+              value={number(counts.unassigned)}
+              hint={t("kpis.unassignedHint")}
+              selected={filter === "unassigned"}
+              onSelect={() => setFilter("unassigned")}
+            />
+          )}
+        </section>
+      ) : null}
 
-      <div className="animate-rise flex flex-col gap-3 [animation-delay:200ms] md:flex-row md:items-center md:justify-between">
-        <div className="bg-muted flex w-full overflow-x-auto rounded-lg p-0.5 text-sm md:w-fit" role="tablist">
-          {(["all", "active", "none"] as const).map((key) => (
+      <div className="animate-rise flex flex-col gap-3 [animation-delay:120ms] lg:flex-row lg:items-center lg:justify-between">
+        <div
+          className="bg-muted flex w-full overflow-x-auto rounded-lg p-0.5 text-sm lg:w-fit"
+          role="tablist"
+        >
+          {filters.map((key) => (
             <button
               key={key}
               type="button"
@@ -133,196 +230,414 @@ export function CustomersPageClient({
               aria-selected={filter === key}
               onClick={() => setFilter(key)}
               className={cn(
-                "flex-1 rounded-md px-3 py-1.5 whitespace-nowrap transition-all duration-200 md:flex-none",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 whitespace-nowrap transition-all duration-200 lg:flex-none",
                 filter === key
                   ? "bg-background font-medium shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t(`filters.${key}`)}{" "}
-              <span className="text-muted-foreground tabular-nums">({formatNumber(counts[key], locale)})</span>
+              {t(`filters.${key}`)}
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {number(counts[key])}
+              </span>
             </button>
           ))}
         </div>
-        <InputGroup className="bg-card h-10 md:h-9 md:max-w-xs">
-          <InputGroupAddon>
-            <SearchIcon />
-          </InputGroupAddon>
-          <InputGroupInput
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("searchPlaceholder")}
-            aria-label={t("searchPlaceholder")}
-          />
-          {query ? (
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton size="icon-xs" onClick={() => setQuery("")} aria-label={t("clearSearch")}>
-                <XIcon />
-              </InputGroupButton>
+        <div className="flex gap-2">
+          <InputGroup className="bg-card h-10 flex-1 lg:h-9 lg:w-72 lg:flex-none">
+            <InputGroupAddon>
+              <SearchIcon />
             </InputGroupAddon>
-          ) : null}
-        </InputGroup>
+            <InputGroupInput
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+            />
+            {query ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  onClick={() => setQuery("")}
+                  aria-label={t("clearSearch")}
+                >
+                  <XIcon />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
+          </InputGroup>
+          <label className="relative flex shrink-0 items-center">
+            <span className="sr-only">{t("sort.label")}</span>
+            <ArrowUpDownIcon
+              className="text-muted-foreground pointer-events-none absolute start-2.5 size-4"
+              aria-hidden
+            />
+            <NativeSelect
+              className="bg-card h-10 w-40 ps-8 lg:h-9"
+              value={sort}
+              onChange={(event) => setSort(event.target.value as Sort)}
+            >
+              {CUSTOMER_SORTS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`sort.${key}`)}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+        </div>
       </div>
 
       {visible.length === 0 ? (
         <EmptyState
-          icon={UsersIcon}
-          title={customers.length === 0 ? t("empty") : t("noMatches")}
-          description={customers.length === 0 ? t("emptyHint") : t("noMatchesHint")}
+          icon={counts.all === 0 ? UsersIcon : SearchIcon}
+          title={counts.all === 0 ? t("empty") : t("noMatches")}
+          description={counts.all === 0 ? t("emptyHint") : t("noMatchesHint")}
         />
       ) : (
-        <ResponsiveTable
-          rows={visible}
-          columns={[
-            {
-              key: "customer",
-              header: t("columns.customer"),
-              cell: (c) => <CustomerName customer={c} />,
-              className: "ps-4",
-            },
-            {
-              key: "contact",
-              header: t("columns.contact"),
-              cell: (c) => (
-                <div className="grid max-w-56 gap-0.5">
-                  <a
-                    href={`tel:${c.phone}`}
-                    dir="ltr"
-                    className="hover:text-brand w-fit whitespace-nowrap tabular-nums transition-colors rtl:justify-self-end"
-                  >
-                    {formatUaePhone(c.phone)}
-                  </a>
-                  {c.email ? (
-                    <a
-                      href={`mailto:${c.email}`}
-                      title={c.email}
-                      className="text-muted-foreground hover:text-brand truncate text-xs transition-colors"
-                    >
-                      {c.email}
-                    </a>
-                  ) : null}
-                </div>
-              ),
-            },
-            {
-              key: "branch",
-              header: t("columns.branch"),
-              cell: (c) => <span className="block max-w-48 truncate">{c.branchName ?? "—"}</span>,
-              className: "hidden xl:table-cell",
-            },
-            {
-              key: "salesperson",
-              header: t("columns.salesperson"),
-              cell: (c) =>
-                c.salesperson ? (
-                  <span className="whitespace-nowrap">{c.salesperson.name}</span>
-                ) : (
-                  <span className="text-muted-foreground">{t("unassigned")}</span>
-                ),
-              className: "hidden lg:table-cell",
-            },
-            {
-              key: "bookings",
-              header: t("columns.bookings"),
-              cell: (c) => <BookingsSummary customer={c} />,
-            },
-            {
-              key: "added",
-              header: t("columns.added"),
-              cell: (c) => (
-                <span className="text-muted-foreground whitespace-nowrap" title={formatDate(c.createdAt, locale)}>
-                  {formatRelativeTime(c.createdAt, locale)}
-                </span>
-              ),
-              className: "hidden text-end 2xl:table-cell",
-            },
-          ]}
-          renderCard={(c) => (
-            <article key={c.id} className="bg-card grid min-w-0 gap-3 overflow-hidden rounded-xl border p-4 shadow-xs">
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <CustomerName customer={c} />
-                <div className="shrink-0">
-                  <BookingsSummary customer={c} stacked />
-                </div>
-              </div>
-              <div className="text-muted-foreground grid gap-1.5 text-sm">
-                <a href={`tel:${c.phone}`} className="hover:text-brand flex w-fit items-center gap-2">
-                  <PhoneIcon className="size-3.5" aria-hidden />
-                  <span dir="ltr" className="tabular-nums">
-                    {formatUaePhone(c.phone)}
-                  </span>
-                </a>
-                {c.email ? (
-                  <a href={`mailto:${c.email}`} className="hover:text-brand flex min-w-0 items-center gap-2">
-                    <MailIcon className="size-3.5 shrink-0" aria-hidden />
-                    <span className="truncate">{c.email}</span>
-                  </a>
-                ) : null}
-                {c.branchName ? (
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Building2Icon className="size-3.5 shrink-0" aria-hidden />
-                    <span className="truncate">{c.branchName}</span>
-                  </span>
-                ) : null}
-              </div>
-              <div className="text-muted-foreground flex items-center justify-between gap-3 border-t pt-3 text-xs">
-                <span className="truncate">{c.salesperson?.name ?? t("unassigned")}</span>
-                <span className="shrink-0">{formatRelativeTime(c.createdAt, locale)}</span>
-              </div>
-            </article>
-          )}
-        />
+        <>
+          <ul
+            className={cn(
+              "stagger grid gap-3 transition-opacity [--stagger:35ms] sm:grid-cols-2 xl:grid-cols-3",
+              isFetching && "opacity-70",
+            )}
+            aria-busy={isFetching}
+          >
+            {visible.map((c) => (
+              <li key={c.id} className="min-w-0">
+                <CustomerCard
+                  customer={c}
+                  showSalesperson={!ownOnly}
+                  canCreateBooking={canCreateBooking}
+                  isNew={monthKey(c.createdAt) === thisMonth}
+                />
+              </li>
+            ))}
+          </ul>
+          <ListPagination
+            namespace="customers"
+            page={page}
+            pageSize={pageSize}
+            pageSizes={CUSTOMER_PAGE_SIZES}
+            total={data.total}
+            fetching={isFetching}
+            onChange={(next) => {
+              if (next.pageSize) setPageSize(Number(next.pageSize));
+              setPage(next.page);
+              document.getElementById("main")?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </>
       )}
     </div>
   );
 }
 
-function CustomerName({ customer }: { customer: CustomerListItem }) {
-  const initials = customer.name
+const TONES = {
+  brand: "bg-brand-soft text-brand",
+  success: "bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/12 dark:text-emerald-300",
+  info: "bg-sky-600/10 text-sky-700 dark:bg-sky-400/12 dark:text-sky-300",
+  warning: "bg-amber-600/12 text-amber-700 dark:bg-amber-400/12 dark:text-amber-300",
+  neutral: "bg-muted text-foreground/70",
+} as const;
+
+/** A summary figure that filters the list when clicked (same shape as the Bookings tiles). */
+function SummaryTile({
+  icon: Icon,
+  tone,
+  label,
+  value,
+  hint,
+  selected,
+  onSelect,
+}: {
+  icon: LucideIcon;
+  tone: keyof typeof TONES;
+  label: string;
+  value: string;
+  hint: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const tile = (className: string) => (
+    <span
+      className={cn("flex shrink-0 items-center justify-center rounded-lg", TONES[tone], className)}
+      aria-hidden
+    >
+      <Icon className="size-4" />
+    </span>
+  );
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={cn(
+        "bg-card grid min-w-0 gap-1.5 rounded-xl px-3 py-2.5 text-start shadow-xs ring-1 ring-foreground/[0.07] sm:p-4",
+        "hover:ring-brand/30 outline-none transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "ring-brand/60 ring-2",
+      )}
+    >
+      {/* Phones: a short row (icon, then label / value / hint). */}
+      <span className="flex items-center gap-2.5 sm:justify-between sm:gap-2">
+        {tile("size-8 sm:hidden")}
+        <span className="grid min-w-0 flex-1">
+          <span className="text-muted-foreground truncate text-xs font-medium">{label}</span>
+          <span className="font-heading truncate text-lg leading-tight font-semibold tracking-tight tabular-nums sm:hidden">
+            {value}
+          </span>
+          <span className="text-muted-foreground truncate text-[11px] leading-tight sm:hidden">
+            {hint}
+          </span>
+        </span>
+        {tile("size-8 max-sm:hidden")}
+      </span>
+      <span className="font-heading truncate text-2xl font-semibold tracking-tight tabular-nums max-sm:hidden">
+        {value}
+      </span>
+      <span className="text-muted-foreground truncate text-xs max-sm:hidden">{hint}</span>
+    </button>
+  );
+}
+
+const initials = (name: string) =>
+  name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
-    .join("");
-  const active = customer.bookings.active > 0;
+    .join("") || "?";
+
+/** Where the customer stands: a car on hold now, bought or booked before, or not yet. */
+function CustomerStatus({ customer }: { customer: CustomerListItem }) {
+  const t = useTranslations("customers");
+  const { total, active } = customer.bookings;
+  const style =
+    active > 0
+      ? { className: TONES.success, label: t("status.active", { count: active }), live: true }
+      : total > 0
+        ? { className: TONES.neutral, label: t("status.past"), live: false }
+        : { className: "bg-muted/60 text-muted-foreground", label: t("status.none"), live: false };
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
-      <span
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-          active ? "bg-gold text-brand-foreground shadow-sm" : "bg-muted text-foreground/70",
-        )}
-        aria-hidden
-      >
-        {initials || "?"}
-      </span>
-      <div className="min-w-0">
-        <p className="truncate font-medium md:max-w-56" title={customer.name}>
-          {customer.name}
-        </p>
-        <p className="text-muted-foreground font-mono text-xs">{customer.code}</p>
-      </div>
-    </div>
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
+        style.className,
+      )}
+    >
+      {style.live ? (
+        <span className="relative flex size-1.5" aria-hidden>
+          <span className="animate-ping-soft absolute inset-0 rounded-full bg-current motion-reduce:hidden" />
+          <span className="relative size-1.5 rounded-full bg-current" />
+        </span>
+      ) : null}
+      {style.label}
+    </span>
   );
 }
 
-function BookingsSummary({ customer, stacked = false }: { customer: CustomerListItem; stacked?: boolean }) {
+/** A round icon link for the quick contact actions. */
+function ContactAction({
+  href,
+  icon: Icon,
+  label,
+  external = false,
+  className,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  external?: boolean;
+  className?: string;
+}) {
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title={label}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={cn(
+        buttonVariants({ variant: "outline", size: "icon" }),
+        "size-10 rounded-full sm:size-9",
+        className,
+      )}
+    >
+      <Icon className="size-4" aria-hidden />
+    </a>
+  );
+}
+
+function CustomerCard({
+  customer: c,
+  showSalesperson,
+  canCreateBooking,
+  isNew,
+}: {
+  customer: CustomerListItem;
+  showSalesperson: boolean;
+  canCreateBooking: boolean;
+  isNew: boolean;
+}) {
   const t = useTranslations("customers");
   const locale = useAppLocale();
-  const { total, active } = customer.bookings;
-  if (total === 0) return <span className="text-muted-foreground text-xs">{t("noBookings")}</span>;
+  const active = c.bookings.active > 0;
+  const phoneDigits = c.phone.replace(/\D/g, "");
+  const place = [c.city, c.branchName].filter(Boolean).join(" · ");
+
   return (
-    <div className={cn("flex gap-1.5", stacked ? "flex-col items-end" : "flex-wrap items-center")}>
-      {active > 0 ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-700 dark:bg-emerald-400/12 dark:text-emerald-300">
-          <span className="size-1.5 animate-pulse rounded-full bg-current" aria-hidden />
-          {t("activeCount", { count: active })}
-        </span>
-      ) : null}
-      <span className="text-muted-foreground text-xs whitespace-nowrap">
-        {t("totalCount", { count: total, formatted: formatNumber(total, locale) })}
-      </span>
-    </div>
+    <article
+      className={cn(
+        "bg-card flex h-full flex-col overflow-hidden rounded-xl shadow-xs ring-1 ring-foreground/[0.07]",
+        "hover:ring-brand/30 transition-[box-shadow] duration-300 hover:shadow-md",
+      )}
+    >
+      <div className="grid flex-1 content-start gap-3 p-4">
+        {/* Who */}
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className={cn(
+              "flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+              active
+                ? "bg-gold text-brand-foreground shadow-sm"
+                : "bg-muted text-foreground/70",
+            )}
+            aria-hidden
+          >
+            {initials(c.name)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className="truncate font-semibold" title={c.name}>
+                {c.name}
+              </p>
+              <CustomerStatus customer={c} />
+            </div>
+            <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span className="font-mono">{c.code}</span>
+              {isNew ? (
+                <span className="rounded-full bg-sky-600/10 px-1.5 py-px font-medium text-sky-700 dark:bg-sky-400/12 dark:text-sky-300">
+                  {t("newBadge")}
+                </span>
+              ) : null}
+            </p>
+          </div>
+        </div>
+
+        {/* Contact and ownership */}
+        <dl className="grid gap-1.5 text-sm">
+          <div className="flex items-center gap-2">
+            <dt className="sr-only">{t("columns.contact")}</dt>
+            <PhoneIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
+            <dd dir="ltr" className="tabular-nums rtl:text-end">
+              {formatUaePhone(c.phone)}
+            </dd>
+          </div>
+          {c.email ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <dt className="sr-only">{t("actions.email")}</dt>
+              <MailIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
+              <dd className="text-muted-foreground truncate" title={c.email}>
+                {c.email}
+              </dd>
+            </div>
+          ) : null}
+          {place ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <dt className="sr-only">{t("columns.branch")}</dt>
+              <Building2Icon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
+              <dd className="text-muted-foreground truncate">{place}</dd>
+            </div>
+          ) : null}
+          {showSalesperson ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <dt className="sr-only">{t("columns.salesperson")}</dt>
+              <span
+                className={cn(
+                  "flex size-3.5 shrink-0 items-center justify-center rounded-full text-[7px] font-bold",
+                  c.salesperson
+                    ? "bg-foreground/10 text-foreground/70"
+                    : "bg-amber-500/20 text-amber-700",
+                )}
+                aria-hidden
+              >
+                {c.salesperson ? initials(c.salesperson.name).slice(0, 1) : "!"}
+              </span>
+              <dd
+                className={cn(
+                  "truncate",
+                  c.salesperson ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400",
+                )}
+              >
+                {c.salesperson
+                  ? t("ownedBy", { name: c.salesperson.name })
+                  : t("unassigned")}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+
+        {/* History */}
+        <p className="text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-1.5 text-xs">
+          {c.bookings.total > 0 ? (
+            <>
+              <span className="text-foreground font-medium">
+                {t("totalCount", {
+                  count: c.bookings.total,
+                  formatted: formatNumber(c.bookings.total, locale),
+                })}
+              </span>
+              {c.bookings.lastAt ? (
+                <span title={formatDate(c.bookings.lastAt, locale)}>
+                  {" · "}
+                  {t("lastBooked", { when: formatRelativeTime(c.bookings.lastAt, locale) })}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <span title={formatDate(c.createdAt, locale)}>
+              {t("addedOn", { when: formatRelativeTime(c.createdAt, locale) })}
+            </span>
+          )}
+        </p>
+      </div>
+
+      {/* One-tap actions */}
+      <div className="bg-muted/30 flex items-center gap-2 border-t px-3 py-2.5">
+        <ContactAction href={`tel:${c.phone}`} icon={PhoneIcon} label={t("actions.call")} />
+        <ContactAction
+          href={`https://wa.me/${phoneDigits}`}
+          icon={MessageCircleIcon}
+          label={t("actions.whatsapp")}
+          external
+          className="hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400"
+        />
+        {c.email ? (
+          <ContactAction href={`mailto:${c.email}`} icon={MailIcon} label={t("actions.email")} />
+        ) : null}
+        <div className="ms-auto flex min-w-0 items-center gap-2">
+          {c.bookings.total > 0 ? (
+            <Link
+              href={`/bookings?filter=all&q=${encodeURIComponent(c.phone)}`}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "h-10 px-2.5 sm:h-9",
+                canCreateBooking && "max-sm:hidden",
+              )}
+            >
+              {t("actions.viewBookings")}
+            </Link>
+          ) : null}
+          {canCreateBooking ? (
+            <Link
+              href={`/bookings?customerId=${c.id}`}
+              className={cn(buttonVariants({ variant: "brand", size: "sm" }), "h-10 sm:h-9")}
+            >
+              <CalendarPlusIcon aria-hidden />
+              {t("actions.book")}
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    </article>
   );
 }

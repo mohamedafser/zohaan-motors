@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarIcon, CarIcon, PencilLineIcon, Settings2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { Control, UseFormSetValue } from "react-hook-form";
@@ -7,6 +8,8 @@ import { Controller, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
 import { FormField } from "@/components/forms/form-field";
+import { FUEL_ICONS, bodyTypeIcon } from "@/components/inventory/vehicle-select-icons";
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
@@ -135,13 +138,16 @@ export function VehicleCatalogFields({
   }
 
   const variantOptions = [
+    // The fuel icon tells petrol, hybrid and electric trims apart at a glance.
     ...variants.map((variant) => ({
       value: variant.id,
       label: optionLabel(variant.name, variant.nameAr),
+      icon: variant.fuelType ? FUEL_ICONS[variant.fuelType] : <Settings2Icon />,
     })),
     {
       value: CUSTOM_VARIANT_VALUE,
       label: t("inventory.fields.customVariantOption"),
+      icon: <PencilLineIcon />,
     },
   ];
 
@@ -173,6 +179,7 @@ export function VehicleCatalogFields({
               options={makes.map((make) => ({
                 value: make.id,
                 label: optionLabel(make.name, make.nameAr),
+                icon: <BrandLogo name={make.name} />,
               }))}
               searchPlaceholder={t("inventory.fields.searchBrand")}
               placeholder={t("inventory.fields.selectPlaceholder")}
@@ -209,6 +216,8 @@ export function VehicleCatalogFields({
               options={models.map((model) => ({
                 value: model.id,
                 label: optionLabel(model.name, model.nameAr),
+                // Body shape (sedan, SUV, pickup…) when the catalog knows it.
+                icon: model.vehicleType ? bodyTypeIcon(model.vehicleType) : <CarIcon />,
               }))}
               searchPlaceholder={t("inventory.fields.searchModel")}
               placeholder={t("inventory.fields.selectPlaceholder")}
@@ -246,6 +255,7 @@ export function VehicleCatalogFields({
               options={years.map((year) => ({
                 value: year.id,
                 label: String(year.year),
+                icon: <CalendarIcon />,
               }))}
               searchPlaceholder={t("inventory.fields.searchYear")}
               placeholder={t("inventory.fields.selectPlaceholder")}

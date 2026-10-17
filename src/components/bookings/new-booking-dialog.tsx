@@ -49,6 +49,7 @@ export function NewBookingDialog({
   onOpenChange,
   initialVehicleId,
   initialQuantity,
+  initialCustomerId,
   canCreateCustomer,
   sell = false,
   depositMinutes: initialDepositMinutes,
@@ -59,6 +60,8 @@ export function NewBookingDialog({
   initialVehicleId?: string;
   /** Units to book when opened for a multi-unit car (e.g. from Update status). */
   initialQuantity?: number;
+  /** An existing customer to book for (e.g. "Book a car" on the Customers screen). */
+  initialCustomerId?: string;
   canCreateCustomer: boolean;
   /** Sell the car now, paid in full, instead of booking it (no deposit). */
   sell?: boolean;
@@ -75,6 +78,7 @@ export function NewBookingDialog({
   const [form, setForm] = useState(() => ({
     ...emptyForm(),
     vehicleId: initialVehicleId ?? "",
+    customerId: initialCustomerId ?? "",
     quantity: String(initialQuantity ?? 1),
   }));
   const [vehicles, setVehicles] = useState<BookableVehicle[]>([]);

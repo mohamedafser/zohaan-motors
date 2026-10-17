@@ -16,9 +16,11 @@ import {
   ACQUISITION_SOURCE_ICONS,
   ACQUISITION_STATUS_ICONS,
   BRANCH_ICON,
+  MODEL_ICON,
   ORDER_ICONS,
 } from "@/components/acquisitions/acquisition-select-icons";
 import { FormField } from "@/components/forms/form-field";
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { DebouncedFilterInput, FilterGroup } from "@/components/shared/filter-controls";
 import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -301,6 +303,7 @@ export function AcquisitionFilters({ actions }: { actions?: React.ReactNode }) {
                 options={(meta.data?.makes ?? []).map((make) => ({
                   value: make.name,
                   label: make.name,
+                  icon: <BrandLogo name={make.name} />,
                 }))}
               />
             </FormField>
@@ -314,6 +317,7 @@ export function AcquisitionFilters({ actions }: { actions?: React.ReactNode }) {
                 options={modelOptions.map((model) => ({
                   value: model.name,
                   label: model.name,
+                  icon: MODEL_ICON,
                 }))}
               />
             </FormField>

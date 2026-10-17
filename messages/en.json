@@ -2535,12 +2535,20 @@
       "active": "Active buyers",
       "new": "New this month",
       "unassigned": "Unassigned",
-      "bookings": "Total bookings"
+      "bookings": "Total bookings",
+      "totalHint": "{count, plural, one {{formatted} booking} other {{formatted} bookings}} in total",
+      "activeHint": "A car on hold right now",
+      "newHint": "Added this month",
+      "none": "No bookings yet",
+      "noneHint": "Ready for a first booking",
+      "unassignedHint": "No sales executive yet"
     },
     "filters": {
       "all": "All",
       "active": "Active booking",
-      "none": "No bookings"
+      "new": "New this month",
+      "none": "No bookings",
+      "unassigned": "Unassigned"
     },
     "searchPlaceholder": "Search name, phone, email or code",
     "clearSearch": "Clear search",
@@ -2559,7 +2567,37 @@
     "empty": "No customers yet",
     "emptyHint": "Customers are added when you create a booking.",
     "noMatches": "No matching customers",
-    "noMatchesHint": "Try a different name, phone number, or filter."
+    "noMatchesHint": "Try a different name, phone number, or filter.",
+    "newBadge": "New",
+    "ownedBy": "Sales executive: {name}",
+    "lastBooked": "last booked {when}",
+    "addedOn": "Added {when} · no bookings yet",
+    "status": {
+      "active": "{count, plural, one {Active booking} other {# active bookings}}",
+      "past": "Booked before",
+      "none": "No bookings yet"
+    },
+    "sort": {
+      "label": "Sort customers",
+      "newest": "Newest first",
+      "recent": "Recently booked",
+      "bookings": "Most bookings",
+      "name": "Name A–Z"
+    },
+    "actions": {
+      "call": "Call",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "viewBookings": "Bookings",
+      "book": "Book a car",
+      "loading": "Loading customers"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "pageSize": "Per page",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "duration": {
     "days": "{count, plural, one {# day} other {# days}}",
