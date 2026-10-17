@@ -1,58 +1,25 @@
 "use client";
 
-import { BadgeCheckIcon, CalendarCheckIcon, CarIcon, HandCoinsIcon, TruckIcon } from "lucide-react";
+import { CarIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { KpiCard, type KpiTone } from "@/components/cards/kpi-card";
+import { StockPipelineSkeleton } from "@/components/feedback/skeletons";
 import { useAppLocale } from "@/components/inventory/inventory-utils";
-import { KpiCardSkeleton } from "@/components/feedback/skeletons";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatPercent } from "@/lib/utils/currency";
 import type { InventorySummary } from "@/types/vehicle";
 
-const summaryKeys = [
-  "total",
-  "inTransit",
-  "readyForSale",
-  "reserved",
-  "sold",
-] as const satisfies readonly (keyof InventorySummary)[];
-
-const summaryVisuals = {
-  total: { icon: CarIcon, tone: "neutral" },
-  inTransit: { icon: TruckIcon, tone: "info" },
-  readyForSale: { icon: BadgeCheckIcon, tone: "success" },
-  reserved: { icon: CalendarCheckIcon, tone: "warning" },
-  sold: { icon: HandCoinsIcon, tone: "violet" },
-} satisfies Record<(typeof summaryKeys)[number], { icon: typeof CarIcon; tone: KpiTone }>;
-
+/** Stock at a glance: a compact card on phones, the pipeline card with the total elsewhere. */
 export function VehicleSummary({ summary }: { summary?: InventorySummary }) {
-  const t = useTranslations();
-  const locale = useAppLocale();
-
   return (
-    <div className="grid gap-3">
-      <section
-        className="stagger grid grid-cols-2 gap-3 [--stagger:70ms] md:grid-cols-3 xl:grid-cols-5"
-        aria-label={t("inventory.summary.total")}
-      >
-        {summaryKeys.map((key) =>
-          summary ? (
-            <KpiCard
-              key={key}
-              label={t(`inventory.summary.${key}`)}
-              value={formatNumber(summary[key], locale)}
-              icon={summaryVisuals[key].icon}
-              tone={summaryVisuals[key].tone}
-            />
-          ) : (
-            <KpiCardSkeleton key={key} brand={key === "total"} />
-          ),
-        )}
-      </section>
-      {summary && summary.total > 0 ? <StockPipeline summary={summary} /> : null}
-    </div>
+    <>
+      <CompactSummary summary={summary} />
+      <div className="hidden md:block">
+        {summary ? <StockPipeline summary={summary} /> : <StockPipelineSkeleton />}
+      </div>
+    </>
   );
 }
 
@@ -62,6 +29,79 @@ const pipelineSegments = [
   { key: "reserved", color: "bg-amber-500" },
   { key: "sold", color: "bg-violet-500" },
 ] as const;
+
+/** Phone layout: total, the segmented bar and the four statuses in a single row. */
+function CompactSummary({ summary }: { summary?: InventorySummary }) {
+  const t = useTranslations();
+  const locale = useAppLocale();
+  const share = (value: number) => (summary?.total ? value / summary.total : 0);
+
+  return (
+    <Card size="sm" className="animate-rise gap-3 px-3.5 py-3 md:hidden">
+      <div className="flex items-center gap-2.5">
+        <span
+          className="bg-muted text-foreground/70 flex size-8 shrink-0 items-center justify-center rounded-lg"
+          aria-hidden
+        >
+          <CarIcon className="size-4" />
+        </span>
+        <p className="text-muted-foreground text-xs font-medium">{t("inventory.summary.total")}</p>
+        {summary ? (
+          <p className="font-heading ms-auto text-xl font-semibold tabular-nums">
+            {formatNumber(summary.total, locale)}
+          </p>
+        ) : (
+          <Skeleton className="ms-auto h-6 w-12" />
+        )}
+      </div>
+
+      <div
+        className="bg-muted flex h-2 gap-0.5 overflow-hidden rounded-full"
+        role="img"
+        aria-label={
+          summary
+            ? pipelineSegments
+                .map((segment) => `${t(`inventory.summary.${segment.key}`)} ${summary[segment.key]}`)
+                .join(", ")
+            : undefined
+        }
+      >
+        {summary
+          ? pipelineSegments.map((segment) =>
+              summary[segment.key] > 0 ? (
+                <div
+                  key={segment.key}
+                  className={cn(
+                    segment.color,
+                    "animate-grow-x h-full first:rounded-s-full last:rounded-e-full ltr:origin-left rtl:origin-right",
+                  )}
+                  style={{ width: `${share(summary[segment.key]) * 100}%` }}
+                />
+              ) : null,
+            )
+          : null}
+      </div>
+
+      <ul className="grid grid-cols-4 divide-x rtl:divide-x-reverse">
+        {pipelineSegments.map((segment) => (
+          <li key={segment.key} className="grid min-w-0 justify-items-center gap-0.5 px-1 text-center">
+            {summary ? (
+              <span className="flex items-center gap-1 text-base font-semibold tabular-nums">
+                <span className={cn(segment.color, "size-2 shrink-0 rounded-full")} aria-hidden />
+                {formatNumber(summary[segment.key], locale)}
+              </span>
+            ) : (
+              <Skeleton className="h-5 w-8" />
+            )}
+            <span className="text-muted-foreground line-clamp-2 text-[11px] leading-tight">
+              {t(`inventory.summary.${segment.key}`)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
 
 /** Where the units are, as one segmented bar, plus how much of the stock has sold. */
 function StockPipeline({ summary }: { summary: InventorySummary }) {
@@ -74,9 +114,25 @@ function StockPipeline({ summary }: { summary: InventorySummary }) {
   return (
     <Card className="animate-rise grid gap-5 p-4 [animation-delay:350ms] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5">
       <div className="grid gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="font-heading font-semibold">{t("inventory.pipeline.title")}</p>
-          <p className="text-muted-foreground text-xs">{t("inventory.pipeline.hint")}</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-heading font-semibold">{t("inventory.pipeline.title")}</p>
+            <p className="text-muted-foreground text-xs">{t("inventory.pipeline.hint")}</p>
+          </div>
+          <div className="bg-muted/60 flex shrink-0 items-center gap-2.5 rounded-lg py-1.5 ps-1.5 pe-3">
+            <span
+              className="bg-background text-foreground/70 flex size-7 items-center justify-center rounded-md shadow-xs"
+              aria-hidden
+            >
+              <CarIcon className="size-4" />
+            </span>
+            <span className="text-muted-foreground text-xs font-medium">
+              {t("inventory.summary.total")}
+            </span>
+            <span className="font-heading text-xl font-semibold tabular-nums">
+              {formatNumber(summary.total, locale)}
+            </span>
+          </div>
         </div>
         <div
           className="bg-muted flex h-4 gap-0.5 overflow-hidden rounded-full"

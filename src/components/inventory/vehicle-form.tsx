@@ -30,7 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FormSectionsSkeleton } from "@/components/feedback/skeletons";
+import { VehicleSectionsSkeleton } from "@/components/feedback/skeletons";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/use-permission";
 import { useInventoryMeta } from "@/hooks/use-vehicles";
@@ -185,11 +185,13 @@ function toDefaults(vehicle: VehicleDetail | undefined, branchId: string): Vehic
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card>
+    <Card className="gap-4 [--card-spacing:--spacing(4)] sm:[--card-spacing:--spacing(5)]">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</CardContent>
+      <CardContent className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-3">
+        {children}
+      </CardContent>
     </Card>
   );
 }
@@ -442,7 +444,7 @@ function VehicleFormBody({
 
   return (
     <form
-      className={cn("grid gap-6", !hideActions && "pb-2")}
+      className={cn("grid gap-4", !hideActions && "pb-2")}
       noValidate
       onSubmit={form.handleSubmit(async (values) => {
         await onSubmit(enrich(values));
@@ -455,22 +457,20 @@ function VehicleFormBody({
       ) : null}
 
       <Section title={t("inventory.sections.basic")}>
-        <FormField
-          label={t("inventory.fields.stockId")}
-          htmlFor="stockNumber"
-          hint={mode === "create" ? t("inventory.fields.stockIdHint") : undefined}
-        >
-          <Input
-            id="stockNumber"
-            readOnly
-            disabled
-            className="h-11 md:h-10"
-            value={mode === "edit" ? (vehicle?.stockNumber ?? "") : ""}
-            placeholder={mode === "create" ? t("inventory.fields.stockIdHint") : undefined}
-          />
-        </FormField>
+        {/* New vehicles get their stock ID on save, so the field only shows when editing. */}
+        {mode === "edit" ? (
+          <FormField label={t("inventory.fields.stockId")} htmlFor="stockNumber">
+            <Input
+              id="stockNumber"
+              readOnly
+              disabled
+              className="h-11 md:h-10"
+              value={vehicle?.stockNumber ?? ""}
+            />
+          </FormField>
+        ) : null}
         {textField("vin", t("inventory.fields.vin"), {
-          hint: t("inventory.fields.vinHint"),
+          placeholder: t("inventory.fields.vinHint"),
           className: "font-mono uppercase",
           autoCapitalize: "characters",
         })}
@@ -754,12 +754,12 @@ function VehicleFormBody({
             label={t("inventory.fields.notes")}
             htmlFor="description"
             error={message("description")}
-            hint={t("inventory.fields.notesHint")}
           >
             <Textarea
               id="description"
-              rows={4}
-              className="min-h-24"
+              rows={3}
+              className="min-h-20"
+              placeholder={t("inventory.fields.notesHint")}
               {...aria("description")}
               {...form.register("description")}
             />
@@ -817,9 +817,7 @@ export function VehicleForm({ ref, ...props }: VehicleFormProps) {
   const meta = useInventoryMeta();
 
   if (meta.isPending) {
-    return (
-      <FormSectionsSkeleton />
-    );
+    return <VehicleSectionsSkeleton />;
   }
 
   if (meta.isError) {

@@ -1,26 +1,34 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { BadgeCheckIcon, CalendarCheckIcon } from "lucide-react";
+import { BadgeCheckIcon, CalendarCheckIcon, PackageCheckIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { NewBookingDialog } from "@/components/bookings/new-booking-dialog";
+import {
+  VehicleStatusUpdateDialog,
+  type StatusUpdateVehicle,
+} from "@/components/inventory/vehicle-status-update-dialog";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/hooks/use-permission";
 import { vehicleKeys } from "@/hooks/use-vehicles";
 import { cn } from "@/lib/utils";
 import type { VehicleListItem } from "@/types/vehicle";
 
-type SaleVehicle = Pick<VehicleListItem, "id" | "status" | "hasMinimumPrice">;
+type SaleVehicle = StatusUpdateVehicle & Pick<VehicleListItem, "hasMinimumPrice">;
 
-/** Which of Book now / Mark as sold this user gets for the car (none unless Ready for sale). */
-export function useSaleActions(vehicle: SaleVehicle) {
+/**
+ * Which actions this user gets for the car: Mark ready for sale while it's In transit,
+ * then Book now / Mark as sold once it's Ready for sale.
+ */
+export function useSaleActions(vehicle: Pick<VehicleListItem, "status">) {
   const { can } = usePermission();
   const ready = vehicle.status === "ready_for_sale";
+  const canMarkReady = vehicle.status === "acquired" && can("vehicle.ready_for_sale");
   const canBook = ready && can("reservation.create");
   const canSell = ready && (can("sale.create") || can("vehicle.status.change"));
-  return { canBook, canSell, any: canBook || canSell };
+  return { canMarkReady, canBook, canSell, any: canMarkReady || canBook || canSell };
 }
 
 const LAYOUT = {
@@ -42,6 +50,7 @@ const LAYOUT = {
 /**
  * "Book now" and "Mark as sold" for a Ready for sale car, each opening the booking form
  * in place (the sale form takes no deposit). Both need a minimum selling price first.
+ * An In transit car gets "Mark ready for sale" instead, which runs the readiness checks.
  */
 export function VehicleSaleActions({
   vehicle,
@@ -53,11 +62,47 @@ export function VehicleSaleActions({
   const t = useTranslations();
   const { can } = usePermission();
   const queryClient = useQueryClient();
-  const { canBook, canSell } = useSaleActions(vehicle);
+  const { canMarkReady, canBook, canSell } = useSaleActions(vehicle);
   const [form, setForm] = useState<{ sell: boolean; key: number } | null>(null);
-  if (!canBook && !canSell) return null;
+  const [readyOpen, setReadyOpen] = useState(false);
+  if (!canMarkReady && !canBook && !canSell) return null;
 
   const style = LAYOUT[layout];
+
+  if (canMarkReady) {
+    const label = t("inventory.statusUpdate.confirm.ready_for_sale");
+    return (
+      <>
+        <span title={label} className={cn("inline-flex", style.wrapper)}>
+          <Button
+            type="button"
+            variant="brand"
+            size={style.size}
+            className={style.button}
+            aria-label={label}
+            onClick={(event) => {
+              // Rows and cards are links; the button opens the dialog instead.
+              event.preventDefault();
+              event.stopPropagation();
+              setReadyOpen(true);
+            }}
+          >
+            <PackageCheckIcon aria-hidden />
+            <span className={style.label || undefined}>{label}</span>
+          </Button>
+        </span>
+        <span className="contents" data-row-stop onClick={(event) => event.stopPropagation()}>
+          <VehicleStatusUpdateDialog
+            vehicle={vehicle}
+            open={readyOpen}
+            onOpenChange={setReadyOpen}
+            direct
+          />
+        </span>
+      </>
+    );
+  }
+
   const blocked = vehicle.hasMinimumPrice ? undefined : t("bookings.errors.noMinimumPrice");
   const button = (sell: boolean) => {
     const label = sell ? t("bookings.markSold") : t("inventory.actions.bookNow");

@@ -179,11 +179,11 @@ function toDefaults(
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card>
+    <Card className="gap-4 [--card-spacing:--spacing(4)] sm:[--card-spacing:--spacing(5)]">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</CardContent>
+      <CardContent className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-3">{children}</CardContent>
     </Card>
   );
 }
@@ -815,21 +815,24 @@ function AcquisitionFormBody({
       </Section>
 
       <Section title={t("acquisitions.sections.purchase")}>
-        <FormField
-          label={perUnit(t("acquisitions.fields.askingPrice"))}
-          htmlFor="askingPrice"
-          error={fieldError("askingPrice")}
-        >
-          <Input
-            id="askingPrice"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            className="h-11 md:h-10"
-            {...form.register("askingPrice")}
-          />
-        </FormField>
+        {/* The Inventory steps leave out the seller's asking price; a saved one is kept. */}
+        {!embedded ? (
+          <FormField
+            label={perUnit(t("acquisitions.fields.askingPrice"))}
+            htmlFor="askingPrice"
+            error={fieldError("askingPrice")}
+          >
+            <Input
+              id="askingPrice"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              className="h-11 md:h-10"
+              {...form.register("askingPrice")}
+            />
+          </FormField>
+        ) : null}
         <FormField
           label={perUnit(t("acquisitions.fields.purchasePrice"))}
           htmlFor="purchasePrice"
@@ -969,7 +972,7 @@ function AcquisitionFormBody({
   );
 
   if (embedded) {
-    return <div className="grid gap-6">{formBody}</div>;
+    return <div className="grid gap-4">{formBody}</div>;
   }
 
   return (

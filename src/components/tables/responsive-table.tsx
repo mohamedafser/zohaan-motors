@@ -43,8 +43,7 @@ export function ResponsiveTable<T extends { id: string }>({
   /** Skip the framed container, e.g. when the table already sits inside a Card. */
   bare?: boolean;
   /**
-   * `auto` — cards on small screens, table from md up (legacy).
-   * `list` — table (scrollable on small screens).
+   * `auto` / `list` — cards on phones, the table from md up (phones never get the table).
    * `grid` — card grid at all breakpoints.
    */
   viewMode?: ListViewMode | "auto";
@@ -53,32 +52,27 @@ export function ResponsiveTable<T extends { id: string }>({
   gridClassName?: string;
 }) {
   const router = useRouter();
-  const showGrid = viewMode === "grid" || viewMode === "auto";
-  const showTable = viewMode === "list" || viewMode === "auto";
+  const showTable = viewMode !== "grid";
 
   return (
     <>
-      {showGrid ? (
-        <div
-          className={cn(
-            viewMode === "grid"
-              ? cn(
-                  "stagger grid gap-3 [--stagger:45ms] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
-                  gridClassName,
-                )
-              : "stagger grid gap-3 [--stagger:45ms] md:hidden",
-            viewMode === "auto" && "md:hidden",
-          )}
-        >
-          {rows.map((row) => renderCard(row))}
-        </div>
-      ) : null}
+      <div
+        className={cn(
+          "stagger grid gap-3 [--stagger:45ms] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
+          gridClassName,
+          showTable && "md:hidden",
+        )}
+      >
+        {rows.map((row) => renderCard(row))}
+      </div>
 
       {showTable ? (
         <div
           className={cn(
-            bare ? "" : "bg-card ring-foreground/[0.07] overflow-hidden rounded-xl shadow-xs ring-1",
-            viewMode === "auto" && "hidden md:block",
+            bare
+              ? ""
+              : "bg-card ring-foreground/[0.07] overflow-hidden rounded-xl shadow-xs ring-1",
+            "hidden md:block",
             viewMode === "list" && "overflow-x-auto",
           )}
         >
@@ -98,7 +92,9 @@ export function ResponsiveTable<T extends { id: string }>({
                 return (
                   <TableRow
                     key={row.id}
-                    className={cn(href && "hover:bg-brand-soft/50 cursor-pointer transition-colors")}
+                    className={cn(
+                      href && "hover:bg-brand-soft/50 cursor-pointer transition-colors",
+                    )}
                     onClick={
                       href
                         ? (event) => {

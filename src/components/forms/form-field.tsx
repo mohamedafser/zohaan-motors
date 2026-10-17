@@ -38,11 +38,11 @@ export function FormField({
 
   return (
     <div className="grid content-start gap-2">
-      <Label htmlFor={htmlFor}>
+      <Label htmlFor={htmlFor} className="gap-0.5">
         {label}
         {required ? (
           <>
-            <span className="text-destructive ms-0.5" aria-hidden>
+            <span className="text-destructive" aria-hidden>
               *
             </span>
             <span className="sr-only"> ({t("validation.required")})</span>

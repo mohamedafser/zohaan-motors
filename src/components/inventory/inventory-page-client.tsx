@@ -16,7 +16,7 @@ import { VehicleSummary } from "@/components/inventory/vehicle-summary";
 import { VehicleTable } from "@/components/inventory/vehicle-table";
 import { PageHeader } from "@/components/layout/page-header";
 import { ListPagination } from "@/components/tables/list-pagination";
-import { TableSkeleton, VehicleGridSkeleton } from "@/components/feedback/skeletons";
+import { VehicleResultsSkeleton } from "@/components/feedback/skeletons";
 import { ViewModeToggle } from "@/components/tables/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useListViewMode } from "@/hooks/use-list-view-mode";
@@ -56,7 +56,7 @@ export function InventoryPageClient() {
 
       <VehicleFilters actions={<ViewModeToggle mode={mode} onChange={setMode} />} />
 
-      {isLoading ? mode === "grid" ? <VehicleGridSkeleton /> : <TableSkeleton columns={7} /> : null}
+      {isLoading ? <VehicleResultsSkeleton view={mode} /> : null}
 
       {error ? (
         <EmptyState

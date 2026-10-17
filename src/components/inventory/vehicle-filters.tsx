@@ -234,28 +234,31 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
       ariaLabel={t("inventory.filters.searchLabel")}
       actions={actions}
       advancedCount={advancedCount}
+      basicCount={["status", "marketType"].filter((key) => Boolean(searchParams.get(key))).length}
       hasActiveFilters={hasQuery}
       onClear={clear}
       chips={chips}
       drawerTitle={t("inventory.filters.drawerTitle")}
       drawerDescription={t("inventory.filters.drawerHint")}
+      search={
+        <div className="relative">
+          <SearchIcon
+            className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
+            aria-hidden
+          />
+          <DebouncedFilterInput
+            type="search"
+            inputMode="search"
+            aria-label={t("inventory.filters.searchLabel")}
+            placeholder={t("inventory.filters.searchPlaceholder")}
+            className="h-11 ps-9 md:h-10"
+            value={searchParams.get("q") ?? ""}
+            onCommit={(value) => update({ q: value })}
+          />
+        </div>
+      }
       basicFilters={
         <>
-          <div className="relative sm:col-span-2 xl:col-span-1">
-            <SearchIcon
-              className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2"
-              aria-hidden
-            />
-            <DebouncedFilterInput
-              type="search"
-              inputMode="search"
-              aria-label={t("inventory.filters.searchLabel")}
-              placeholder={t("inventory.filters.searchPlaceholder")}
-              className="h-11 ps-9 md:h-10"
-              value={searchParams.get("q") ?? ""}
-              onCommit={(value) => update({ q: value })}
-            />
-          </div>
           <SearchableSelect
             aria-label={t("inventory.filters.status")}
             value={searchParams.get("status") ?? ""}

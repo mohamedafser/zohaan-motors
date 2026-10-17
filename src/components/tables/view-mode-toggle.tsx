@@ -21,7 +21,8 @@ export function ViewModeToggle({
   return (
     <div
       className={cn(
-        "bg-muted/50 inline-flex items-center gap-0.5 rounded-lg border p-0.5",
+        // Phones always get the grid, so the switch only shows from tablets up.
+        "bg-muted/50 hidden items-center gap-0.5 rounded-lg border p-0.5 md:inline-flex",
         className,
       )}
       role="group"

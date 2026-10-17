@@ -38,6 +38,9 @@ export function isPublicAuthPath(pathname: string) {
 }
 
 /** Breadcrumb labels for users who only see their own records. */
+/** Step forms that pin their own bars to the edges, so they get the whole screen. */
+export const FOCUS_ROUTES = /^\/inventory\/(new|[^/]+\/edit)\/?$/;
+
 export const ownBreadcrumbLabels: Record<string, string> = {
   bookings: "nav.myBookings",
 };

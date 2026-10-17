@@ -1,4 +1,15 @@
+import { appConfig } from "@/config/app";
 import { alertBookingEvent } from "@/lib/bookings/alerts";
+import {
+  BOOKING_FILTERS,
+  bookingToCollect,
+  bookingUrgency,
+  inBookingFilter,
+  matchesBookingSearch,
+  type BookingFilter,
+  type BookingListPage,
+  type BookingListQuery,
+} from "@/lib/bookings/list-query";
 import { hasPermission, type Permission } from "@/lib/permissions";
 import {
   canViewAllBookings,
@@ -184,9 +195,9 @@ const isOwnBooking = (
 
 type Ownership = { created_by: string | null; salesperson_id: string | null };
 
-// Sales executives may edit, sell and cancel their own bookings even without the
-// broader sale/status permissions. Other roles go by permission, and only Super Admins
-// and Accountants may act on bookings that aren't theirs.
+// Sales executives may sell their own bookings even without the broader sale/status
+// permissions. Other roles go by permission, and only Super Admins and Accountants may
+// act on bookings that aren't theirs.
 function canActOnBooking(booking: Ownership, context: UserContext, ...permissions: Permission[]) {
   const own = isOwnBooking(booking, context);
   if (isSalesExecutive(context)) return own;
@@ -196,145 +207,228 @@ function canActOnBooking(booking: Ownership, context: UserContext, ...permission
   );
 }
 
-const canEditBooking = (booking: Ownership, context: UserContext) =>
-  canActOnBooking(booking, context, "reservation.create");
+/** Once a car is booked, only Super Admins may change or cancel the booking. */
+const canEditBooking = (_booking: Ownership, context: UserContext) =>
+  context.roles.includes("super_admin");
 
 const canSellBooking = (booking: Ownership, context: UserContext) =>
   canActOnBooking(booking, context, "sale.create", "vehicle.status.change");
 
-const canCancelBooking = (booking: Ownership, context: UserContext) =>
-  canActOnBooking(booking, context, "reservation.cancel");
+const canCancelBooking = (_booking: Ownership, context: UserContext) =>
+  context.roles.includes("super_admin");
 
 /** Selling a ready-for-sale car straight away (no booking first). */
 export const canSellDirectly = (context: UserContext) =>
   hasPermission(context.permissions, "sale.create", context.roles) ||
   hasPermission(context.permissions, "vehicle.status.change", context.roles);
 
+const BOOKING_SELECT =
+  "id, reservation_number, status, amount, selling_price, balance_received, sold_at, cancelled_at, currency, reserved_at, expires_at, notes, cancel_reason, auto_cancelled, balance_overdue_notified_at, created_by, salesperson_id, branch_id, units, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)";
+
+type BookingRow = {
+  id: string;
+  reservation_number: string;
+  status: BookingStatus;
+  amount: number;
+  selling_price: number | string | null;
+  balance_received: number | string | null;
+  sold_at: string | null;
+  cancelled_at: string | null;
+  currency: string;
+  reserved_at: string;
+  expires_at: string | null;
+  notes: string | null;
+  cancel_reason: string | null;
+  balance_overdue_notified_at: string | null;
+  auto_cancelled: boolean | null;
+  created_by: string | null;
+  salesperson_id: string | null;
+  branch_id: string;
+  /** Set once the booking's split units were merged back into another record. */
+  units: number | null;
+  vehicles: Joined<{
+    id: string;
+    stock_number: string | null;
+    year: number | null;
+    make: string | null;
+    model: string | null;
+    status: string;
+    quantity: number | null;
+  }>;
+  customers: Joined<{ id: string; display_name: string; phone: string }>;
+};
+
+/** Bookings visible to the caller, newest first; RLS enforces the same rule. */
+function bookingRowsQuery(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  context: UserContext,
+  options: { number?: string } = {},
+) {
+  let query = supabase.from("reservations").select(BOOKING_SELECT);
+  if (options.number) query = query.eq("reservation_number", options.number);
+  if (ownBookingsOnly(context)) query = query.or(ownBookingFilter(context));
+  return query.order("reserved_at", { ascending: false }).order("id", { ascending: false });
+}
+
+function toBookingItem(
+  row: BookingRow,
+  context: UserContext,
+  terms: PaymentTerms,
+  now: number,
+  names: Map<string, string>,
+): BookingListItem {
+  const vehicle = one(row.vehicles);
+  const customer = one(row.customers);
+  // Active bookings past their expiry date are shown as expired.
+  const status =
+    row.status === "active" && row.expires_at && new Date(row.expires_at).getTime() < now
+      ? "expired"
+      : row.status;
+  const deposit = Number(row.amount);
+  const sellingPrice = row.selling_price == null ? null : Number(row.selling_price);
+  const units = row.units ?? vehicle?.quantity ?? 1;
+  const totalPrice = quantityTotal(sellingPrice, units);
+  const balanceReceived = row.balance_received == null ? null : Number(row.balance_received);
+  const outstanding = totalPrice == null ? 0 : totalPrice - deposit - (balanceReceived ?? 0);
+  const balanceDueAt =
+    (status === "active" || status === "converted") && outstanding > 0.005
+      ? deadlineFrom(row.reserved_at, terms.balanceMinutes)
+      : null;
+  return {
+    id: row.id,
+    number: row.reservation_number,
+    status,
+    deposit,
+    sellingPrice,
+    units,
+    totalPrice,
+    balanceDue:
+      totalPrice == null ? null : Math.max(0, Math.round((totalPrice - deposit) * 100) / 100),
+    balanceReceived,
+    soldAt: row.sold_at,
+    currency: row.currency,
+    reservedAt: row.reserved_at,
+    expiresAt: row.expires_at,
+    notes: row.notes,
+    cancelReason: row.cancel_reason,
+    cancelledAt: row.cancelled_at,
+    balanceAlertedAt: row.balance_overdue_notified_at,
+    createdBy: row.created_by,
+    autoCancelled: row.auto_cancelled ?? false,
+    depositDueAt:
+      status === "active" && deposit <= 0
+        ? deadlineFrom(row.reserved_at, terms.depositMinutes)
+        : null,
+    balanceDueAt,
+    balanceOverdue: balanceDueAt != null && new Date(balanceDueAt).getTime() < now,
+    can: {
+      edit: status === "active" && canEditBooking(row, context),
+      sell: status === "active" && canSellBooking(row, context),
+      cancel: status === "active" && canCancelBooking(row, context),
+    },
+    vehicle: vehicle
+      ? {
+          id: vehicle.id,
+          stockNumber: vehicle.stock_number,
+          title: vehicleTitle(vehicle),
+          status: vehicle.status,
+        }
+      : null,
+    customer: customer
+      ? { id: customer.id, name: customer.display_name, phone: customer.phone }
+      : null,
+    salesperson: row.salesperson_id
+      ? { id: row.salesperson_id, name: names.get(row.salesperson_id) ?? "—" }
+      : null,
+    branchId: row.branch_id,
+  };
+}
+
+async function salespersonNames(rows: { salesperson_id: string | null }[]) {
+  return profileNames([
+    ...new Set(rows.map((r) => r.salesperson_id).filter((id): id is string => !!id)),
+  ]);
+}
+
 export async function listBookings(
   context: UserContext,
   options: { number?: string } = {},
 ): Promise<Result<BookingListItem[]>> {
   const supabase = await createClient();
-  let query = supabase
-    .from("reservations")
-    .select(
-      "id, reservation_number, status, amount, selling_price, balance_received, sold_at, cancelled_at, currency, reserved_at, expires_at, notes, cancel_reason, auto_cancelled, balance_overdue_notified_at, created_by, salesperson_id, branch_id, units, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)",
-    );
-  if (options.number) query = query.eq("reservation_number", options.number);
-  // RLS enforces the same rule; filtering here keeps it explicit in the app.
-  if (ownBookingsOnly(context)) query = query.or(ownBookingFilter(context));
-  const { data, error } = await query.order("reserved_at", { ascending: false }).limit(500);
+  const { data, error } = await bookingRowsQuery(supabase, context, options).limit(500);
   if (error) return fail(error.code ?? "db_error", error.message);
+  const rows = (data ?? []) as unknown as BookingRow[];
+  const [names, terms] = await Promise.all([salespersonNames(rows), getPaymentTerms()]);
+  const now = Date.now();
+  return { data: rows.map((row) => toBookingItem(row, context, terms, now, names)), error: null };
+}
 
-  type Row = {
-    id: string;
-    reservation_number: string;
-    status: BookingStatus;
-    amount: number;
-    selling_price: number | string | null;
-    balance_received: number | string | null;
-    sold_at: string | null;
-    cancelled_at: string | null;
-    currency: string;
-    reserved_at: string;
-    expires_at: string | null;
-    notes: string | null;
-    cancel_reason: string | null;
-    balance_overdue_notified_at: string | null;
-    auto_cancelled: boolean | null;
-    created_by: string | null;
-    salesperson_id: string | null;
-    branch_id: string;
-    /** Set once the booking's split units were merged back into another record. */
-    units: number | null;
-    vehicles: Joined<{
-      id: string;
-      stock_number: string | null;
-      year: number | null;
-      make: string | null;
-      model: string | null;
-      status: string;
-      quantity: number | null;
-    }>;
-    customers: Joined<{ id: string; display_name: string; phone: string }>;
+/** PostgREST returns at most this many rows per request (supabase/config.toml max_rows). */
+const SCAN_CHUNK = 1000;
+const SCAN_LIMIT = 50_000;
+
+/**
+ * One page of the Bookings screen. Status, deadlines and amounts owed depend on the
+ * payment terms, so the server derives them for every visible booking, then filters,
+ * searches, counts and sorts here and returns only the requested page (salesperson
+ * names are looked up for that page alone).
+ */
+export async function listBookingsPage(
+  context: UserContext,
+  query: BookingListQuery,
+): Promise<Result<BookingListPage>> {
+  const supabase = await createClient();
+  const rows: BookingRow[] = [];
+  for (let from = 0; from < SCAN_LIMIT; from += SCAN_CHUNK) {
+    const { data, error } = await bookingRowsQuery(supabase, context).range(
+      from,
+      from + SCAN_CHUNK - 1,
+    );
+    if (error) return fail(error.code ?? "db_error", error.message);
+    const chunk = (data ?? []) as unknown as BookingRow[];
+    rows.push(...chunk);
+    if (chunk.length < SCAN_CHUNK) break;
+  }
+
+  const terms = await getPaymentTerms();
+  const now = Date.now();
+  const noNames = new Map<string, string>();
+  const all = rows.map((row) => toBookingItem(row, context, terms, now, noNames));
+  const rowById = new Map(rows.map((row) => [row.id, row]));
+
+  const counts = Object.fromEntries(
+    BOOKING_FILTERS.map((key) => [key, all.filter((b) => inBookingFilter(b, key)).length]),
+  ) as Record<BookingFilter, number>;
+  const active = all.filter((b) => b.status === "active");
+  const summary = {
+    activeValue: active.reduce((sum, b) => sum + (b.totalPrice ?? 0), 0),
+    noDeposit: active.filter((b) => b.depositDueAt).length,
+    overdue: active.filter((b) => b.balanceOverdue).length,
+    soldValue: all
+      .filter((b) => b.status === "converted")
+      .reduce((sum, b) => sum + (b.totalPrice ?? 0), 0),
+    toCollect: active.reduce((sum, b) => sum + bookingToCollect(b), 0),
+    currency: all[0]?.currency ?? appConfig.currency,
   };
 
-  const rows = (data ?? []) as unknown as Row[];
-  const [names, terms] = await Promise.all([
-    profileNames([
-      ...new Set(rows.map((r) => r.salesperson_id).filter((id): id is string => !!id)),
-    ]),
-    getPaymentTerms(),
-  ]);
-  const now = Date.now();
+  const matching = all.filter(
+    (b) => inBookingFilter(b, query.filter) && matchesBookingSearch(b, query.q),
+  );
+  if (query.filter === "attention") matching.sort((x, y) => bookingUrgency(x) - bookingUrgency(y));
+
+  // Past the last page (e.g. after a cancel empties it): show the last page instead.
+  const pages = Math.max(1, Math.ceil(matching.length / query.pageSize));
+  const page = Math.min(query.page, pages);
+  const slice = matching.slice((page - 1) * query.pageSize, page * query.pageSize);
+  const names = await salespersonNames(slice.map((b) => rowById.get(b.id)!));
+  const items = slice.map((b) =>
+    b.salesperson
+      ? { ...b, salesperson: { ...b.salesperson, name: names.get(b.salesperson.id) ?? "—" } }
+      : b,
+  );
+
   return {
-    data: rows.map((row) => {
-      const vehicle = one(row.vehicles);
-      const customer = one(row.customers);
-      // Active bookings past their expiry date are shown as expired.
-      const status =
-        row.status === "active" && row.expires_at && new Date(row.expires_at).getTime() < now
-          ? "expired"
-          : row.status;
-      const deposit = Number(row.amount);
-      const sellingPrice = row.selling_price == null ? null : Number(row.selling_price);
-      const units = row.units ?? vehicle?.quantity ?? 1;
-      const totalPrice = quantityTotal(sellingPrice, units);
-      const balanceReceived = row.balance_received == null ? null : Number(row.balance_received);
-      const outstanding = totalPrice == null ? 0 : totalPrice - deposit - (balanceReceived ?? 0);
-      const balanceDueAt =
-        (status === "active" || status === "converted") && outstanding > 0.005
-          ? deadlineFrom(row.reserved_at, terms.balanceMinutes)
-          : null;
-      return {
-        id: row.id,
-        number: row.reservation_number,
-        status,
-        deposit,
-        sellingPrice,
-        units,
-        totalPrice,
-        balanceDue:
-          totalPrice == null ? null : Math.max(0, Math.round((totalPrice - deposit) * 100) / 100),
-        balanceReceived,
-        soldAt: row.sold_at,
-        currency: row.currency,
-        reservedAt: row.reserved_at,
-        expiresAt: row.expires_at,
-        notes: row.notes,
-        cancelReason: row.cancel_reason,
-        cancelledAt: row.cancelled_at,
-        balanceAlertedAt: row.balance_overdue_notified_at,
-        createdBy: row.created_by,
-        autoCancelled: row.auto_cancelled ?? false,
-        depositDueAt:
-          status === "active" && deposit <= 0
-            ? deadlineFrom(row.reserved_at, terms.depositMinutes)
-            : null,
-        balanceDueAt,
-        balanceOverdue: balanceDueAt != null && new Date(balanceDueAt).getTime() < now,
-        can: {
-          edit: status === "active" && canEditBooking(row, context),
-          sell: status === "active" && canSellBooking(row, context),
-          cancel: status === "active" && canCancelBooking(row, context),
-        },
-        vehicle: vehicle
-          ? {
-              id: vehicle.id,
-              stockNumber: vehicle.stock_number,
-              title: vehicleTitle(vehicle),
-              status: vehicle.status,
-            }
-          : null,
-        customer: customer
-          ? { id: customer.id, name: customer.display_name, phone: customer.phone }
-          : null,
-        salesperson: row.salesperson_id
-          ? { id: row.salesperson_id, name: names.get(row.salesperson_id) ?? "—" }
-          : null,
-        branchId: row.branch_id,
-      };
-    }),
+    data: { items, total: matching.length, page, pageSize: query.pageSize, counts, summary },
     error: null,
   };
 }
@@ -684,9 +778,11 @@ export async function updateBooking(
   if (!allowed) {
     return fail(
       "forbidden",
-      ownBookingsOnly(context)
-        ? "You can only manage your own bookings."
-        : "You do not have permission for this action.",
+      action.action === "cancel"
+        ? "Only a Super Admin can cancel a booking."
+        : ownBookingsOnly(context)
+          ? "You can only manage your own bookings."
+          : "You do not have permission for this action.",
     );
   }
   if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
@@ -755,12 +851,7 @@ export async function editBooking(
     ({ id: string; status: string; vehicle_id: string } & Ownership) | null;
   if (!booking) return fail("not_found", "Booking not found.");
   if (!canEditBooking(booking, context)) {
-    return fail(
-      "forbidden",
-      ownBookingsOnly(context)
-        ? "You can only manage your own bookings."
-        : "You do not have permission to edit bookings.",
-    );
+    return fail("forbidden", "Only a Super Admin can edit a booking.");
   }
   if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
 

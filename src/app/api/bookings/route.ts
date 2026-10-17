@@ -1,15 +1,18 @@
 import { jsonError, jsonOk, requireApiUser } from "@/lib/api/http";
-import { createBooking, listBookings } from "@/lib/bookings/service";
+import { readBookingListQuery } from "@/lib/bookings/list-query";
+import { createBooking, listBookingsPage } from "@/lib/bookings/service";
 import { invalidateBookingDeadlines, maybeRunBookingDeadlineSweep } from "@/lib/notifications/service";
 import { firstFieldErrors } from "@/lib/validation";
 import { createBookingSchema } from "@/lib/validation/booking";
 
-export async function GET() {
+/** One page of bookings: ?filter=active|attention|sold|closed|all&q=&page=1&pageSize=25 */
+export async function GET(request: Request) {
   const auth = await requireApiUser("reservation.view");
   if ("response" in auth) return auth.response;
   // Apply any deadline that just passed so the list is current.
   await maybeRunBookingDeadlineSweep();
-  const result = await listBookings(auth.context);
+  const query = readBookingListQuery(new URL(request.url).searchParams);
+  const result = await listBookingsPage(auth.context, query);
   if (result.error) return jsonError(result.error.code, result.error.message, 400);
   return jsonOk(result.data);
 }

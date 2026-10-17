@@ -39,10 +39,26 @@ export function KpiCard({
   tone?: KpiTone;
   hint?: string;
 }) {
+  const iconTile = (className: string) =>
+    Icon ? (
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center transition-transform duration-300 ease-(--ease-spring) group-hover/kpi:scale-110 group-hover/kpi:-rotate-6",
+          tones[tone],
+          className,
+        )}
+        aria-hidden
+      >
+        <Icon className="size-4" />
+      </span>
+    ) : null;
+
   return (
+    // Phones: a short row (icon, then label / value / hint). From sm up: label and icon on
+    // top, the figure below.
     <Card
       size="sm"
-      className="group/kpi hover:ring-brand/30 relative isolate gap-3 px-4 py-4 hover:-translate-y-0.5 hover:shadow-lg"
+      className="group/kpi hover:ring-brand/30 relative isolate gap-3 px-4 py-4 hover:-translate-y-0.5 hover:shadow-lg max-sm:gap-0 max-sm:px-3 max-sm:py-2.5"
     >
       <span
         className={cn(
@@ -54,20 +70,24 @@ export function KpiCard({
       {tone === "brand" ? (
         <span className="bg-gold absolute inset-x-0 top-0 h-0.5" aria-hidden />
       ) : null}
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-muted-foreground line-clamp-2 text-sm leading-snug font-medium">{label}</p>
-        {Icon ? (
-          <span
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-(--ease-spring) group-hover/kpi:scale-110 group-hover/kpi:-rotate-6",
-              tones[tone],
-            )}
-          >
-            <Icon className="size-4" aria-hidden />
-          </span>
-        ) : null}
+      <div className="flex items-center gap-2.5 sm:items-start sm:justify-between sm:gap-2">
+        {iconTile("size-8 rounded-lg sm:hidden")}
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground font-medium max-sm:truncate max-sm:text-xs sm:line-clamp-2 sm:text-sm sm:leading-snug">
+            {label}
+          </p>
+          <p className="font-heading truncate text-lg leading-tight font-semibold tracking-tight tabular-nums sm:hidden">
+            {value}
+          </p>
+          {hint ? (
+            <p className="text-muted-foreground truncate text-[11px] leading-tight sm:hidden">
+              {hint}
+            </p>
+          ) : null}
+        </div>
+        {iconTile("size-9 rounded-xl max-sm:hidden")}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 max-sm:hidden">
         <p className="font-heading truncate text-2xl font-semibold tracking-tight tabular-nums">
           {value}
         </p>

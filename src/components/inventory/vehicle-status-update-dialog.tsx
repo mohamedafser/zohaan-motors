@@ -394,10 +394,13 @@ function ReviewStep({
 
 function StatusUpdateFlow({
   vehicle,
+  direct,
   onDone,
   onHandOff,
 }: {
   vehicle: StatusUpdateVehicle;
+  /** Skip the choose step when there's only one target and no units to pick. */
+  direct?: boolean;
   onDone: () => void;
   /** Booked / Sold: hand over to the booking or sale form with the chosen number of units. */
   onHandOff: (target: "reserved" | "sold", units: number) => void;
@@ -412,9 +415,11 @@ function StatusUpdateFlow({
   const defaultUnits = (target: StatusUpdateTarget | null) =>
     String(target === "ready_for_sale" ? vehicle.quantity : 1);
   const [units, setUnits] = useState(() => defaultUnits(selected));
-  const [step, setStep] = useState<"choose" | "review">("choose");
-
   const multiUnit = vehicle.quantity > 1;
+  const [step, setStep] = useState<"choose" | "review">(
+    direct && !multiUnit && selected === "ready_for_sale" ? "review" : "choose",
+  );
+
   const unitsOk = !multiUnit || validUnits(vehicle, units);
 
   if (step === "review" && selected === "ready_for_sale") {
@@ -470,10 +475,13 @@ export function VehicleStatusUpdateDialog({
   vehicle,
   open,
   onOpenChange,
+  direct,
 }: {
   vehicle: StatusUpdateVehicle;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Open at the confirm step when the only move is Ready for sale (one unit). */
+  direct?: boolean;
 }) {
   const t = useTranslations();
   const { can } = usePermission();
@@ -501,6 +509,7 @@ export function VehicleStatusUpdateDialog({
             <StatusUpdateFlow
               key={vehicle.status}
               vehicle={vehicle}
+              direct={direct}
               onDone={() => onOpenChange(false)}
               onHandOff={(target, units) => {
                 onOpenChange(false);
