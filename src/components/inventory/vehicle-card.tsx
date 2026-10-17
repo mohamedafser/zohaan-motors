@@ -61,13 +61,14 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
 
   return (
     // h-full + flex column: every card in a grid row is the same height and the
-    // price/location row and action bar line up along the bottom.
+    // price/location row and action bar line up along the bottom. Phones get a compact
+    // horizontal card: photo on the side, status inside the details.
     <Card className="group/vehicle hover:ring-brand/30 flex h-full flex-col gap-0 overflow-hidden py-0 hover:-translate-y-1 hover:shadow-lg">
       <Link
         href={vehicleHref(vehicle.stockNumber)}
-        className="focus-visible:ring-ring/50 flex flex-1 flex-col outline-none focus-visible:ring-3"
+        className="focus-visible:ring-ring/50 flex flex-1 outline-none focus-visible:ring-3 max-sm:flex-row sm:flex-col"
       >
-        <div className="bg-muted relative aspect-[16/10] w-full shrink-0 overflow-hidden">
+        <div className="bg-muted relative shrink-0 overflow-hidden max-sm:min-h-28 max-sm:w-28 max-sm:self-stretch sm:aspect-[16/10] sm:w-full">
           {vehicle.primaryPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
             <img
@@ -77,26 +78,32 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               loading="lazy"
             />
           ) : (
-            <VehiclePhotoPlaceholder className="pt-8" />
+            <VehiclePhotoPlaceholder className="sm:pt-8" />
           )}
           {/* Soft scrim behind the chips for extra separation on busy photos. */}
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/30 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-black/30 to-transparent max-sm:hidden"
             aria-hidden
           />
           {/* Sold cars get the corner ribbon instead of a status chip, so the condition
               chip moves to the free corner. */}
+          {/* Phones keep the Sold ribbon, sized for the small side photo. */}
           {sold ? (
-            <>
+            <div className="sm:hidden">
+              <SoldRibbon size="sm" />
+            </div>
+          ) : null}
+          {sold ? (
+            <div className="max-sm:hidden">
               <SoldRibbon size="md" />
               <div className="absolute start-2.5 top-2.5">
                 <Chip>
                   <MarketTypeBadge value={vehicle.marketType} />
                 </Chip>
               </div>
-            </>
+            </div>
           ) : (
-            <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2">
+            <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2 max-sm:hidden">
               <Chip>
                 <VehicleStatusBadge status={vehicle.status} />
               </Chip>
@@ -107,7 +114,12 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 p-4 max-sm:gap-1.5 max-sm:p-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:hidden">
+            {/* Sold cars already say so on the photo ribbon. */}
+            {sold ? null : <VehicleStatusBadge status={vehicle.status} />}
+            <MarketTypeBadge value={vehicle.marketType} className="h-5 px-1.5 text-[11px]" />
+          </div>
           <div className="min-w-0">
             <div className="flex items-center justify-between gap-2">
               <p className="text-muted-foreground font-mono text-xs">{vehicle.stockNumber}</p>
@@ -123,20 +135,24 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
                 {t("inventory.quantity.units", { count: vehicle.quantity })}
               </span>
             </div>
-            <p className="group-hover/vehicle:text-brand truncate text-base font-semibold tracking-tight transition-colors">
+            <p className="group-hover/vehicle:text-brand truncate font-semibold tracking-tight transition-colors sm:text-base">
               {vehicle.make} {vehicle.model}
             </p>
             {/* Always one line tall so titles line up across the row. */}
-            <p className="text-muted-foreground min-h-5 truncate text-sm">
+            <p className="text-muted-foreground min-h-5 truncate text-sm max-sm:hidden">
               {vehicle.variant ?? " "}
             </p>
           </div>
 
-          <ul className="flex flex-wrap gap-1.5">
-            {specs.map((spec) => (
+          <ul className="flex flex-wrap gap-1.5 max-sm:gap-1">
+            {specs.map((spec, index) => (
               <li
                 key={spec.value}
-                className="bg-muted/60 text-foreground/80 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs tabular-nums"
+                className={cn(
+                  "bg-muted/60 text-foreground/80 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs tabular-nums max-sm:px-1.5 max-sm:py-0.5",
+                  // Phones keep year and mileage; the rest is on the vehicle page.
+                  index > 1 && "max-sm:hidden",
+                )}
               >
                 <spec.icon className="text-brand size-3.5" aria-hidden />
                 {spec.value}
@@ -144,7 +160,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
             ))}
           </ul>
 
-          <div className="mt-auto flex items-end justify-between gap-3 border-t pt-3 text-sm">
+          <div className="mt-auto flex items-end justify-between gap-3 border-t pt-3 text-sm max-sm:gap-2 max-sm:border-0 max-sm:pt-1 max-sm:text-xs">
             <span className="text-muted-foreground flex min-w-0 items-center gap-1.5">
               <MapPinIcon className="size-3.5 shrink-0" aria-hidden />
               <span className="truncate">{place || t("inventory.fields.notSet")}</span>
@@ -153,7 +169,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               <VehiclePrice
                 vehicle={vehicle}
                 className="shrink-0 text-end"
-                amountClassName="font-heading text-base font-semibold"
+                amountClassName="font-heading text-sm font-semibold sm:text-base"
               />
             ) : null}
           </div>
@@ -163,7 +179,10 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
       {/* Book now and Mark as sold share the width; Edit is a compact icon beside them,
           or a full button when it's the only action. No actions, no bar. */}
       {sale.any || canEdit ? (
-        <div className="bg-muted/30 flex items-center gap-2 border-t px-3 py-2.5" data-row-stop>
+        <div
+          className="bg-muted/30 flex items-center gap-2 border-t px-3 py-2.5 max-sm:py-2"
+          data-row-stop
+        >
           <VehicleSaleActions vehicle={vehicle} layout="card" />
           {canEdit ? (
             <Link

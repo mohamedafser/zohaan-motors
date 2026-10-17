@@ -30,7 +30,7 @@ import {
   useAppLocale,
   vehicleTitle,
 } from "@/components/inventory/inventory-utils";
-import { NewCarBadge } from "@/components/inventory/market-type-badge";
+import { NewCarBadge, UsedCarBadge } from "@/components/inventory/market-type-badge";
 import { ReadyForSaleTag, SoldRibbon, isSoldStatus } from "@/components/inventory/vehicle-sold-tag";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -134,7 +134,11 @@ export function VehicleHero({ vehicle }: { vehicle: VehicleDetail }) {
           )}
           <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-black/0 to-transparent" />
           {isSoldStatus(vehicle.status) ? <SoldRibbon /> : null}
-          {vehicle.marketType === "new" ? <NewCarBadge className="absolute start-3 top-3" /> : null}
+          {vehicle.marketType === "new" ? (
+            <NewCarBadge className="absolute start-3 top-3" />
+          ) : vehicle.marketType === "used" ? (
+            <UsedCarBadge className="absolute start-3 top-3" />
+          ) : null}
           {/* Ready for sale uses the corner the Sold ribbon takes on sold cars. */}
           {vehicle.status === "ready_for_sale" ? (
             <ReadyForSaleTag className="absolute end-3 top-3" />

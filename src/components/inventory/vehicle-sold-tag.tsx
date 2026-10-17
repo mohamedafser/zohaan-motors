@@ -55,6 +55,8 @@ const RIBBON = {
   lg: { box: "size-32", band: "-end-10 top-6 w-44 py-1.5 text-xs tracking-[0.3em]" },
   /** Grid card photo. */
   md: { box: "size-24", band: "-end-8 top-4 w-32 py-1 text-[10px] tracking-[0.25em]" },
+  /** Compact phone card photo. */
+  sm: { box: "size-16", band: "-end-6 top-2.5 w-24 py-0.5 text-[8px] tracking-[0.2em]" },
 } as const;
 
 /** Corner ribbon across a sold vehicle's photo. */

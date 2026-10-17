@@ -155,7 +155,14 @@ export async function getDashboard(context: UserContext, requestedMonth?: string
     supabase.from("branches").select("id, name").order("name"),
     allBookings ? listSalesExecutives() : Promise.resolve([]),
   ]);
-  const bookings = bookingsResult.data ?? [];
+  // Sales executives only see their own figures: a booking they created for a colleague's
+  // customer belongs to that colleague, so it stays off this dashboard.
+  const bookings = (bookingsResult.data ?? []).filter(
+    (b) =>
+      allBookings ||
+      b.salesperson?.id === context.userId ||
+      (!b.salesperson && b.createdBy === context.userId),
+  );
   const vehicles = (vehiclesResult.data ?? []) as VehicleRow[];
   const branchNames = new Map(
     ((branchesResult.data ?? []) as { id: string; name: string }[]).map((b) => [b.id, b.name]),
@@ -292,9 +299,11 @@ export async function getDashboard(context: UserContext, requestedMonth?: string
   };
   // Everyone on the team is listed, including those with nothing yet this month.
   for (const person of salesExecutives) member(person.id, person.name);
+  if (!allBookings) member(context.userId, context.displayName);
   for (const b of bookings) {
-    if (!b.salesperson) continue;
-    const row = member(b.salesperson.id, b.salesperson.name);
+    const owner = b.salesperson ?? (allBookings ? null : { id: context.userId, name: context.displayName });
+    if (!owner) continue;
+    const row = member(owner.id, owner.name);
     if (inMonth(b.reservedAt)) row.newBookings += 1;
     if (b.status === "converted" && inMonth(b.soldAt)) {
       row.soldUnits += b.units;

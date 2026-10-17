@@ -232,10 +232,6 @@ export function CreateVehicleReview({
                 />
                 <ReviewField label={t("acquisitions.fields.lotNumber")} value={acquisition.lotNumber} />
                 <ReviewField
-                  label={t("acquisitions.fields.askingPrice")}
-                  value={formatMoney(acquisition.askingPrice, acquisition.currency)}
-                />
-                <ReviewField
                   label={t("acquisitions.fields.purchasePrice")}
                   value={formatMoney(acquisition.purchasePrice, acquisition.currency)}
                 />

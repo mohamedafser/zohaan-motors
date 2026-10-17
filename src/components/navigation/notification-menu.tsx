@@ -3,6 +3,7 @@
 import { BellIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { NotificationIcon } from "@/components/notifications/notification-icon";
 import { PushPrompt } from "@/components/notifications/push-prompt";
 import { useNotificationText } from "@/components/notifications/use-notification-text";
 import { useNotifications } from "@/components/providers/notification-provider";
@@ -80,14 +81,19 @@ export function NotificationMenu() {
                   href={item.href}
                   onClick={() => markRead(item.id)}
                   className={cn(
-                    "hover:bg-muted focus-visible:bg-muted block px-3 py-3 outline-none",
+                    "hover:bg-muted focus-visible:bg-muted flex items-start gap-3 px-3 py-3 outline-none",
                     !item.read && "bg-brand/8",
                   )}
                 >
-                  <span className="block text-sm font-medium">{text(item).title}</span>
-                  <span className="text-muted-foreground mt-1 block text-xs">{text(item).body}</span>
-                  <span className="text-muted-foreground mt-1 block text-xs">
-                    {formatRelativeTime(item.createdAt, locale)}
+                  <NotificationIcon type={item.type} className="size-8 rounded-lg" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{text(item).title}</span>
+                    <span className="text-muted-foreground mt-1 block text-xs">
+                      {text(item).body}
+                    </span>
+                    <span className="text-muted-foreground mt-1 block text-xs">
+                      {formatRelativeTime(item.createdAt, locale)}
+                    </span>
                   </span>
                 </Link>
               </li>

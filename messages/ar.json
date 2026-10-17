@@ -47,6 +47,7 @@
     "myBookings": "حجوزاتي"
   },
   "common": {
+    "backTo": "العودة إلى {page}",
     "search": "بحث",
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -272,6 +273,27 @@
     "markAllRead": "تعيين الكل كمقروء",
     "clearAll": "مسح الكل",
     "open": "فتح",
+    "unreadLabel": "غير مقروء:",
+    "filters": { "all": "الكل", "unread": "غير المقروءة", "type": "التصفية حسب النوع" },
+    "categories": {
+      "all": "كل الأنواع",
+      "booking": "حجوزات جديدة",
+      "sale": "المبيعات",
+      "cancellation": "الإلغاءات",
+      "payment": "المدفوعات",
+      "other": "أخرى"
+    },
+    "groups": {
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "thisWeek": "في وقت سابق هذا الأسبوع",
+      "older": "أقدم"
+    },
+    "caughtUp": "لا جديد لديك",
+    "caughtUpHint": "لا توجد إشعارات غير مقروءة. ستظهر الإشعارات الجديدة هنا.",
+    "noMatches": "لا توجد إشعارات تطابق هذه التصفية",
+    "clearTitle": "مسح كل الإشعارات؟",
+    "clearDescription": "{count, plural, one {سيُحذف إشعار واحد} two {سيُحذف إشعاران} few {ستُحذف # إشعارات} many {سيُحذف # إشعارًا} other {سيُحذف # إشعار}} من حسابك. لا يمكن التراجع عن ذلك.",
     "types": {
       "bookingAutoCancelled": {
         "title": "أُلغي الحجز: لم يُستلم العربون",
@@ -1690,7 +1712,7 @@
       "sourceReference": "المرجع",
       "lotNumber": "رقم اللوت",
       "askingPrice": "السعر المطلوب",
-      "purchasePrice": "سعر الشراء المتفق عليه",
+      "purchasePrice": "سعر الشراء",
       "expenseTotal": "مصروفات إضافية",
       "totalAcquisitionCost": "إجمالي تكلفة الاستحواذ",
       "currency": "العملة",
@@ -2356,6 +2378,7 @@
     "moreActions": "إجراءات أخرى للحجز {number}",
     "filters": {
       "active": "نشطة",
+      "attention": "تحتاج إلى متابعة",
       "sold": "مباعة",
       "closed": "مغلقة",
       "all": "الكل"
@@ -2363,6 +2386,42 @@
     "searchPlaceholder": "ابحث بالحجز أو السيارة أو العميل أو الهاتف",
     "clearSearch": "مسح البحث",
     "noMatches": "لا توجد حجوزات مطابقة للبحث.",
+    "attentionEmpty": "لا شيء يحتاج إلى متابعة. كل الحجوزات تسير كما يجب.",
+    "pagination": {
+      "showing": "عرض {from}–{to} من {total}",
+      "pageSize": "لكل صفحة",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "actions": {
+      "loading": "جارٍ تحميل الحجوزات"
+    },
+    "view": "فتح الحجز {number}",
+    "bookedOn": "حُجز في {date}",
+    "soldOn": "بيعت في {date}",
+    "summary": {
+      "active": "الحجوزات النشطة",
+      "activeHint": "{amount} محجوزة",
+      "attention": "تحتاج إلى متابعة",
+      "attentionHint": "{deposit} بلا عربون · {overdue} متأخرة",
+      "attentionNone": "كل شيء على ما يرام",
+      "sold": "مباعة",
+      "soldHint": "{amount} مبيعات",
+      "toCollect": "المتبقي للتحصيل",
+      "toCollectHint": "الأرصدة على الحجوزات النشطة"
+    },
+    "deadline": {
+      "deposit": "العربون مستحق خلال {duration}",
+      "depositNow": "العربون مستحق الآن",
+      "balance": "الدفع الكامل مستحق خلال {duration}",
+      "balanceNow": "الدفع الكامل مستحق الآن",
+      "overdue": "الدفع متأخر منذ {duration}"
+    },
+    "progress": {
+      "paidOf": "دُفع <strong>{paid}</strong> من {total}",
+      "toCollect": "{amount} متبقٍ للتحصيل",
+      "paidInFull": "مدفوع بالكامل"
+    },
     "unitsBadge": "{count} وحدات",
     "payment": {
       "title": "الدفع",

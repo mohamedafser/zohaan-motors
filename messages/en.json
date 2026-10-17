@@ -47,6 +47,7 @@
     "myBookings": "My bookings"
   },
   "common": {
+    "backTo": "Back to {page}",
     "search": "Search",
     "save": "Save",
     "cancel": "Cancel",
@@ -272,6 +273,27 @@
     "markAllRead": "Mark all as read",
     "clearAll": "Clear all",
     "open": "Open",
+    "unreadLabel": "Unread:",
+    "filters": { "all": "All", "unread": "Unread", "type": "Filter by type" },
+    "categories": {
+      "all": "All types",
+      "booking": "New bookings",
+      "sale": "Sales",
+      "cancellation": "Cancellations",
+      "payment": "Payments",
+      "other": "Other"
+    },
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "Earlier this week",
+      "older": "Older"
+    },
+    "caughtUp": "You're all caught up",
+    "caughtUpHint": "There are no unread notifications. New ones will appear here.",
+    "noMatches": "No notifications match this filter",
+    "clearTitle": "Clear all notifications?",
+    "clearDescription": "{count, plural, one {This removes # notification} other {This removes # notifications}} from your account. This can't be undone.",
     "types": {
       "bookingAutoCancelled": {
         "title": "Booking cancelled: no deposit",
@@ -1695,7 +1717,7 @@
       "sourceReference": "Reference",
       "lotNumber": "Lot number",
       "askingPrice": "Asking price",
-      "purchasePrice": "Agreed purchase price",
+      "purchasePrice": "Purchase price",
       "expenseTotal": "Additional expenses",
       "totalAcquisitionCost": "Total acquisition cost",
       "currency": "Currency",
@@ -2361,6 +2383,7 @@
     "moreActions": "More actions for {number}",
     "filters": {
       "active": "Active",
+      "attention": "Needs attention",
       "sold": "Sold",
       "closed": "Closed",
       "all": "All"
@@ -2368,6 +2391,42 @@
     "searchPlaceholder": "Search booking, car, customer or phone",
     "clearSearch": "Clear search",
     "noMatches": "No bookings match your search.",
+    "attentionEmpty": "Nothing needs attention. Every booking is on track.",
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "pageSize": "Per page",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "actions": {
+      "loading": "Loading bookings"
+    },
+    "view": "Open booking {number}",
+    "bookedOn": "Booked {date}",
+    "soldOn": "Sold {date}",
+    "summary": {
+      "active": "Active bookings",
+      "activeHint": "{amount} on hold",
+      "attention": "Needs attention",
+      "attentionHint": "{deposit} no deposit · {overdue} overdue",
+      "attentionNone": "All on track",
+      "sold": "Sold",
+      "soldHint": "{amount} in sales",
+      "toCollect": "To collect",
+      "toCollectHint": "Balances on active bookings"
+    },
+    "deadline": {
+      "deposit": "Deposit due in {duration}",
+      "depositNow": "Deposit due now",
+      "balance": "Full payment due in {duration}",
+      "balanceNow": "Full payment due now",
+      "overdue": "Payment overdue by {duration}"
+    },
+    "progress": {
+      "paidOf": "<strong>{paid}</strong> of {total} paid",
+      "toCollect": "{amount} to collect",
+      "paidInFull": "Paid in full"
+    },
     "unitsBadge": "{count} units",
     "payment": {
       "title": "Payment",
