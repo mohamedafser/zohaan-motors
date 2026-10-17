@@ -58,7 +58,8 @@ function OptionIcon({ icon }: { icon?: ReactNode }) {
     );
   }
   return (
-    <span className="text-muted-foreground flex size-4 shrink-0 items-center justify-center [&_svg]:size-4">
+    // At least icon-sized; wider artwork such as brand logos keeps its own width.
+    <span className="text-muted-foreground flex min-h-4 min-w-4 shrink-0 items-center justify-center [&_svg]:size-4">
       {icon}
     </span>
   );

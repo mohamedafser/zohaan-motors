@@ -17,6 +17,7 @@ import {
 } from "@/lib/permissions/roles";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { getPaymentTerms } from "@/lib/settings/payment-terms";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { createClient } from "@/lib/supabase/server";
 import { quantityTotal } from "@/lib/vehicles/quantity";
 import { getPrimaryPhotoUrls } from "@/lib/vehicles/photos";
@@ -64,7 +65,14 @@ export type BookingListItem = {
   balanceOverdue: boolean;
   /** What the signed-in user may do with this booking (permissions + ownership). */
   can: { edit: boolean; sell: boolean; cancel: boolean };
-  vehicle: { id: string; stockNumber: string | null; title: string; status: string } | null;
+  vehicle: {
+    id: string;
+    stockNumber: string | null;
+    title: string;
+    status: string;
+    /** Signed URL of the main photo; only filled on the Bookings screen's page. */
+    photoUrl?: string | null;
+  } | null;
   customer: { id: string; name: string; phone: string } | null;
   salesperson: { id: string; name: string } | null;
   branchId: string;
@@ -117,15 +125,20 @@ const one = <T>(value: Joined<T>): T | null => (Array.isArray(value) ? (value[0]
 // Read with the service role so every salesperson sees the same owner.
 export async function customerOwners(customerIds?: string[]): Promise<Map<string, string>> {
   const admin = createServiceRoleClient();
-  let query = admin
-    .from("reservations")
-    .select("customer_id, salesperson_id, reserved_at")
-    .not("salesperson_id", "is", null)
-    .order("reserved_at", { ascending: true });
-  if (customerIds) query = query.in("customer_id", customerIds);
-  const { data } = await query;
+  const { data } = await fetchAllRows<{ customer_id: string; salesperson_id: string }>(
+    (from, to) => {
+      let query = admin
+        .from("reservations")
+        .select("customer_id, salesperson_id, reserved_at")
+        .not("salesperson_id", "is", null)
+        .order("reserved_at", { ascending: true })
+        .order("id", { ascending: true });
+      if (customerIds) query = query.in("customer_id", customerIds);
+      return query.range(from, to);
+    },
+  );
   const owners = new Map<string, string>();
-  for (const row of (data ?? []) as unknown as { customer_id: string; salesperson_id: string }[]) {
+  for (const row of data) {
     if (!owners.has(row.customer_id)) owners.set(row.customer_id, row.salesperson_id);
   }
   return owners;
@@ -420,12 +433,18 @@ export async function listBookingsPage(
   const pages = Math.max(1, Math.ceil(matching.length / query.pageSize));
   const page = Math.min(query.page, pages);
   const slice = matching.slice((page - 1) * query.pageSize, page * query.pageSize);
-  const names = await salespersonNames(slice.map((b) => rowById.get(b.id)!));
-  const items = slice.map((b) =>
-    b.salesperson
-      ? { ...b, salesperson: { ...b.salesperson, name: names.get(b.salesperson.id) ?? "—" } }
-      : b,
-  );
+  const vehicleIds = [...new Set(slice.flatMap((b) => (b.vehicle ? [b.vehicle.id] : [])))];
+  const [names, photos] = await Promise.all([
+    salespersonNames(slice.map((b) => rowById.get(b.id)!)),
+    getPrimaryPhotoUrls(vehicleIds),
+  ]);
+  const items = slice.map((b) => ({
+    ...b,
+    vehicle: b.vehicle ? { ...b.vehicle, photoUrl: photos.get(b.vehicle.id) ?? null } : null,
+    salesperson: b.salesperson
+      ? { ...b.salesperson, name: names.get(b.salesperson.id) ?? "—" }
+      : null,
+  }));
 
   return {
     data: { items, total: matching.length, page, pageSize: query.pageSize, counts, summary },

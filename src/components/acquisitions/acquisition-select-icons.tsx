@@ -141,4 +141,9 @@ export function acquisitionCurrencyOptions(): SearchableSelectOption[] {
 }
 
 export const ACQUISITION_CURRENCY_ICON = <ReceiptIcon />;
-export { BRANCH_ICON, ORDER_ICONS, ORIGIN_ICONS } from "@/components/inventory/vehicle-select-icons";
+export {
+  BRANCH_ICON,
+  MODEL_ICON,
+  ORDER_ICONS,
+  ORIGIN_ICONS,
+} from "@/components/inventory/vehicle-select-icons";

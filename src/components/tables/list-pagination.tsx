@@ -7,7 +7,7 @@ import { NativeSelect } from "@/components/inventory/native-select";
 import { Spinner } from "@/components/shared/spinner";
 import { Button } from "@/components/ui/button";
 
-const PAGE_SIZES = [25, 50, 100];
+const PAGE_SIZES: readonly number[] = [25, 50, 100];
 
 /**
  * Footer for paginated list pages. `namespace` is the module's message
@@ -19,6 +19,7 @@ export function ListPagination({
   pageSize,
   total,
   fetching,
+  pageSizes = PAGE_SIZES,
   onChange,
 }: {
   namespace: string;
@@ -26,6 +27,8 @@ export function ListPagination({
   pageSize: number;
   total: number;
   fetching?: boolean;
+  /** Choices for rows per page; card grids use multiples of their column count. */
+  pageSizes?: readonly number[];
   onChange: (next: { page: number; pageSize?: string }) => void;
 }) {
   const t = useTranslations();
@@ -56,7 +59,7 @@ export function ListPagination({
             onChange={(event) => onChange({ pageSize: event.target.value, page: 1 })}
             aria-label={t(key("pagination.pageSize"))}
           >
-            {PAGE_SIZES.map((size) => (
+            {pageSizes.map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>

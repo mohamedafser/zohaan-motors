@@ -10,7 +10,6 @@ import {
   BanIcon,
   CalendarCheckIcon,
   CalendarClockIcon,
-  CarFrontIcon,
   CircleAlertIcon,
   EllipsisVerticalIcon,
   HourglassIcon,
@@ -30,6 +29,7 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { useNotifications } from "@/components/providers/notification-provider";
 import { PageHeader } from "@/components/layout/page-header";
 import { PAYMENT_COLORS } from "@/components/bookings/booking-charts";
+import { VehiclePhotoPlaceholder } from "@/components/inventory/vehicle-photo-placeholder";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -102,6 +102,7 @@ export function BookingsPageClient({
   const locale = useLocale() as AppLocale;
   const searchParams = useSearchParams();
   const initialVehicleId = searchParams.get("vehicleId") ?? undefined;
+  const initialCustomerId = searchParams.get("customerId") ?? undefined;
 
   const queryClient = useQueryClient();
 
@@ -159,7 +160,8 @@ export function BookingsPageClient({
     }
   }, [filter, searchTerm, page, pageSize]);
   const [dialogOpen, setDialogOpen] = useState(
-    canCreate && (Boolean(initialVehicleId) || searchParams.get("new") === "1"),
+    canCreate &&
+      (Boolean(initialVehicleId) || Boolean(initialCustomerId) || searchParams.get("new") === "1"),
   );
   // Remounts the dialog on every open so it starts with a fresh form.
   const [dialogKey, setDialogKey] = useState(0);
@@ -398,6 +400,7 @@ export function BookingsPageClient({
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           initialVehicleId={initialVehicleId}
+          initialCustomerId={initialCustomerId}
           canCreateCustomer={canCreateCustomer}
           depositMinutes={depositMinutes}
           onCreated={refresh}
@@ -688,11 +691,22 @@ function BookingRow({
 
       {/* Car, booking number and date */}
       <div className="flex min-w-0 items-start gap-3">
+        {/* The car's main photo, or the showroom placeholder when it has none. */}
         <span
-          className="bg-muted text-foreground/70 hidden size-11 shrink-0 items-center justify-center rounded-xl sm:flex"
+          className="bg-muted relative size-14 shrink-0 overflow-hidden rounded-lg ring-1 ring-foreground/[0.07] sm:h-16 sm:w-20"
           aria-hidden
         >
-          <CarFrontIcon className="size-5" />
+          {vehicle?.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+            <img
+              src={vehicle.photoUrl}
+              alt=""
+              loading="lazy"
+              className="size-full object-cover transition-transform duration-500 group-hover/booking:scale-105"
+            />
+          ) : (
+            <VehiclePhotoPlaceholder size="sm" />
+          )}
         </span>
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex items-center justify-between gap-2 lg:justify-start">

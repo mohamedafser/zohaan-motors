@@ -14,6 +14,7 @@ import {
   BRANCH_ICON,
   FUEL_ICONS,
   LOCATION_ICON,
+  MODEL_ICON,
   ORDER_ICONS,
   ORIGIN_ICONS,
   SORT_ICONS,
@@ -21,6 +22,7 @@ import {
   TRANSMISSION_ICONS,
   bodyTypeIcon,
 } from "@/components/inventory/vehicle-select-icons";
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { DebouncedFilterInput, FilterGroup } from "@/components/shared/filter-controls";
 import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -336,6 +338,7 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
                 options={(meta.data?.makes ?? []).map((make) => ({
                   value: make.name,
                   label: make.name,
+                  icon: <BrandLogo name={make.name} />,
                 }))}
               />
             </FormField>
@@ -349,6 +352,7 @@ export function VehicleFilters({ actions }: { actions?: React.ReactNode }) {
                 options={modelOptions.map((model) => ({
                   value: model.name,
                   label: model.name,
+                  icon: MODEL_ICON,
                 }))}
               />
             </FormField>

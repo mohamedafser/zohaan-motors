@@ -137,5 +137,6 @@ export const ORDER_ICONS = {
 } as const;
 
 export const BRANCH_ICON = <Building2Icon />;
+export const MODEL_ICON = <CarIcon />;
 export const LOCATION_ICON = <MapPinIcon />;
 export const TRANSFER_ICON = <ArrowLeftRightIcon />;

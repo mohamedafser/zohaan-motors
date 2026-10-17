@@ -2530,12 +2530,20 @@
       "active": "عملاء بحجز نشط",
       "new": "جدد هذا الشهر",
       "unassigned": "غير مُسندين",
-      "bookings": "إجمالي الحجوزات"
+      "bookings": "إجمالي الحجوزات",
+      "totalHint": "{count, plural, one {حجز واحد} two {حجزان} few {{formatted} حجوزات} many {{formatted} حجزًا} other {{formatted} حجز}} إجمالًا",
+      "activeHint": "سيارة محجوزة حاليًا",
+      "newHint": "أُضيفوا هذا الشهر",
+      "none": "بلا حجوزات بعد",
+      "noneHint": "جاهزون لأول حجز",
+      "unassignedHint": "بلا مندوب مبيعات بعد"
     },
     "filters": {
       "all": "الكل",
       "active": "حجز نشط",
-      "none": "بدون حجوزات"
+      "new": "جدد هذا الشهر",
+      "none": "بدون حجوزات",
+      "unassigned": "غير مُسندين"
     },
     "searchPlaceholder": "ابحث بالاسم أو الهاتف أو البريد أو الرمز",
     "clearSearch": "مسح البحث",
@@ -2554,7 +2562,37 @@
     "empty": "لا يوجد عملاء بعد",
     "emptyHint": "يُضاف العملاء عند إنشاء حجز.",
     "noMatches": "لا يوجد عملاء مطابقون",
-    "noMatchesHint": "جرّب اسمًا أو رقم هاتف أو عامل تصفية مختلفًا."
+    "noMatchesHint": "جرّب اسمًا أو رقم هاتف أو عامل تصفية مختلفًا.",
+    "newBadge": "جديد",
+    "ownedBy": "مندوب المبيعات: {name}",
+    "lastBooked": "آخر حجز {when}",
+    "addedOn": "أُضيف {when} · بلا حجوزات بعد",
+    "status": {
+      "active": "{count, plural, one {حجز نشط} two {حجزان نشطان} few {# حجوزات نشطة} many {# حجزًا نشطًا} other {# حجز نشط}}",
+      "past": "حجز سابقًا",
+      "none": "بلا حجوزات بعد"
+    },
+    "sort": {
+      "label": "ترتيب العملاء",
+      "newest": "الأحدث أولًا",
+      "recent": "آخر حجز",
+      "bookings": "الأكثر حجوزات",
+      "name": "الاسم أ–ي"
+    },
+    "actions": {
+      "call": "اتصال",
+      "whatsapp": "واتساب",
+      "email": "بريد إلكتروني",
+      "viewBookings": "الحجوزات",
+      "book": "احجز سيارة",
+      "loading": "جارٍ تحميل العملاء"
+    },
+    "pagination": {
+      "showing": "عرض {from}–{to} من {total}",
+      "pageSize": "لكل صفحة",
+      "previous": "السابق",
+      "next": "التالي"
+    }
   },
   "duration": {
     "days": "{count, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",

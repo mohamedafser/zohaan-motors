@@ -52,7 +52,7 @@ export default function Loading() {
           >
             <span className="bg-muted absolute inset-y-0 start-0 w-1" aria-hidden />
             <div className="flex items-start gap-3">
-              <Skeleton className="hidden size-11 shrink-0 rounded-xl sm:block" />
+              <Skeleton className="size-14 shrink-0 rounded-lg sm:h-16 sm:w-20" />
               <div className="grid flex-1 gap-2">
                 <div className="flex justify-between gap-2 lg:justify-start">
                   <Skeleton className="h-3.5 w-20" />
