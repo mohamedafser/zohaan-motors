@@ -42,7 +42,14 @@ import type { AppNotification } from "@/types/notification";
 type ReadFilter = "all" | "unread";
 type DayGroup = "today" | "yesterday" | "thisWeek" | "older";
 
-const CATEGORIES: NotificationCategory[] = ["booking", "sale", "cancellation", "payment", "other"];
+const CATEGORIES: NotificationCategory[] = [
+  "booking",
+  "ready",
+  "sale",
+  "cancellation",
+  "payment",
+  "other",
+];
 
 /** Calendar day in the viewer's zone, as a UTC midnight timestamp. */
 function dayStamp(value: Date, timeZone: string) {

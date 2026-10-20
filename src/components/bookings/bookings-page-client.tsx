@@ -17,12 +17,20 @@ import {
   PhoneIcon,
   PlusIcon,
   SearchIcon,
+  ShieldCheckIcon,
+  ShieldEllipsisIcon,
+  ShieldXIcon,
   WalletIcon,
   XCircleIcon,
   XIcon,
 } from "lucide-react";
 
-import { CancelBookingDialog, MarkSoldDialog } from "@/components/bookings/booking-action-dialogs";
+import {
+  CancelBookingDialog,
+  MarkSoldDialog,
+  RequestHoldDialog,
+  ReviewHoldDialog,
+} from "@/components/bookings/booking-action-dialogs";
 import { EditBookingDialog } from "@/components/bookings/edit-booking-dialog";
 import { NewBookingDialog } from "@/components/bookings/new-booking-dialog";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -62,6 +70,7 @@ import { bookingHref } from "@/lib/bookings/routes";
 import { vehicleHref } from "@/lib/vehicles/routes";
 
 type Filter = BookingFilter;
+type BookingAction = "edit" | "sold" | "cancel" | "requestHold" | "reviewHold";
 const FILTERS = BOOKING_FILTERS;
 
 /** The list as the server returns it; keyed by everything that changes the page. */
@@ -172,12 +181,12 @@ export function BookingsPageClient({
 
   // One booking at a time is acted on; the open dialog is derived from `action`.
   const [selected, setSelected] = useState<BookingListItem | null>(null);
-  const [action, setAction] = useState<"edit" | "sold" | "cancel" | null>(null);
-  const openAction = (booking: BookingListItem, next: "edit" | "sold" | "cancel") => {
+  const [action, setAction] = useState<BookingAction | null>(null);
+  const openAction = (booking: BookingListItem, next: BookingAction) => {
     setSelected(booking);
     setAction(next);
   };
-  const dialogProps = (kind: "edit" | "sold" | "cancel") => ({
+  const dialogProps = (kind: BookingAction) => ({
     open: action === kind,
     onOpenChange: (open: boolean) => {
       if (!open) setAction(null);
@@ -237,7 +246,7 @@ export function BookingsPageClient({
       />
 
       {counts.all > 0 ? (
-        <section className="stagger grid grid-cols-2 gap-3 [--stagger:60ms] lg:grid-cols-4">
+        <section className="stagger grid grid-cols-2 gap-3 [--stagger:60ms] xl:grid-cols-4">
           <SummaryTile
             icon={CalendarCheckIcon}
             tone="brand"
@@ -282,9 +291,9 @@ export function BookingsPageClient({
         </section>
       ) : null}
 
-      <div className="animate-rise flex flex-col gap-3 [animation-delay:120ms] lg:flex-row lg:items-center lg:justify-between">
+      <div className="animate-rise flex flex-col gap-3 [animation-delay:120ms] xl:flex-row xl:items-center xl:justify-between">
         <div
-          className="bg-muted flex w-full overflow-x-auto rounded-lg p-0.5 text-sm lg:w-fit"
+          className="bg-muted flex w-full overflow-x-auto rounded-lg p-0.5 text-sm xl:w-fit"
           role="tablist"
         >
           {FILTERS.map((key) => (
@@ -295,7 +304,7 @@ export function BookingsPageClient({
               aria-selected={filter === key}
               onClick={() => setFilter(key)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 whitespace-nowrap transition-all duration-200 lg:flex-none",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 whitespace-nowrap transition-all duration-200 xl:flex-none",
                 filter === key
                   ? "bg-background font-medium shadow-xs"
                   : "text-muted-foreground hover:text-foreground",
@@ -315,7 +324,7 @@ export function BookingsPageClient({
             </button>
           ))}
         </div>
-        <InputGroup className="bg-card h-10 lg:h-9 lg:max-w-xs">
+        <InputGroup className="bg-card h-10 lg:h-9 xl:max-w-xs">
           <InputGroupAddon>
             <SearchIcon />
           </InputGroupAddon>
@@ -365,7 +374,7 @@ export function BookingsPageClient({
             aria-busy={isFetching}
           >
             {visible.map((b) => (
-              <li key={b.id}>
+              <li key={b.id} className="@container">
                 <BookingRow booking={b} showSalesperson={!ownOnly} onAction={openAction} />
               </li>
             ))}
@@ -393,6 +402,8 @@ export function BookingsPageClient({
       />
       <MarkSoldDialog booking={selected} onDone={refresh} {...dialogProps("sold")} />
       <CancelBookingDialog booking={selected} onDone={refresh} {...dialogProps("cancel")} />
+      <RequestHoldDialog booking={selected} onDone={refresh} {...dialogProps("requestHold")} />
+      <ReviewHoldDialog booking={selected} onDone={refresh} {...dialogProps("reviewHold")} />
 
       {canCreate ? (
         <NewBookingDialog
@@ -603,6 +614,38 @@ function DeadlineChip({ booking: b }: { booking: BookingListItem }) {
   return null;
 }
 
+const HOLD_STYLE: Record<
+  NonNullable<BookingListItem["cancellationHold"]>["status"],
+  { icon: LucideIcon; className: string }
+> = {
+  pending: {
+    icon: ShieldEllipsisIcon,
+    className: "bg-sky-600/10 text-sky-800 dark:bg-sky-400/12 dark:text-sky-300",
+  },
+  approved: { icon: ShieldCheckIcon, className: TONES.success },
+  rejected: { icon: ShieldXIcon, className: TONES.danger },
+};
+
+/** Cancellation hold state, beside the deadline chip and styled like it; the buttons are in the actions. */
+function HoldChip({ booking: b }: { booking: BookingListItem }) {
+  const t = useTranslations("bookings");
+  const hold = b.status === "active" && b.deposit <= 0 ? b.cancellationHold : null;
+  if (!hold) return null;
+  const { icon: Icon, className } = HOLD_STYLE[hold.status];
+  return (
+    <span
+      className={cn(
+        "inline-flex w-fit max-w-full items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium",
+        className,
+      )}
+      title={hold.reason ?? undefined}
+    >
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{t(`holdChip.${hold.status}`)}</span>
+    </span>
+  );
+}
+
 /** Collected so far (deposit, then balance) against the price, and what's left. */
 function PaymentProgress({ booking: b }: { booking: BookingListItem }) {
   const t = useTranslations("bookings");
@@ -671,7 +714,7 @@ function BookingRow({
 }: {
   booking: BookingListItem;
   showSalesperson: boolean;
-  onAction: (booking: BookingListItem, action: "edit" | "sold" | "cancel") => void;
+  onAction: (booking: BookingListItem, action: BookingAction) => void;
 }) {
   const t = useTranslations("bookings");
   const locale = useLocale() as AppLocale;
@@ -684,7 +727,11 @@ function BookingRow({
       className={cn(
         "group/booking bg-card relative grid gap-4 overflow-hidden rounded-xl p-4 ps-5 shadow-xs ring-1 ring-foreground/[0.07]",
         "hover:ring-brand/30 transition-[box-shadow] duration-300 hover:shadow-md",
-        "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] lg:items-center lg:gap-6",
+        // Sized by the card, not the window: stacked on phones, two columns (car | customer,
+        // payment | actions) on medium cards, one line on wide ones. The actions column has a
+        // fixed width so rows line up whatever buttons they have.
+        "@2xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] @2xl:gap-x-6",
+        "@[66rem]:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.3fr)_12rem] @[66rem]:items-center",
       )}
     >
       <span className={cn("absolute inset-y-0 start-0 w-1", accentOf(b))} aria-hidden />
@@ -709,10 +756,10 @@ function BookingRow({
           )}
         </span>
         <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex items-center justify-between gap-2 lg:justify-start">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 @[66rem]:justify-start">
             <Link
               href={bookingHref(b.number)}
-              className="font-mono text-xs font-medium after:absolute after:inset-0 after:content-[''] hover:underline"
+              className="font-mono text-xs font-medium whitespace-nowrap after:absolute after:inset-0 after:content-[''] hover:underline"
               aria-label={t("view", { number: b.number })}
             >
               {b.number}
@@ -740,7 +787,7 @@ function BookingRow({
       </div>
 
       {/* Customer and sales executive */}
-      <div className="grid min-w-0 gap-1 border-t pt-3 lg:border-0 lg:pt-0">
+      <div className="grid min-w-0 content-start gap-1 border-t pt-3 @2xl:border-0 @2xl:pt-0">
         <p className="truncate text-sm font-medium">{customer?.name ?? "—"}</p>
         {customer?.phone ? (
           <a
@@ -766,12 +813,20 @@ function BookingRow({
       </div>
 
       {/* Payment and what's due next */}
-      <div className="grid min-w-0 gap-2.5">
+      <div className="grid min-w-0 content-start gap-2.5 @2xl:border-t @2xl:pt-3 @[66rem]:border-0 @[66rem]:pt-0">
         <PaymentProgress booking={b} />
-        <DeadlineChip booking={b} />
+        <div className="flex flex-wrap items-center gap-1.5 empty:hidden">
+          <DeadlineChip booking={b} />
+          <HoldChip booking={b} />
+        </div>
       </div>
 
-      <BookingActions booking={b} onAction={onAction} />
+      {b.can.sell || b.can.edit || b.can.cancel || b.can.requestHold || b.can.reviewHold ? (
+        <BookingActions booking={b} onAction={onAction} />
+      ) : (
+        // No actions: on two-column cards, carry the divider across the right half too.
+        <div className="hidden border-t @2xl:block @[66rem]:hidden" aria-hidden />
+      )}
     </article>
   );
 }
@@ -781,55 +836,92 @@ function BookingActions({
   onAction,
 }: {
   booking: BookingListItem;
-  onAction: (booking: BookingListItem, action: "edit" | "sold" | "cancel") => void;
+  onAction: (booking: BookingListItem, action: BookingAction) => void;
 }) {
   const t = useTranslations("bookings");
   const hasMenu = b.can.edit || b.can.cancel;
-  if (!b.can.sell && !hasMenu) return null;
+  const hold = b.can.reviewHold ? "reviewHold" : b.can.requestHold ? "requestHold" : null;
+  if (!b.can.sell && !hasMenu && !hold) return null;
 
   return (
-    <div className="relative z-10 flex items-center gap-1.5 border-t pt-3 lg:justify-end lg:border-0 lg:pt-0">
-      {b.can.sell ? (
+    <div className="relative z-10 grid content-start gap-1.5 border-t pt-3 @[66rem]:border-0 @[66rem]:pt-0">
+      {b.can.sell || hasMenu ? (
+        <div className="flex items-center justify-end gap-1.5">
+          {b.can.sell ? (
+            <Button
+              variant="outline"
+              className="hover:border-brand/50 hover:bg-brand-soft h-10 min-w-0 flex-1 whitespace-nowrap lg:h-9"
+              onClick={() => onAction(b, "sold")}
+            >
+              <BadgeCheckIcon className="text-brand" />
+              <span className="truncate">{t("markSold")}</span>
+            </Button>
+          ) : null}
+          {hasMenu ? <BookingMenu booking={b} onAction={onAction} /> : null}
+        </div>
+      ) : null}
+      {hold === "reviewHold" ? (
+        <Button
+          variant="brand"
+          className="h-10 w-full lg:h-9"
+          title={t("reviewHold")}
+          onClick={() => onAction(b, "reviewHold")}
+        >
+          <ShieldEllipsisIcon />
+          <span className="truncate">{t("reviewHold")}</span>
+        </Button>
+      ) : hold === "requestHold" ? (
         <Button
           variant="outline"
-          className="hover:border-brand/50 hover:bg-brand-soft h-10 flex-1 whitespace-nowrap lg:h-9 lg:flex-none"
-          onClick={() => onAction(b, "sold")}
+          className="hover:border-brand/50 hover:bg-brand-soft h-10 w-full lg:h-9"
+          title={t("requestHoldHint")}
+          onClick={() => onAction(b, "requestHold")}
         >
-          <BadgeCheckIcon className="text-brand" />
-          {t("markSold")}
+          <ShieldCheckIcon className="text-brand" />
+          <span className="truncate">{t("requestHoldShort")}</span>
         </Button>
       ) : null}
-      {hasMenu ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="outline"
-                size="icon"
-                className="size-10 lg:size-9"
-                aria-label={t("moreActions", { number: b.number })}
-              />
-            }
-          >
-            <EllipsisVerticalIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {b.can.edit ? (
-              <DropdownMenuItem onClick={() => onAction(b, "edit")}>
-                <PencilIcon />
-                {t("editAction")}
-              </DropdownMenuItem>
-            ) : null}
-            {b.can.edit && b.can.cancel ? <DropdownMenuSeparator /> : null}
-            {b.can.cancel ? (
-              <DropdownMenuItem variant="destructive" onClick={() => onAction(b, "cancel")}>
-                <XCircleIcon />
-                {t("cancelAction")}
-              </DropdownMenuItem>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
     </div>
+  );
+}
+
+function BookingMenu({
+  booking: b,
+  onAction,
+}: {
+  booking: BookingListItem;
+  onAction: (booking: BookingListItem, action: BookingAction) => void;
+}) {
+  const t = useTranslations("bookings");
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0 lg:size-9"
+            aria-label={t("moreActions", { number: b.number })}
+          />
+        }
+      >
+        <EllipsisVerticalIcon />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {b.can.edit ? (
+          <DropdownMenuItem onClick={() => onAction(b, "edit")}>
+            <PencilIcon />
+            {t("editAction")}
+          </DropdownMenuItem>
+        ) : null}
+        {b.can.edit && b.can.cancel ? <DropdownMenuSeparator /> : null}
+        {b.can.cancel ? (
+          <DropdownMenuItem variant="destructive" onClick={() => onAction(b, "cancel")}>
+            <XCircleIcon />
+            {t("cancelAction")}
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

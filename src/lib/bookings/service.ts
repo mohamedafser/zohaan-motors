@@ -1,5 +1,6 @@
 import { appConfig } from "@/config/app";
 import { alertBookingEvent } from "@/lib/bookings/alerts";
+import { holdsDeadline, type CancellationHoldStatus } from "@/lib/bookings/cancellation-hold";
 import {
   BOOKING_FILTERS,
   bookingToCollect,
@@ -63,8 +64,29 @@ export type BookingListItem = {
   balanceDueAt: string | null;
   /** The full-payment deadline has passed with money still outstanding. */
   balanceOverdue: boolean;
+  /**
+   * Deposit exception request. Pending or approved, the booking isn't auto-cancelled for a
+   * missing deposit; rejected, the deadline applies again.
+   */
+  cancellationHold: {
+    status: CancellationHoldStatus;
+    reason: string | null;
+    requestedBy: string | null;
+    requestedAt: string | null;
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    reviewNote: string | null;
+  } | null;
   /** What the signed-in user may do with this booking (permissions + ownership). */
-  can: { edit: boolean; sell: boolean; cancel: boolean };
+  can: {
+    edit: boolean;
+    sell: boolean;
+    cancel: boolean;
+    /** Ask a Super Admin to keep the booking despite no deposit (once per booking). */
+    requestHold: boolean;
+    /** Approve or reject a pending hold (Super Admins). */
+    reviewHold: boolean;
+  };
   vehicle: {
     id: string;
     stockNumber: string | null;
@@ -197,14 +219,22 @@ const isSalesExecutive = (context: UserContext) => isSalesExecutiveRole(context.
 /** Everyone except Super Admins and Accountants works only with their own bookings. */
 const ownBookingsOnly = (context: UserContext) => !canViewAllBookings(context.roles);
 
+/**
+ * A booking belongs to its sales executive. Booking a colleague's customer hands the booking
+ * to that colleague, so whoever made it no longer sees it; the creator only owns bookings
+ * without a sales executive. Mirrors the reservations RLS policies (00062).
+ */
 function ownBookingFilter(context: UserContext) {
-  return `created_by.eq.${context.userId},salesperson_id.eq.${context.userId}`;
+  return `salesperson_id.eq.${context.userId},and(salesperson_id.is.null,created_by.eq.${context.userId})`;
 }
 
 const isOwnBooking = (
   booking: { created_by: string | null; salesperson_id: string | null },
   context: UserContext,
-) => booking.created_by === context.userId || booking.salesperson_id === context.userId;
+) =>
+  booking.salesperson_id
+    ? booking.salesperson_id === context.userId
+    : booking.created_by === context.userId;
 
 type Ownership = { created_by: string | null; salesperson_id: string | null };
 
@@ -230,13 +260,20 @@ const canSellBooking = (booking: Ownership, context: UserContext) =>
 const canCancelBooking = (_booking: Ownership, context: UserContext) =>
   context.roles.includes("super_admin");
 
+/** The booking's own sales executive (creator or assignee) asks for a cancellation hold. */
+const canRequestHold = (booking: Ownership, context: UserContext) =>
+  isOwnBooking(booking, context);
+
+/** Only Super Admins approve or reject a cancellation hold. */
+const canReviewHold = (context: UserContext) => context.roles.includes("super_admin");
+
 /** Selling a ready-for-sale car straight away (no booking first). */
 export const canSellDirectly = (context: UserContext) =>
   hasPermission(context.permissions, "sale.create", context.roles) ||
   hasPermission(context.permissions, "vehicle.status.change", context.roles);
 
 const BOOKING_SELECT =
-  "id, reservation_number, status, amount, selling_price, balance_received, sold_at, cancelled_at, currency, reserved_at, expires_at, notes, cancel_reason, auto_cancelled, balance_overdue_notified_at, created_by, salesperson_id, branch_id, units, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)";
+  "id, reservation_number, status, amount, selling_price, balance_received, sold_at, cancelled_at, currency, reserved_at, expires_at, notes, cancel_reason, auto_cancelled, balance_overdue_notified_at, created_by, salesperson_id, branch_id, units, cancellation_hold_status, cancellation_hold_reason, cancellation_hold_requested_by, cancellation_hold_requested_at, cancellation_hold_reviewed_by, cancellation_hold_reviewed_at, cancellation_hold_review_note, vehicles(id, stock_number, year, make, model, status, quantity), customers(id, display_name, phone)";
 
 type BookingRow = {
   id: string;
@@ -259,6 +296,13 @@ type BookingRow = {
   branch_id: string;
   /** Set once the booking's split units were merged back into another record. */
   units: number | null;
+  cancellation_hold_status: CancellationHoldStatus | null;
+  cancellation_hold_reason: string | null;
+  cancellation_hold_requested_by: string | null;
+  cancellation_hold_requested_at: string | null;
+  cancellation_hold_reviewed_by: string | null;
+  cancellation_hold_reviewed_at: string | null;
+  cancellation_hold_review_note: string | null;
   vehicles: Joined<{
     id: string;
     stock_number: string | null;
@@ -307,6 +351,9 @@ function toBookingItem(
     (status === "active" || status === "converted") && outstanding > 0.005
       ? deadlineFrom(row.reserved_at, terms.balanceMinutes)
       : null;
+  const holdStatus = row.cancellation_hold_status;
+  const awaitingDeposit = status === "active" && deposit <= 0;
+  const depositDeadline = deadlineFrom(row.reserved_at, terms.depositMinutes);
   return {
     id: row.id,
     number: row.reservation_number,
@@ -328,16 +375,35 @@ function toBookingItem(
     balanceAlertedAt: row.balance_overdue_notified_at,
     createdBy: row.created_by,
     autoCancelled: row.auto_cancelled ?? false,
-    depositDueAt:
-      status === "active" && deposit <= 0
-        ? deadlineFrom(row.reserved_at, terms.depositMinutes)
-        : null,
+    // A pending or approved cancellation hold stops the deposit deadline.
+    depositDueAt: awaitingDeposit && !holdsDeadline(holdStatus) ? depositDeadline : null,
     balanceDueAt,
     balanceOverdue: balanceDueAt != null && new Date(balanceDueAt).getTime() < now,
+    cancellationHold: holdStatus
+      ? {
+          status: holdStatus,
+          reason: row.cancellation_hold_reason,
+          requestedBy: row.cancellation_hold_requested_by
+            ? (names.get(row.cancellation_hold_requested_by) ?? null)
+            : null,
+          requestedAt: row.cancellation_hold_requested_at,
+          reviewedBy: row.cancellation_hold_reviewed_by
+            ? (names.get(row.cancellation_hold_reviewed_by) ?? null)
+            : null,
+          reviewedAt: row.cancellation_hold_reviewed_at,
+          reviewNote: row.cancellation_hold_review_note,
+        }
+      : null,
     can: {
       edit: status === "active" && canEditBooking(row, context),
       sell: status === "active" && canSellBooking(row, context),
       cancel: status === "active" && canCancelBooking(row, context),
+      requestHold:
+        awaitingDeposit &&
+        !holdStatus &&
+        new Date(depositDeadline).getTime() > now &&
+        canRequestHold(row, context),
+      reviewHold: status === "active" && holdStatus === "pending" && canReviewHold(context),
     },
     vehicle: vehicle
       ? {
@@ -357,9 +423,23 @@ function toBookingItem(
   };
 }
 
-async function salespersonNames(rows: { salesperson_id: string | null }[]) {
+/** Names of the sales executives and the people who asked for or reviewed a cancellation hold. */
+async function salespersonNames(
+  rows: Pick<
+    BookingRow,
+    "salesperson_id" | "cancellation_hold_requested_by" | "cancellation_hold_reviewed_by"
+  >[],
+) {
   return profileNames([
-    ...new Set(rows.map((r) => r.salesperson_id).filter((id): id is string => !!id)),
+    ...new Set(
+      rows
+        .flatMap((r) => [
+          r.salesperson_id,
+          r.cancellation_hold_requested_by,
+          r.cancellation_hold_reviewed_by,
+        ])
+        .filter((id): id is string => !!id),
+    ),
   ]);
 }
 
@@ -568,7 +648,7 @@ async function checkMinimumPrice(vehicleId: string, sellingPrice: number) {
 export async function createBooking(
   values: CreateBookingValues,
   context: UserContext,
-): Promise<Result<{ id: string }>> {
+): Promise<Result<{ id: string; assignedTo: string | null }>> {
   const sell = values.sell === true;
   if (
     sell
@@ -713,9 +793,13 @@ export async function createBooking(
         sold_by: context.userId,
       }
     : { amount: values.deposit };
-  const { data: bookingRow, error: bookingError } = await (sell ? admin : supabase)
+  // The id is made here rather than read back: when the customer belongs to another sales
+  // executive, the booking is theirs and RLS no longer lets the creator select it.
+  const booking = { id: crypto.randomUUID() };
+  const { error: bookingError } = await (sell ? admin : supabase)
     .from("reservations")
     .insert({
+      id: booking.id,
       reservation_number: code("BK"),
       vehicle_id: target.id,
       customer_id: customerId,
@@ -726,12 +810,9 @@ export async function createBooking(
       notes: values.notes || null,
       created_by: context.userId,
       ...sale,
-    })
-    .select("id")
-    .single();
-  const booking = bookingRow as { id: string } | null;
+    });
 
-  if (bookingError || !booking) {
+  if (bookingError) {
     await rollback();
     // DB trigger backstop (e.g. minimum price removed after the check above).
     if (bookingError?.message?.includes("minimum selling price not set")) {
@@ -763,12 +844,17 @@ export async function createBooking(
   }
 
   alertBookingEvent(sell ? "sold" : "created", booking.id, context.userId);
-  return { data: { id: booking.id }, error: null };
+  // Booked for a colleague's customer: tell the creator whose bookings it went to.
+  const assignedTo =
+    ownBookingsOnly(context) && salespersonId !== context.userId
+      ? (salesExecutives.find((p) => p.id === salespersonId)?.name ?? null)
+      : null;
+  return { data: { id: booking.id, assignedTo }, error: null };
 }
 
 export async function updateBooking(
   id: string,
-  action: Exclude<BookingActionValues, { action: "edit" }>,
+  action: Extract<BookingActionValues, { action: "cancel" | "sold" }>,
   context: UserContext,
 ): Promise<Result<true>> {
   const supabase = await createClient();
@@ -852,6 +938,129 @@ export async function updateBooking(
   // Units split off for this booking rejoin the Ready for sale record they came from.
   if (action.action === "cancel") await mergeReadySplitUnits(booking.vehicle_id);
   alertBookingEvent(action.action === "cancel" ? "cancelled" : "sold", id, context.userId);
+  return { data: true, error: null };
+}
+
+type HoldRow = Ownership & {
+  id: string;
+  status: string;
+  amount: number | string;
+  reserved_at: string;
+  cancellation_hold_status: CancellationHoldStatus | null;
+};
+
+/** The booking as the caller may see it (RLS applies), with its cancellation hold. */
+async function loadHoldBooking(id: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("reservations")
+    .select("id, status, amount, reserved_at, created_by, salesperson_id, cancellation_hold_status")
+    .eq("id", id)
+    .maybeSingle();
+  return data as unknown as HoldRow | null;
+}
+
+const holdTaken = (status: CancellationHoldStatus | null) =>
+  status === "approved"
+    ? fail("hold_approved", "A cancellation hold was already approved for this booking.")
+    : status === "rejected"
+      ? fail("hold_rejected", "The cancellation hold for this booking was already rejected.")
+      : fail("hold_pending", "A cancellation hold request is already waiting for review.");
+
+/**
+ * No deposit yet: the booking's sales executive asks the Super Admins to keep it from
+ * being auto-cancelled. One request per booking; the deadline pauses while it's reviewed.
+ */
+export async function requestCancellationHold(
+  id: string,
+  reason: string,
+  context: UserContext,
+): Promise<Result<true>> {
+  const booking = await loadHoldBooking(id);
+  if (!booking) return fail("not_found", "Booking not found.");
+  if (!canRequestHold(booking, context)) {
+    return fail("forbidden", "Only the booking's sales executive can request a cancellation hold.");
+  }
+  if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
+  if (Number(booking.amount) > 0) {
+    return fail("deposit_received", "The deposit was already received for this booking.");
+  }
+  if (booking.cancellation_hold_status) return holdTaken(booking.cancellation_hold_status);
+  const terms = await getPaymentTerms();
+  if (new Date(deadlineFrom(booking.reserved_at, terms.depositMinutes)).getTime() <= Date.now()) {
+    return fail("deadline_passed", "The deposit deadline has already passed.");
+  }
+
+  // Conditional update: only one request ever moves the hold from none to pending, so a
+  // double click or two tabs can't send the request (or its alerts) twice.
+  const admin = createServiceRoleClient();
+  const { data, error } = await admin
+    .from("reservations")
+    .update({
+      cancellation_hold_status: "pending",
+      cancellation_hold_reason: reason,
+      cancellation_hold_requested_by: context.userId,
+      cancellation_hold_requested_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("status", "active")
+    .lte("amount", 0)
+    .is("cancellation_hold_status", null)
+    .select("id");
+  if (error) return fail(error.code ?? "db_error", error.message);
+  if (!data || data.length === 0) {
+    const latest = await loadHoldBooking(id);
+    if (latest?.status !== "active") return fail("not_active", "This booking is no longer active.");
+    return holdTaken(latest.cancellation_hold_status ?? "pending");
+  }
+
+  alertBookingEvent("hold_requested", id, context.userId);
+  return { data: true, error: null };
+}
+
+/**
+ * A Super Admin approves (the booking stays active and won't auto-cancel) or rejects (the
+ * normal deposit deadline applies again) a pending cancellation hold.
+ */
+export async function reviewCancellationHold(
+  id: string,
+  decision: "approve" | "reject",
+  note: string | undefined,
+  context: UserContext,
+): Promise<Result<true>> {
+  if (!canReviewHold(context)) {
+    return fail("forbidden", "Only a Super Admin can review a cancellation hold.");
+  }
+  const booking = await loadHoldBooking(id);
+  if (!booking) return fail("not_found", "Booking not found.");
+  if (booking.status !== "active") return fail("not_active", "This booking is no longer active.");
+  if (booking.cancellation_hold_status !== "pending") {
+    return booking.cancellation_hold_status
+      ? holdTaken(booking.cancellation_hold_status)
+      : fail("no_request", "There is no cancellation hold request to review.");
+  }
+
+  const admin = createServiceRoleClient();
+  const { data, error } = await admin
+    .from("reservations")
+    .update({
+      cancellation_hold_status: decision === "approve" ? "approved" : "rejected",
+      cancellation_hold_reviewed_by: context.userId,
+      cancellation_hold_reviewed_at: new Date().toISOString(),
+      cancellation_hold_review_note: note || null,
+    })
+    .eq("id", id)
+    .eq("status", "active")
+    .eq("cancellation_hold_status", "pending")
+    .select("id");
+  if (error) return fail(error.code ?? "db_error", error.message);
+  if (!data || data.length === 0) {
+    const latest = await loadHoldBooking(id);
+    if (latest?.status !== "active") return fail("not_active", "This booking is no longer active.");
+    return holdTaken(latest.cancellation_hold_status);
+  }
+
+  alertBookingEvent(decision === "approve" ? "hold_approved" : "hold_rejected", id, context.userId);
   return { data: true, error: null };
 }
 
@@ -948,7 +1157,11 @@ export async function getVehicleBooking(
     notes: row.notes,
     customer: customer ? { name: customer.display_name, phone: customer.phone } : null,
     salesperson: row.salesperson_id ? (names.get(row.salesperson_id) ?? null) : null,
-    bookedBy: row.created_by ? (names.get(row.created_by) ?? null) : null,
+    // Only when someone else booked it for the sales executive.
+    bookedBy:
+      row.created_by && row.created_by !== row.salesperson_id
+        ? (names.get(row.created_by) ?? null)
+        : null,
   };
 }
 

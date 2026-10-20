@@ -5,6 +5,8 @@ import { isPushConfigured, sendPushToUsers } from "@/lib/notifications/push";
 import { getPaymentTerms } from "@/lib/settings/payment-terms";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { holdsDeadline } from "@/lib/bookings/cancellation-hold";
+import { vehicleHref } from "@/lib/vehicles/routes";
 import type { AppNotification } from "@/types/notification";
 
 type Row = {
@@ -19,15 +21,34 @@ type Row = {
   created_at: string;
 };
 
+/** Every active (not deleted) user, for alerts the whole team should see. */
+export async function listActiveUserIds() {
+  const { data, error } = await createServiceRoleClient()
+    .from("profiles")
+    .select("id")
+    .eq("status", "active")
+    .is("deleted_at", null);
+  if (error) console.error("[notifications] could not list active users", error.message);
+  return ((data ?? []) as { id: string }[]).map((row) => row.id);
+}
+
 /** Where a notification leads when opened. */
 export function notificationHref(type: string, data: Record<string, unknown> | null): string {
+  const stockNumber = typeof data?.stockNumber === "string" ? data.stockNumber : "";
+  // Sold cars open the vehicle's inventory page, whether sold through a booking or directly.
+  if (type === "vehicle_ready_for_sale" || type === "vehicle_sold" || type === "booking_sold") {
+    return stockNumber ? vehicleHref(stockNumber) : "/inventory";
+  }
   const number = typeof data?.bookingNumber === "string" ? data.bookingNumber : "";
   if (
     type === "booking_auto_cancelled" ||
     type === "booking_balance_overdue" ||
     type === "booking_created" ||
     type === "booking_cancelled" ||
-    type === "booking_sold"
+    type === "booking_sold" ||
+    type === "booking_hold_requested" ||
+    type === "booking_hold_approved" ||
+    type === "booking_hold_rejected"
   ) {
     return number ? bookingHref(number) : "/bookings";
   }
@@ -200,6 +221,11 @@ export async function deliverPendingPushes() {
         body: row.message,
         url: notificationHref(row.type, row.data),
         tag: row.id,
+        // Hold requests open the booking, where the Super Admin approves or rejects.
+        actions:
+          row.type === "booking_hold_requested"
+            ? [{ action: "review", title: "Review request" }]
+            : undefined,
       }),
     ),
   );
@@ -226,7 +252,7 @@ export async function findNextBookingDeadline(): Promise<number | null> {
   const { data } = await admin
     .from("reservations")
     .select(
-      "status, reserved_at, amount, selling_price, balance_received, balance_overdue_notified_at, vehicles(quantity)",
+      "status, reserved_at, amount, selling_price, balance_received, balance_overdue_notified_at, cancellation_hold_status, vehicles(quantity)",
     )
     .in("status", ["active", "converted"])
     .limit(1000);
@@ -237,6 +263,7 @@ export async function findNextBookingDeadline(): Promise<number | null> {
     selling_price: number | string | null;
     balance_received: number | string | null;
     balance_overdue_notified_at: string | null;
+    cancellation_hold_status: string | null;
     vehicles: { quantity: number | null } | { quantity: number | null }[] | null;
   };
   const now = Date.now();
@@ -247,7 +274,9 @@ export async function findNextBookingDeadline(): Promise<number | null> {
   for (const row of (data ?? []) as unknown as Row[]) {
     const bookedAt = new Date(row.reserved_at).getTime();
     const deposit = Number(row.amount);
-    if (row.status === "active" && deposit <= 0) consider(bookedAt + terms.depositMinutes * 60_000);
+    if (row.status === "active" && deposit <= 0 && !holdsDeadline(row.cancellation_hold_status)) {
+      consider(bookedAt + terms.depositMinutes * 60_000);
+    }
     if (row.balance_overdue_notified_at || row.selling_price == null) continue;
     const vehicle = Array.isArray(row.vehicles) ? row.vehicles[0] : row.vehicles;
     const total = Number(row.selling_price) * (vehicle?.quantity ?? 1);

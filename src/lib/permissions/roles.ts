@@ -7,8 +7,9 @@ export function isSalesExecutive(roles: readonly string[]) {
 }
 
 /**
- * Super Admins and Accountants see every booking; everyone else sees only bookings they
- * created or are assigned to (mirrors public.can_view_all_bookings()).
+ * Super Admins and Accountants see every booking; everyone else sees only bookings assigned
+ * to them as sales executive, or that they created without one (mirrors
+ * public.can_view_all_bookings() and the reservations RLS policies).
  */
 export function canViewAllBookings(roles: readonly string[]) {
   return roles.includes("super_admin") || roles.includes("accountant");

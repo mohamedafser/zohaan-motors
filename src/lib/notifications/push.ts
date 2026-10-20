@@ -11,6 +11,8 @@ export type PushPayload = {
   url: string;
   /** Notifications with the same tag replace each other on the device. */
   tag?: string;
+  /** Buttons on the notification; any of them opens `url`. Not every browser shows them. */
+  actions?: { action: string; title: string }[];
 };
 
 let configured: boolean | null = null;
@@ -21,7 +23,12 @@ export function isPushConfigured() {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
   if (!publicKey || !privateKey) return (configured = false);
-  const subject = process.env.VAPID_SUBJECT?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim() || "mailto:admin@localhost";
+  // Apple's push service (Safari, iOS) rejects subjects that aren't mailto: or https: URLs.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const subject =
+    process.env.VAPID_SUBJECT?.trim() ||
+    (siteUrl?.startsWith("https://") ? siteUrl : "") ||
+    "mailto:admin@example.com";
   webpush.setVapidDetails(subject, publicKey, privateKey);
   return (configured = true);
 }
@@ -37,7 +44,12 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
     .in("user_id", userIds);
-  const subscriptions = (data ?? []) as { id: string; endpoint: string; p256dh: string; auth: string }[];
+  const subscriptions = (data ?? []) as {
+    id: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+  }[];
 
   const body = JSON.stringify(payload);
   const gone: string[] = [];
@@ -48,7 +60,8 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           body,
-          { TTL: 60 * 60 * 24 },
+          // High urgency so phones on battery saver deliver it right away.
+          { TTL: 60 * 60 * 24, urgency: "high" },
         );
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;

@@ -50,6 +50,11 @@ function canMutate(context: UserContext) {
   );
 }
 
+/** Users who can create but not edit vehicles (e.g. Accountants) only add photos to cars they created. */
+function canEditAnyVehicle(context: UserContext) {
+  return hasPermission(context.permissions, "vehicle.edit", context.roles);
+}
+
 function mapDbError(error: { message?: string; code?: string }): PhotoServiceError {
   const message = (error.message ?? "").toLowerCase();
   if (message.includes("not authorized") || message.includes("permission")) {
@@ -141,13 +146,17 @@ async function assertVehicleAccess(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vehicles")
-    .select("id")
+    .select("id, created_by")
     .eq("id", vehicleId)
     .is("deleted_at", null)
     .maybeSingle();
   if (error) return { data: null, error: mapDbError(error) };
   if (!data) return { data: null, error: { code: "not_found", message: "Vehicle not found." } };
-  return { data: { id: (data as { id: string }).id }, error: null };
+  const row = data as { id: string; created_by: string | null };
+  if (write && !canEditAnyVehicle(context) && row.created_by !== context.userId) {
+    return { data: null, error: { code: "forbidden", message: "Not authorized." } };
+  }
+  return { data: { id: row.id }, error: null };
 }
 
 /**

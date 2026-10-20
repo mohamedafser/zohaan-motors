@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/permissions";
+import { alertVehicleEvent } from "@/lib/vehicles/alerts";
 import {
   canEditAcquisitionFields,
   canEditPurchaseTerms,
@@ -617,6 +618,8 @@ export async function createAcquisition(
     .single();
 
   if (error) return { data: null, error: mapDbError(error) };
+  // A vehicle created here starts Ready for sale.
+  if (!values.vehicle.vehicleId) alertVehicleEvent("ready_for_sale", vehicleResult.data.id, context.userId);
 
   try {
   await supabase.rpc("write_audit_log", {
