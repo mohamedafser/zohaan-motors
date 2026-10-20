@@ -61,7 +61,7 @@ No separate `user_branch_access` table — Phase 3 `user_roles.branch_id` covers
 | Sales Executive | CRM + sales actions; vehicle view/price; **no** costs, payments, admin |
 | Inspector | Inspections (view/create/edit/submit, findings, photos) + vehicle view; **no** approve/reject/review/override/cost |
 | Workshop Manager | Workshop + vehicle view/costs |
-| Accountant | Payments, invoices, financial reports, vehicle cost/profit view |
+| Accountant | Payments, invoices, financial reports, vehicle cost/profit view; can add vehicles (`vehicle.create`) but not edit them |
 | Document Officer | Documents + limited vehicle/customer/sale view |
 | Viewer | Read-only operational subset (no create/edit/delete, no profit) |
 

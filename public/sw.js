@@ -26,6 +26,7 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       data: { url: payload.url || "/notifications" },
+      actions: Array.isArray(payload.actions) ? payload.actions.slice(0, 2) : undefined,
     }),
   );
 });

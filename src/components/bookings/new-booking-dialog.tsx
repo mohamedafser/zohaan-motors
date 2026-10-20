@@ -252,7 +252,11 @@ export function NewBookingDialog({
       return;
     }
 
-    toast.success(t(sell ? "markedSold" : "created"));
+    // A colleague's customer: the booking went to their sales executive, not this user's list.
+    const assignedTo = (json.data as { assignedTo?: string | null } | undefined)?.assignedTo;
+    toast.success(t(sell ? "markedSold" : "created"), {
+      description: assignedTo ? t("assignedToColleague", { name: assignedTo }) : undefined,
+    });
     // Picks up the new booking's deposit deadline, so it's applied the moment it passes.
     void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     onOpenChange(false);

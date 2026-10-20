@@ -12,6 +12,9 @@ import {
   CircleXIcon,
   PencilIcon,
   PhoneIcon,
+  ShieldCheckIcon,
+  ShieldEllipsisIcon,
+  ShieldXIcon,
   StickyNoteIcon,
   TriangleAlertIcon,
   UserRoundIcon,
@@ -19,7 +22,12 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
-import { CancelBookingDialog, MarkSoldDialog } from "@/components/bookings/booking-action-dialogs";
+import {
+  CancelBookingDialog,
+  MarkSoldDialog,
+  RequestHoldDialog,
+  ReviewHoldDialog,
+} from "@/components/bookings/booking-action-dialogs";
 import { CountdownRing, PaymentBar, PaymentRing, type PaymentPart } from "@/components/bookings/booking-charts";
 import { EditBookingDialog } from "@/components/bookings/edit-booking-dialog";
 import { PageHeader } from "@/components/layout/page-header";
@@ -37,7 +45,7 @@ import { formatUaePhone } from "@/lib/utils/phone";
 import { deadlineFrom } from "@/lib/validation/payment-terms";
 import { vehicleHref } from "@/lib/vehicles/routes";
 
-type Action = "edit" | "sold" | "cancel";
+type Action = "edit" | "sold" | "cancel" | "requestHold" | "reviewHold";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -82,6 +90,11 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
   const depositDueAt = deadlineFrom(b.reservedAt, b.paymentTerms.depositMinutes);
   const balanceDueAt = deadlineFrom(b.reservedAt, b.paymentTerms.balanceMinutes);
   const open = b.status === "active";
+  // A pending or approved cancellation hold stops the deposit deadline.
+  const depositOnHold =
+    open &&
+    b.deposit <= 0 &&
+    (b.cancellationHold?.status === "pending" || b.cancellationHold?.status === "approved");
   const next = open
     ? b.depositDueAt
       ? { kind: "deposit" as const, at: b.depositDueAt }
@@ -108,6 +121,22 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
         description={t("subtitle", { date: when(b.reservedAt) })}
         actions={
           <div className="flex flex-wrap gap-2">
+            {b.can.requestHold ? (
+              <Button
+                variant="outline"
+                title={tBookings("requestHoldHint")}
+                onClick={() => setAction("requestHold")}
+              >
+                <ShieldCheckIcon />
+                {tBookings("requestHold")}
+              </Button>
+            ) : null}
+            {b.can.reviewHold ? (
+              <Button variant="brand" onClick={() => setAction("reviewHold")}>
+                <ShieldEllipsisIcon />
+                {tBookings("reviewHold")}
+              </Button>
+            ) : null}
             {b.can.edit ? (
               <Button variant="outline" onClick={() => setAction("edit")}>
                 <PencilIcon />
@@ -298,7 +327,10 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
             }
           />
           <Person icon={BadgeCheckIcon} label={t("people.salesperson")} name={b.salesperson?.name ?? "—"} />
-          <Person icon={CalendarCheckIcon} label={t("people.bookedBy")} name={b.bookedBy ?? "—"} />
+          {/* Only when someone else booked it for the sales executive; otherwise it's the same name twice. */}
+          {b.createdBy && b.createdBy !== b.salesperson?.id ? (
+            <Person icon={CalendarCheckIcon} label={t("people.bookedBy")} name={b.bookedBy ?? "—"} />
+          ) : null}
         </section>
 
         {/* Timeline */}
@@ -313,9 +345,11 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
                   : b.autoCancelled
                     ? "missed"
                     : open
-                      ? new Date(depositDueAt).getTime() <= (now ?? 0) && now != null
-                        ? "missed"
-                        : "upcoming"
+                      ? depositOnHold
+                        ? "upcoming"
+                        : new Date(depositDueAt).getTime() <= (now ?? 0) && now != null
+                          ? "missed"
+                          : "upcoming"
                       : "skipped"
               }
               title={b.deposit > 0 ? t("timeline.depositReceived", { amount: money(b.deposit) }) : t("timeline.depositDue")}
@@ -324,7 +358,9 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
                   ? t("timeline.depositBy", { date: when(depositDueAt) })
                   : b.autoCancelled
                     ? t("timeline.depositMissed", { date: when(depositDueAt) })
-                    : t("timeline.dueBy", { date: when(depositDueAt) })
+                    : depositOnHold
+                      ? t(`timeline.hold.${b.cancellationHold!.status}`)
+                      : t("timeline.dueBy", { date: when(depositDueAt) })
               }
             />
             <Step
@@ -387,6 +423,18 @@ export function BookingDetailClient({ booking: b }: { booking: BookingDetail }) 
         onOpenChange={(o) => !o && setAction(null)}
         onDone={refresh}
       />
+      <RequestHoldDialog
+        booking={b}
+        open={action === "requestHold"}
+        onOpenChange={(o) => !o && setAction(null)}
+        onDone={refresh}
+      />
+      <ReviewHoldDialog
+        booking={b}
+        open={action === "reviewHold"}
+        onOpenChange={(o) => !o && setAction(null)}
+        onDone={refresh}
+      />
     </div>
   );
 }
@@ -413,6 +461,41 @@ function StatusBanner({ booking: b, when }: { booking: BookingDetail; when: (iso
         <div className="grid gap-0.5">
           <p className="font-medium">{t("overdue")}</p>
           <p className="text-muted-foreground text-sm">{t("overdueHint", { date: when(b.balanceDueAt!) })}</p>
+        </div>
+      </div>
+    );
+  }
+  const hold = b.cancellationHold;
+  if (b.status === "active" && b.deposit <= 0 && hold) {
+    const tone =
+      hold.status === "approved"
+        ? "border-emerald-500/30 bg-emerald-500/8"
+        : hold.status === "rejected"
+          ? "border-destructive/30 bg-destructive/8"
+          : "border-sky-500/30 bg-sky-500/8";
+    const Icon =
+      hold.status === "approved"
+        ? ShieldCheckIcon
+        : hold.status === "rejected"
+          ? ShieldXIcon
+          : ShieldEllipsisIcon;
+    const iconTone =
+      hold.status === "approved"
+        ? "text-emerald-600 dark:text-emerald-400"
+        : hold.status === "rejected"
+          ? "text-destructive"
+          : "text-sky-600 dark:text-sky-400";
+    const at = hold.status === "pending" ? hold.requestedAt : hold.reviewedAt;
+    const by = hold.status === "pending" ? hold.requestedBy : hold.reviewedBy;
+    const note = hold.status === "pending" ? hold.reason : hold.reviewNote;
+    return (
+      <div className={cn("flex items-start gap-3 rounded-xl border p-4", tone)}>
+        <Icon className={cn("mt-0.5 size-5 shrink-0", iconTone)} />
+        <div className="grid gap-0.5">
+          <p className="font-medium">{t(`hold.${hold.status}`)}</p>
+          <p className="text-muted-foreground text-sm">
+            {[by, at ? when(at) : null, note].filter(Boolean).join(" · ")}
+          </p>
         </div>
       </div>
     );

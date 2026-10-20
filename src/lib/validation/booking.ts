@@ -69,6 +69,17 @@ export const bookingActionSchema = z.discriminatedUnion("action", [
   /** Selling records the full balance as received; the server works it out. */
   z.object({ action: z.literal("sold") }),
   editBookingSchema.extend({ action: z.literal("edit") }),
+  /** No deposit yet: the sales executive asks a Super Admin to keep the booking from auto-cancelling. */
+  z.object({
+    action: z.literal("request_hold"),
+    reason: required.max(500, { error: validationMessages.required }),
+  }),
+  /** Super Admin decision on a pending cancellation hold. */
+  z.object({
+    action: z.literal("review_hold"),
+    decision: z.enum(["approve", "reject"]),
+    note: z.string().trim().max(500).optional(),
+  }),
 ]);
 
 export type CreateBookingValues = z.infer<typeof createBookingSchema>;

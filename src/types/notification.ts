@@ -31,4 +31,6 @@ export type BookingPaymentData = {
   /** booking_created / booking_cancelled / booking_sold: who acted, and the cancel reason. */
   actorName?: string | null;
   reason?: string | null;
+  /** booking_hold_approved / booking_hold_rejected: the Super Admin's note. */
+  note?: string | null;
 };

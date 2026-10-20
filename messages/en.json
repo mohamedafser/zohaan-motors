@@ -278,6 +278,7 @@
     "categories": {
       "all": "All types",
       "booking": "New bookings",
+      "ready": "Ready for sale",
       "sale": "Sales",
       "cancellation": "Cancellations",
       "payment": "Payments",
@@ -315,6 +316,26 @@
       "bookingSold": {
         "title": "Car sold",
         "body": "{actor} sold {vehicle} ({number}) to {customer}."
+      },
+      "vehicleReadyForSale": {
+        "title": "Ready for sale",
+        "body": "{actor} marked {vehicle} ready for sale."
+      },
+      "vehicleSold": {
+        "title": "Car sold",
+        "body": "{actor} marked {vehicle} as sold."
+      },
+      "bookingHoldRequested": {
+        "title": "Request to keep a booking",
+        "body": "{actor} asks to keep booking {number} ({vehicle}) for {customer} active without a deposit. Reason: {reason}"
+      },
+      "bookingHoldApproved": {
+        "title": "Booking kept without a deposit",
+        "body": "{actor} approved keeping booking {number} ({vehicle}). It won't be cancelled for a missing deposit."
+      },
+      "bookingHoldRejected": {
+        "title": "Request to keep a booking not approved",
+        "body": "{actor} did not approve keeping booking {number} ({vehicle}). The deposit deadline applies again."
       }
     },
     "alert": {
@@ -2323,6 +2344,7 @@
     "sellPaidInFull": "The customer pays the entire selling price; the car is marked sold.",
     "create": "Create booking",
     "created": "Booking created.",
+    "assignedToColleague": "This customer belongs to {name}, so the booking is in {name}'s bookings.",
     "cancelled": "Booking cancelled.",
     "markedSold": "Car marked as sold.",
     "vehicle": "Vehicle",
@@ -2342,6 +2364,16 @@
     "status": "Status",
     "empty": "No bookings here yet.",
     "markSold": "Mark as sold",
+    "requestHold": "Ask to keep booking",
+    "reviewHold": "Review keep request",
+    "requestHoldShort": "Ask to keep booking",
+    "requestHoldHint": "No deposit yet? Ask a Super Admin to stop this booking from being cancelled automatically.",
+    "reviewHoldShort": "Review",
+    "holdChip": {
+      "pending": "Waiting for approval",
+      "approved": "Kept · won't auto-cancel",
+      "rejected": "Not approved · deposit due"
+    },
     "cancel": "Cancel",
     "statuses": {
       "active": "Active",
@@ -2455,6 +2487,25 @@
       "reasonPlaceholder": "e.g. Customer changed their mind",
       "confirm": "Cancel booking"
     },
+    "holdDialog": {
+      "title": "Keep this booking without a deposit?",
+      "effect": "No deposit has been received yet. Ask a Super Admin to keep this booking active. While they review it, the booking won't be cancelled automatically.",
+      "reason": "Why should this booking be kept?",
+      "reasonPlaceholder": "e.g. Customer is transferring the deposit on Sunday",
+      "confirm": "Send request",
+      "sent": "Request sent to the Super Admins"
+    },
+    "reviewDialog": {
+      "title": "Keep this booking without a deposit?",
+      "requestedBy": "Requested by",
+      "reason": "Reason",
+      "effect": "Approve to keep the booking active without auto-cancellation. Reject to apply the deposit deadline again; if it has passed, the booking is cancelled right away.",
+      "note": "Note (optional)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved. The booking stays active and won't be cancelled automatically.",
+      "rejected": "Not approved. The deposit deadline applies again."
+    },
     "depositDueBy": "No deposit · due by {date}",
     "autoCancelled": "Cancelled automatically: no deposit received in time",
     "cancelReason": "Reason: {reason}",
@@ -2511,14 +2562,24 @@
         "balanceMissed": "Overdue since {date}",
         "sold": "Marked as sold",
         "cancelled": "Booking cancelled",
-        "autoCancelled": "Cancelled automatically"
+        "autoCancelled": "Cancelled automatically",
+        "hold": {
+          "pending": "Keep request under review · deadline paused",
+          "approved": "Kept without a deposit · no deadline",
+          "rejected": "Keep request not approved"
+        }
       },
       "banner": {
         "cancelled": "This booking was cancelled.",
         "autoCancelled": "This booking was cancelled automatically: no deposit was received in time.",
         "overdue": "Full payment is overdue",
         "overdueHint": "The full amount was due by {date}. Follow up with the customer.",
-        "sold": "Sold {date}"
+        "sold": "Sold {date}",
+        "hold": {
+          "pending": "Asked to keep this booking without a deposit · waiting for a Super Admin",
+          "approved": "Kept without a deposit · this booking won't be cancelled automatically",
+          "rejected": "Request to keep the booking was not approved · the deposit deadline applies"
+        }
       },
       "notes": "Notes",
       "noNotes": "No notes."

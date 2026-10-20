@@ -2,6 +2,7 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { decodeVehicleRef, isUuid } from "@/lib/vehicles/routes";
 import { recordForUnits, undoVehicleSplit } from "@/lib/vehicles/units";
+import { alertVehicleEvent } from "@/lib/vehicles/alerts";
 import { maxDiscountPercentFrom } from "@/lib/validation/pricing";
 import { getVehicleBooking } from "@/lib/bookings/service";
 import { hasPermission } from "@/lib/permissions";
@@ -794,6 +795,9 @@ export async function createVehicle(
   // The vehicle exists at this point; a pricing failure is reported as a warning
   // so the client does not retry the create and duplicate the vehicle.
   const pricing = await saveVehiclePricing(id, values, context);
+  if ((values.initialStatus ?? "ready_for_sale") === "ready_for_sale") {
+    alertVehicleEvent("ready_for_sale", id, context.userId);
+  }
   const result = await getVehicle(id, context);
   if (result.data && pricing.error) result.data.pricingWarning = pricing.error.message;
   return result;
@@ -1041,6 +1045,12 @@ export async function changeVehicleStatus(
     if (target.split) await undoVehicleSplit(target.id);
     return { data: null, error: mapDbError(error) };
   }
+  if (
+    current.data.status !== values.status &&
+    (values.status === "ready_for_sale" || values.status === "sold")
+  ) {
+    alertVehicleEvent(values.status, target.id, context.userId);
+  }
   // When only some units moved, this is the new record holding them.
   return getVehicle(target.id, context);
 }
@@ -1202,6 +1212,7 @@ export async function markVehicleReadyForSale(
     if (target.split) await undoVehicleSplit(target.id);
     return { data: null, error: mapDbError(error) };
   }
+  alertVehicleEvent("ready_for_sale", target.id, context.userId);
   // When only some units moved, this is the new record holding them.
   return getVehicle(target.id, context);
 }

@@ -581,7 +581,8 @@ function ManageManager({
 }) {
   const t = useTranslations();
   const { can } = usePermission();
-  const canEdit = !readOnly && (can("vehicle.edit") || can("vehicle.create"));
+  // Managing photos of a saved car is editing it; create-only roles add photos in the create flow.
+  const canEdit = !readOnly && can("vehicle.edit");
   const query = useVehiclePhotos(vehicleId);
   const { add, update, remove, reorder } = useVehiclePhotoMutations(vehicleId);
   const fileRef = useRef<HTMLInputElement>(null);
