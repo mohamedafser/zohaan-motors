@@ -106,6 +106,8 @@ export function DashboardClient({
       style: "currency",
       currency: data.currency,
       notation: "compact",
+      // Explicit minimum: Node pads "320.0K" while browsers print "320K" (hydration mismatch).
+      minimumFractionDigits: 0,
       maximumFractionDigits: 1,
     }).format(value);
   const monthLabel = (key: string, style: "short" | "long" = "short") => {

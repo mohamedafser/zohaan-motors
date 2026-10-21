@@ -1,5 +1,3 @@
-import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
-
 export function PageHeader({
   title,
   description,
@@ -11,7 +9,6 @@ export function PageHeader({
 }) {
   return (
     <header className="animate-rise flex flex-col gap-3">
-      <AppBreadcrumbs />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="font-heading text-xl font-semibold tracking-tight text-balance sm:text-[1.75rem]">
