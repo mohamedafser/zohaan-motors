@@ -4,7 +4,7 @@
     "tagline": "Used car operations, built for the UAE.",
     "region": "United Arab Emirates",
     "footnote": "Inventory, workshop, sales, and documents in one showroom workspace.",
-    "skip": "Skip to content"
+    "skip": "Skip To Content"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -12,7 +12,7 @@
     "acquisitions": "Acquisitions",
     "workshop": "Workshop",
     "pricing": "Pricing",
-    "workshopOrders": "Work orders",
+    "workshopOrders": "Work Orders",
     "customers": "Customers",
     "leads": "Leads",
     "reservations": "Reservations",
@@ -24,7 +24,7 @@
     "branches": "Branches",
     "users": "Users",
     "roles": "Roles",
-    "auditLogs": "Audit logs",
+    "auditLogs": "Audit Logs",
     "notifications": "Notifications",
     "settings": "Settings",
     "groups": {
@@ -35,16 +35,16 @@
       "admin": "Administration",
       "system": "System"
     },
-    "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar",
+    "collapse": "Collapse Sidebar",
+    "expand": "Expand Sidebar",
     "more": "More",
     "home": "Home",
     "cars": "Cars",
     "workshopJobs": "Jobs",
-    "myWorkshopJobs": "My jobs",
-    "vehicleCatalog": "Vehicle catalog",
+    "myWorkshopJobs": "My Jobs",
+    "vehicleCatalog": "Vehicle Catalog",
     "bookings": "Bookings",
-    "myBookings": "My bookings"
+    "myBookings": "My Bookings"
   },
   "common": {
     "backTo": "Back to {page}",
@@ -55,9 +55,9 @@
     "close": "Close",
     "loading": "Loading",
     "new": "New",
-    "viewAll": "View all",
+    "viewAll": "View All",
     "sample": "Sample",
-    "signOut": "Sign out",
+    "signOut": "Sign Out",
     "language": "Language",
     "theme": "Theme",
     "themeLight": "Light",
@@ -68,86 +68,86 @@
     "required": "Required",
     "optional": "Optional",
     "clear": "Clear",
-    "noResults": "No results",
+    "noResults": "No Results",
     "delete": "Delete",
-    "moveEarlier": "Move earlier",
-    "moveLater": "Move later",
+    "moveEarlier": "Move Earlier",
+    "moveLater": "Move Later",
     "previous": "Previous",
     "next": "Next",
-    "phoneCountry": "Country code",
+    "phoneCountry": "Country Code",
     "searchCountry": "Search country…",
-    "noCountry": "No country found",
+    "noCountry": "No Country Found",
     "yes": "Yes",
     "no": "No",
-    "viewMode": "View mode",
+    "viewMode": "View Mode",
     "listView": "List",
     "gridView": "Grid",
     "filters": "Filters",
     "filtersHint": "Narrow results with more options.",
-    "clearAll": "Clear all",
+    "clearAll": "Clear All",
     "done": "Done"
   },
   "quick": {
     "title": "Create",
-    "vehicle": "New vehicle",
-    "acquisition": "New acquisition",
-    "customer": "New customer",
-    "reservation": "New reservation",
-    "sale": "New sale",
-    "workshop": "New workshop order",
+    "vehicle": "New Vehicle",
+    "acquisition": "New Acquisition",
+    "customer": "New Customer",
+    "reservation": "New Reservation",
+    "sale": "New Sale",
+    "workshop": "New Workshop Order",
     "description": "Start a new record",
-    "booking": "New booking"
+    "booking": "New Booking"
   },
   "auth": {
     "login": {
-      "title": "Sign in",
+      "title": "Sign In",
       "description": "Use the email and password issued for your showroom account.",
       "email": "Email",
       "password": "Password",
-      "submit": "Sign in",
+      "submit": "Sign In",
       "forgot": "Forgot password?",
-      "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "showPassword": "Show Password",
+      "hidePassword": "Hide Password"
     },
     "forgot": {
-      "title": "Reset password",
+      "title": "Reset Password",
       "description": "We will email a reset link if the account exists.",
-      "submit": "Send reset link",
+      "submit": "Send Reset Link",
       "success": "If an account exists for that email, a reset link is on its way.",
       "back": "Back to sign in"
     },
     "reset": {
       "title": "Choose a new password",
       "description": "Use at least 8 characters, with upper and lower case letters and a number.",
-      "password": "New password",
-      "confirm": "Confirm password",
-      "submit": "Update password",
+      "password": "New Password",
+      "confirm": "Confirm Password",
+      "submit": "Update Password",
       "success": "Password updated. You can sign in with it now.",
       "waiting": "Open the reset link from your email to continue.",
       "continue": "Continue to sign in"
     },
     "invite": {
-      "title": "Accept invitation",
+      "title": "Accept Invitation",
       "description": "Choose a password for your Zohaan Motors account.",
       "password": "Password",
-      "confirm": "Confirm password",
-      "submit": "Activate account",
+      "confirm": "Confirm Password",
+      "submit": "Activate Account",
       "waiting": "Enter the verification code from your invitation email first."
     },
     "unauthorized": {
       "title": "You don't have permission",
       "description": "You are signed in, but this page is not available for your role.",
-      "back": "Back to dashboard"
+      "back": "Back To Dashboard"
     },
     "bootstrap": {
       "title": "Bootstrap Super Admin",
       "description": "One-time setup. Requires the server bootstrap secret. Disabled after the first Super Admin exists.",
-      "secret": "Bootstrap secret",
-      "firstName": "First name",
-      "lastName": "Last name",
+      "secret": "Bootstrap Secret",
+      "firstName": "First Name",
+      "lastName": "Last Name",
       "email": "Email",
       "password": "Password",
-      "confirm": "Confirm password",
+      "confirm": "Confirm Password",
       "submit": "Create Super Admin",
       "disabled": "Bootstrap is not enabled on this server.",
       "invalidSecret": "Bootstrap secret is incorrect.",
@@ -171,11 +171,11 @@
       "samePassword": "Choose a password different from your current one."
     },
     "verifyEmail": {
-      "title": "Verify your email",
+      "title": "Verify Your Email",
       "description": "We sent a 6-digit verification code to your email address.",
       "instruction": "Enter the 6-digit verification code sent to your email.",
       "sentTo": "We sent a 6-digit code to:",
-      "codeLabel": "Verification code",
+      "codeLabel": "Verification Code",
       "digitLabel": "Digit {index} of {total}",
       "expiresIn": "Your code expires in",
       "expired": "Your verification code has expired.",
@@ -225,15 +225,15 @@
     "sellingBelowMinimum": "Target selling price cannot be lower than the minimum selling price."
   },
   "empty": {
-    "vehicles": "No vehicles found",
+    "vehicles": "No Vehicles Found",
     "vehiclesHint": "Add a vehicle or adjust your filters to see stock here.",
-    "leads": "No leads found",
+    "leads": "No Leads Found",
     "leadsHint": "Showroom enquiries will appear here once leads are connected.",
-    "customers": "No customers found",
+    "customers": "No Customers Found",
     "customersHint": "Buyer records will appear here once customers are connected.",
-    "notifications": "No notifications",
+    "notifications": "No Notifications",
     "notificationsHint": "Updates from the showroom will appear here.",
-    "moduleTitle": "Nothing here yet",
+    "moduleTitle": "Nothing Here Yet",
     "moduleDescription": "This screen is a placeholder. Business records will be added in a later phase."
   },
   "errors": {
@@ -249,10 +249,10 @@
     "placeholder": "Search vehicles, customers, leads…",
     "title": "Search",
     "description": "Find a page or a recent search.",
-    "recent": "Recent searches",
+    "recent": "Recent Searches",
     "pages": "Pages",
     "empty": "No matching pages. Record search will connect in a later phase.",
-    "groupEmpty": "No records yet",
+    "groupEmpty": "No Records Yet",
     "shortcut": "Search",
     "groups": {
       "vehicles": "Vehicles",
@@ -269,16 +269,20 @@
   "notifications": {
     "title": "Notifications",
     "unread": "{count} unread",
-    "markRead": "Mark as read",
+    "markRead": "Mark As Read",
     "markAllRead": "Mark all as read",
-    "clearAll": "Clear all",
+    "clearAll": "Clear All",
     "open": "Open",
     "unreadLabel": "Unread:",
-    "filters": { "all": "All", "unread": "Unread", "type": "Filter by type" },
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "type": "Filter By Type"
+    },
     "categories": {
-      "all": "All types",
-      "booking": "New bookings",
-      "ready": "Ready for sale",
+      "all": "All Types",
+      "booking": "New Bookings",
+      "ready": "Ready For Sale",
       "sale": "Sales",
       "cancellation": "Cancellations",
       "payment": "Payments",
@@ -287,7 +291,7 @@
     "groups": {
       "today": "Today",
       "yesterday": "Yesterday",
-      "thisWeek": "Earlier this week",
+      "thisWeek": "Earlier This Week",
       "older": "Older"
     },
     "caughtUp": "You're all caught up",
@@ -301,28 +305,28 @@
         "body": "Booking {number} for {vehicle} was cancelled because no deposit was received within {duration}. The car is Ready for sale again."
       },
       "bookingBalanceOverdue": {
-        "title": "Full payment overdue",
+        "title": "Full Payment Overdue",
         "body": "Booking {number} for {vehicle} has not been paid in full within {duration}. Outstanding: {amount}."
       },
       "bookingCreated": {
-        "title": "New booking",
+        "title": "New Booking",
         "body": "{actor} booked {vehicle} ({number}) for {customer}."
       },
       "bookingCancelled": {
-        "title": "Booking cancelled",
+        "title": "Booking Cancelled",
         "body": "{actor} cancelled booking {number} for {vehicle}.",
         "reason": "Reason: {reason}"
       },
       "bookingSold": {
-        "title": "Car sold",
+        "title": "Car Sold",
         "body": "{actor} sold {vehicle} ({number}) to {customer}."
       },
       "vehicleReadyForSale": {
-        "title": "Ready for sale",
+        "title": "Ready For Sale",
         "body": "{actor} marked {vehicle} ready for sale."
       },
       "vehicleSold": {
-        "title": "Car sold",
+        "title": "Car Sold",
         "body": "{actor} marked {vehicle} as sold."
       },
       "bookingHoldRequested": {
@@ -346,7 +350,7 @@
       "viewBookings": "View all cancelled bookings",
       "dismiss": "Dismiss",
       "view": "View",
-      "viewBooking": "View booking"
+      "viewBooking": "View Booking"
     },
     "push": {
       "enable": "Turn on push alerts",
@@ -355,13 +359,13 @@
       "failed": "Push alerts could not be turned on.",
       "bannerTitle": "Get booking alerts on this device",
       "bannerDescription": "Turn on push alerts to hear about new, cancelled and sold bookings and missed payments, even when the app is closed.",
-      "notNow": "Not now"
+      "notNow": "Not Now"
     },
     "balanceAlert": {
       "title": "{count, plural, one {A booking is not paid in full} other {# bookings are not paid in full}}",
       "description": "The full amount was not received within {duration} of booking. Follow up with the customer.",
       "outstanding": "Outstanding {amount}",
-      "viewBookings": "View all bookings"
+      "viewBookings": "View All Bookings"
     }
   },
   "dashboard": {
@@ -369,28 +373,28 @@
     "greeting": "Hello, {name}",
     "description": "Stock, bookings, payments and sales across the showroom.",
     "descriptionOwn": "Your bookings, payments and sales, with the showroom's stock.",
-    "viewAll": "View all",
+    "viewAll": "View All",
     "kpis": {
       "soldUnits": "{count, plural, one {# car sold} other {# cars sold}}",
       "soldChange": "{count, plural, one {# car} other {# cars}} · {change} vs last month",
-      "activeBookings": "Active bookings",
+      "activeBookings": "Active Bookings",
       "activeValue": "{value} booked value",
-      "toCollect": "Still to collect",
+      "toCollect": "Still To Collect",
       "overdueCount": "{count, plural, one {# full payment overdue} other {# full payments overdue}}",
       "awaitingDeposit": "{count, plural, =0 {No deposits pending} one {# awaiting deposit} other {# awaiting deposit}}",
       "sales": "Sales · {month}",
       "mySales": "My sales · {month}",
-      "newBookings": "New bookings",
+      "newBookings": "New Bookings",
       "newBookingsHint": "{value} booked · {cancelled} cancelled"
     },
     "sales": {
-      "title": "Sales by month",
+      "title": "Sales By Month",
       "titleOwn": "My sales by month",
       "description": "Value of bookings marked sold, 6 months up to {month}. Hover a month for details.",
       "units": "{count, plural, one {# car} other {# cars}}"
     },
     "attention": {
-      "title": "Needs attention",
+      "title": "Needs Attention",
       "description": "Deposits still due and full payments overdue or due within 2 days.",
       "empty": "Nothing needs attention right now.",
       "deposit_due": "Deposit due by {date}",
@@ -398,15 +402,15 @@
       "balance_due_soon": "Full payment due by {date}"
     },
     "outcomes": {
-      "title": "Booking outcomes",
+      "title": "Booking Outcomes",
       "description": "Bookings made in {month}, by what happened to them.",
       "conversion": "sold",
       "sold": "Sold",
-      "active": "Still active",
+      "active": "Still Active",
       "cancelled": "Cancelled"
     },
     "age": {
-      "title": "Stock age",
+      "title": "Stock Age",
       "description": "How long unsold cars have been in stock.",
       "units": "{count, plural, one {# car} other {# cars}}"
     },
@@ -418,33 +422,33 @@
     },
     "monthFilter": {
       "label": "Month",
-      "thisMonth": "This month"
+      "thisMonth": "This Month"
     },
     "team": {
-      "title": "Sales team activity",
-      "titleOwn": "My activity",
+      "title": "Sales Team Activity",
+      "titleOwn": "My Activity",
       "description": "Bookings, sales and cancellations in {month}. Active bookings and amounts to collect are as of today.",
       "empty": "No sales executives yet.",
       "columns": {
-        "person": "Sales executive",
-        "newBookings": "New bookings",
-        "sold": "Cars sold",
+        "person": "Sales Executive",
+        "newBookings": "New Bookings",
+        "sold": "Cars Sold",
         "revenue": "Sales",
         "cancelled": "Cancelled",
-        "active": "Active now",
-        "toCollect": "To collect"
+        "active": "Active Now",
+        "toCollect": "To Collect"
       }
     },
     "company": {
       "title": "Company stock and sales",
       "description": "Stock as of today; sales and new stock for {month}.",
-      "inStock": "Cars in stock",
+      "inStock": "Cars In Stock",
       "inStockHint": "In transit, ready and booked",
-      "stockValue": "Stock value",
-      "stockValueHint": "At asking price",
-      "added": "Added to stock",
+      "stockValue": "Stock Value",
+      "stockValueHint": "At Asking Price",
+      "added": "Added To Stock",
       "addedHint": "In {month}",
-      "averagePrice": "Average sale price",
+      "averagePrice": "Average Sale Price",
       "averagePriceHint": "{count, plural, =0 {No cars sold} one {Across # car} other {Across # cars}}",
       "columns": {
         "branch": "Branch",
@@ -453,7 +457,7 @@
       }
     },
     "activity": {
-      "title": "Recent activity",
+      "title": "Recent Activity",
       "description": "Latest bookings, sales and cancellations in {month}.",
       "empty": "No activity in this month.",
       "emptyCurrent": "No activity this month yet.",
@@ -469,7 +473,7 @@
       "description": "Vehicles on the floor, in transit, and ready for sale."
     },
     "inventoryNew": {
-      "title": "New vehicle",
+      "title": "New Vehicle",
       "description": "Add a vehicle in a few guided steps — details, acquisition, photos, then save."
     },
     "acquisitions": {
@@ -477,7 +481,7 @@
       "description": "Purchase files for cars coming into stock."
     },
     "acquisitionsNew": {
-      "title": "New acquisition",
+      "title": "New Acquisition",
       "description": "Enter vehicle identity, source details, and purchase terms."
     },
     "workshop": {
@@ -489,7 +493,7 @@
       "description": "Vehicle cost, selling prices, and gross profitability."
     },
     "workshopOrders": {
-      "title": "Work orders",
+      "title": "Work Orders",
       "description": "Open jobs for the workshop."
     },
     "customers": {
@@ -497,7 +501,7 @@
       "description": "Buyers and contacts across the showroom."
     },
     "customersNew": {
-      "title": "New customer",
+      "title": "New Customer",
       "description": "The customer form will be added with the customers module."
     },
     "leads": {
@@ -509,7 +513,7 @@
       "description": "Cars held for a buyer."
     },
     "reservationsNew": {
-      "title": "New reservation",
+      "title": "New Reservation",
       "description": "The reservation form will be added with the reservations module."
     },
     "sales": {
@@ -517,7 +521,7 @@
       "description": "Deals from reservation through handover."
     },
     "salesNew": {
-      "title": "New sale",
+      "title": "New Sale",
       "description": "The sale form will be added with the sales module."
     },
     "payments": {
@@ -539,11 +543,11 @@
     "branches": {
       "title": "Branches",
       "description": "Showrooms and yards.",
-      "create": "New branch",
-      "createTitle": "New branch",
+      "create": "New Branch",
+      "createTitle": "New Branch",
       "createDescription": "Add a showroom or yard. Staff can then be assigned to it.",
       "createSuccess": "Branch created.",
-      "name": "Branch name",
+      "name": "Branch Name",
       "code": "Code",
       "emirate": "Emirate",
       "city": "City",
@@ -557,23 +561,23 @@
       "summary": {
         "branches": "Branches",
         "branchesHint": "{count} active",
-        "inStock": "Cars in stock",
-        "inStockHint": "Across all branches",
-        "ready": "Ready for sale",
-        "team": "Team members"
+        "inStock": "Cars In Stock",
+        "inStockHint": "Across All Branches",
+        "ready": "Ready For Sale",
+        "team": "Team Members"
       },
       "stats": {
-        "inStock": "In stock",
+        "inStock": "In Stock",
         "ready": "Ready",
         "booked": "Booked",
-        "inTransit": "In transit",
+        "inTransit": "In Transit",
         "team": "{count, plural, one {# team member} other {# team members}}",
         "noStock": "No cars here yet"
       },
-      "viewInventory": "View inventory",
+      "viewInventory": "View Inventory",
       "call": "Call {name}",
       "emailTo": "Email {name}",
-      "searchPlaceholder": "Search branches",
+      "searchPlaceholder": "Search Branches",
       "filters": {
         "all": "All",
         "active": "Active",
@@ -598,18 +602,18 @@
     "users": {
       "title": "Users",
       "description": "People who can sign in to this workspace.",
-      "invite": "Invite user",
-      "inviteTitle": "Invite user",
+      "invite": "Invite User",
+      "inviteTitle": "Invite User",
       "inviteDescription": "They will receive an email with a link to set their password.",
       "inviteSuccess": "Invitation sent.",
-      "editTitle": "Edit user",
+      "editTitle": "Edit User",
       "editSuccess": "User updated.",
-      "removeTitle": "Remove user",
+      "removeTitle": "Remove User",
       "removeDescription": "This will immediately revoke their access. This cannot be undone.",
       "removeSuccess": "User removed.",
       "removeConfirm": "Remove",
-      "firstName": "First name",
-      "lastName": "Last name",
+      "firstName": "First Name",
+      "lastName": "Last Name",
       "email": "Email",
       "role": "Role",
       "status": "Status",
@@ -621,21 +625,21 @@
       "statusDisabled": "Disabled",
       "invitedStatusHint": "Status changes once they accept the invite.",
       "name": "Name",
-      "lastSignIn": "Last sign-in",
-      "neverSignedIn": "Never signed in",
+      "lastSignIn": "Last Sign-in",
+      "neverSignedIn": "Never Signed In",
       "joinedOn": "Joined {date}",
       "editAria": "Edit {name}",
       "removeAria": "Remove {name}",
       "searchPlaceholder": "Search by name, email or role",
-      "clearSearch": "Clear search",
+      "clearSearch": "Clear Search",
       "noMatches": "No users match your search.",
       "noMatchesHint": "Try another name, email or filter.",
       "kpis": {
-        "total": "Total users",
+        "total": "Total Users",
         "active": "Active",
         "activeHint": "Can sign in now",
-        "invited": "Pending invites",
-        "invitedHint": "Waiting to accept",
+        "invited": "Pending Invites",
+        "invitedHint": "Waiting To Accept",
         "admins": "Super Admins"
       },
       "filters": {
@@ -671,7 +675,7 @@
       "description": "Role definitions will be enforced in the authorization phase."
     },
     "auditLogs": {
-      "title": "Audit logs",
+      "title": "Audit Logs",
       "description": "A record of sensitive changes, once audit storage is connected."
     },
     "notifications": {
@@ -689,18 +693,18 @@
     "language": "Language",
     "languageHint": "Arabic switches the workspace to right to left.",
     "catalog": {
-      "title": "Vehicle master catalog",
+      "title": "Vehicle Master Catalog",
       "description": "UAE brands, models, years, and verified trims used by Inventory. Deactivate instead of deleting records linked to vehicles.",
       "brands": "Brands",
       "models": "Models",
       "years": "Years",
       "variants": "Variants",
-      "addBrand": "Add brand",
-      "addModel": "Add model",
-      "addYear": "Add year",
-      "addVariant": "Add variant",
+      "addBrand": "Add Brand",
+      "addModel": "Add Model",
+      "addYear": "Add Year",
+      "addVariant": "Add Variant",
       "name": "Name",
-      "nameAr": "Arabic name",
+      "nameAr": "Arabic Name",
       "slug": "Slug",
       "year": "Year",
       "active": "Active",
@@ -708,24 +712,24 @@
       "activate": "Activate",
       "deactivate": "Deactivate",
       "save": "Save",
-      "selectBrand": "Select a brand",
-      "selectModel": "Select a model",
-      "selectYear": "Select a year",
+      "selectBrand": "Select A Brand",
+      "selectModel": "Select A Model",
+      "selectYear": "Select A Year",
       "empty": "Nothing here yet.",
       "manageHint": "Requires settings manage permission.",
       "edit": "Edit",
       "delete": "Delete",
       "cancel": "Cancel",
       "deleteConfirm": "Delete “{name}”?",
-      "allBrands": "All brands",
+      "allBrands": "All Brands",
       "searchIn": "Search {list}",
       "noMatches": "No matches.",
       "count": "{count, plural, one {# item} other {# items}}",
       "pickBrand": "Pick a brand to see its models.",
       "pickModel": "Pick a model to see its years.",
       "pickYear": "Pick a year to see its variants.",
-      "newBrand": "New brand name",
-      "newBrandAr": "Arabic name (optional)",
+      "newBrand": "New Brand Name",
+      "newBrandAr": "Arabic Name (optional)",
       "newModel": "New model for {brand}",
       "newYear": "Year, e.g. 2025",
       "newVariant": "New variant for {year}",
@@ -739,19 +743,19 @@
       "inactiveHint": "Hidden from Inventory forms"
     },
     "paymentTerms": {
-      "title": "Booking payment terms",
+      "title": "Booking Payment Terms",
       "description": "Deadlines count from the date and time a car is booked.",
-      "save": "Save payment terms",
+      "save": "Save Payment Terms",
       "saved": "Payment terms saved.",
       "saveFailed": "Payment terms could not be saved.",
       "appliesTo": "Changes apply to all open bookings. Checks also run automatically every minute while the app is open.",
       "readOnly": "Only users who manage settings can change these.",
       "depositMinutes": {
-        "label": "Deposit deadline",
+        "label": "Deposit Deadline",
         "hint": "Time after booking to receive a deposit."
       },
       "balanceMinutes": {
-        "label": "Full payment deadline",
+        "label": "Full Payment Deadline",
         "hint": "Time after booking to receive the full amount."
       },
       "units": {
@@ -762,13 +766,13 @@
       "timeline": {
         "start": "Booked",
         "after": "+{duration}",
-        "booked": "Car booked",
-        "deposit": "Deposit due",
+        "booked": "Car Booked",
+        "deposit": "Deposit Due",
         "depositMissed": "If missed: booking cancelled, car back to Ready for sale, Super Admins alerted.",
-        "balance": "Full payment due",
+        "balance": "Full Payment Due",
         "balanceMissed": "If missed: sales executive and Super Admins alerted."
       },
-      "runNow": "Run checks now",
+      "runNow": "Run Checks Now",
       "ran": "Checks done: {cancelled} cancelled, {overdue} full-payment alerts.",
       "runFailed": "The checks could not run.",
       "errors": {
@@ -783,28 +787,28 @@
   "media": {
     "title": "Photos",
     "hint": "Photos stay on this device. Nothing is uploaded yet.",
-    "add": "Choose photos",
-    "camera": "Use camera",
+    "add": "Choose Photos",
+    "camera": "Use Camera",
     "empty": "Add photos from the camera or from files.",
-    "remove": "Remove photo",
+    "remove": "Remove Photo",
     "count": "{count} photos"
   },
   "inventory": {
     "summary": {
-      "total": "Total vehicles",
-      "readyForSale": "Ready for sale",
-      "underRepair": "Under repair",
+      "total": "Total Vehicles",
+      "readyForSale": "Ready For Sale",
+      "underRepair": "Under Repair",
       "reserved": "Booked",
       "sold": "Sold",
-      "available": "Ready for sale",
-      "inTransit": "In transit"
+      "available": "Ready For Sale",
+      "inTransit": "In Transit"
     },
     "status": {
-      "acquired": "In transit",
-      "under_inspection": "Under inspection",
-      "inspection_failed": "Inspection failed",
-      "under_repair": "Under repair",
-      "ready_for_sale": "Ready for sale",
+      "acquired": "In Transit",
+      "under_inspection": "Under Inspection",
+      "inspection_failed": "Inspection Failed",
+      "under_repair": "Under Repair",
+      "ready_for_sale": "Ready For Sale",
       "reserved": "Booked",
       "sold": "Sold",
       "delivered": "Delivered",
@@ -816,11 +820,11 @@
       "stockIdHint": "Auto-generated when the vehicle is saved.",
       "vin": "VIN",
       "vinHint": "17 characters. Leave blank if unknown.",
-      "chassis": "Chassis number",
+      "chassis": "Chassis Number",
       "make": "Brand",
       "model": "Model",
       "variant": "Variant",
-      "customVariant": "Custom variant",
+      "customVariant": "Custom Variant",
       "customVariantOption": "Other / custom variant",
       "customVariantPlaceholder": "e.g. factory trim name",
       "searchBrand": "Search brand…",
@@ -830,58 +834,58 @@
       "year": "Year",
       "mileage": "Mileage",
       "mileageUnit": "Unit",
-      "marketType": "Vehicle condition",
-      "bodyType": "Body type",
+      "marketType": "Vehicle Condition",
+      "bodyType": "Body Type",
       "transmission": "Transmission",
-      "fuelType": "Fuel type",
-      "engineSize": "Engine size",
+      "fuelType": "Fuel Type",
+      "engineSize": "Engine Size",
       "engineCylinders": "Cylinders",
-      "driveType": "Drive type",
+      "driveType": "Drive Type",
       "seats": "Seats",
       "doors": "Doors",
-      "exteriorColor": "Exterior colour",
-      "interiorColor": "Interior colour",
-      "customColor": "Custom colour name",
+      "exteriorColor": "Exterior Colour",
+      "interiorColor": "Interior Colour",
+      "customColor": "Custom Colour Name",
       "origin": "Origin",
-      "countryOfOrigin": "Country of origin",
+      "countryOfOrigin": "Country Of Origin",
       "branch": "Branch",
       "location": "Location",
-      "purchaseDate": "Purchase date",
-      "registrationDate": "Registration date",
-      "registrationExpiry": "Registration expiry",
+      "purchaseDate": "Purchase Date",
+      "registrationDate": "Registration Date",
+      "registrationExpiry": "Registration Expiry",
       "notes": "Notes",
       "notesHint": "Internal notes about this vehicle.",
       "status": "Status",
       "source": "Source",
       "condition": "Condition",
-      "sellingPrice": "Selling price",
-      "minimumPrice": "Minimum price",
-      "acquisitionCost": "Total acquisition cost",
+      "sellingPrice": "Selling Price",
+      "minimumPrice": "Minimum Price",
+      "acquisitionCost": "Total Acquisition Cost",
       "createdAt": "Created",
-      "updatedAt": "Last updated",
-      "createdBy": "Created by",
-      "updatedBy": "Updated by",
-      "notSet": "Not set",
+      "updatedAt": "Last Updated",
+      "createdBy": "Created By",
+      "updatedBy": "Updated By",
+      "notSet": "Not Set",
       "selectPlaceholder": "Select",
       "noneOption": "None",
       "stockNumber": "Stock ID",
-      "chassisNumber": "Chassis number",
+      "chassisNumber": "Chassis Number",
       "originType": "Origin",
       "reason": "Reason",
-      "acquisitionNumber": "Acquisition number",
-      "acquisitionStatus": "Acquisition status",
-      "acquisitionType": "Acquisition type",
-      "purchasePrice": "Purchase price",
+      "acquisitionNumber": "Acquisition Number",
+      "acquisitionStatus": "Acquisition Status",
+      "acquisitionType": "Acquisition Type",
+      "purchasePrice": "Purchase Price",
       "brand": "Brand",
       "visibleToStaff": "Visible to other roles",
       "visibleToStaff_yes": "Yes",
       "visibleToStaff_no": "No, Super Admin only",
       "quantity": "Quantity",
-      "portLocation": "Port location",
+      "portLocation": "Port Location",
       "portLocationPlaceholder": "e.g. Jebel Ali Port",
-      "minimumSellingPrice": "Minimum selling price",
+      "minimumSellingPrice": "Minimum Selling Price",
       "minimumSellingPriceHint": "Required before the car can be booked.",
-      "splitFrom": "Split from"
+      "splitFrom": "Split From"
     },
     "enums": {
       "transmission": {
@@ -898,9 +902,9 @@
         "other": "Other"
       },
       "drive": {
-        "fwd": "Front-wheel drive",
-        "rwd": "Rear-wheel drive",
-        "awd": "All-wheel drive",
+        "fwd": "Front-wheel Drive",
+        "rwd": "Rear-wheel Drive",
+        "awd": "All-wheel Drive",
         "four_wd": "4WD",
         "other": "Other"
       },
@@ -932,7 +936,7 @@
         "pickup": "Pickup",
         "van": "Van",
         "wagon": "Wagon",
-        "sports_car": "Sports car",
+        "sports_car": "Sports Car",
         "other": "Other"
       },
       "marketType": {
@@ -941,7 +945,7 @@
       }
     },
     "sections": {
-      "basic": "Basic information",
+      "basic": "Basic Information",
       "specs": "Specifications",
       "appearance": "Appearance",
       "origin": "Origin",
@@ -951,65 +955,65 @@
       "vehicle": "Vehicle",
       "metadata": "Metadata",
       "acquisition": "Acquisition",
-      "sellingPrice": "Selling price"
+      "sellingPrice": "Selling Price"
     },
     "filters": {
       "searchPlaceholder": "Search stock ID, VIN, brand or model",
-      "searchLabel": "Search vehicles",
+      "searchLabel": "Search Vehicles",
       "status": "Status",
-      "allStatuses": "All statuses",
+      "allStatuses": "All Statuses",
       "marketType": "Condition",
-      "allMarketTypes": "All conditions",
+      "allMarketTypes": "All Conditions",
       "branch": "Branch",
-      "allBranches": "All branches",
+      "allBranches": "All Branches",
       "location": "Location",
-      "allLocations": "All locations",
+      "allLocations": "All Locations",
       "make": "Brand",
       "model": "Model",
-      "yearFrom": "Year from",
-      "yearTo": "Year to",
+      "yearFrom": "Year From",
+      "yearTo": "Year To",
       "origin": "Origin",
-      "allOrigins": "All origins",
-      "fuelType": "Fuel type",
-      "allFuelTypes": "All fuel types",
+      "allOrigins": "All Origins",
+      "fuelType": "Fuel Type",
+      "allFuelTypes": "All Fuel Types",
       "transmission": "Transmission",
-      "allTransmissions": "All transmissions",
-      "bodyType": "Body type",
-      "allBodyTypes": "All body types",
-      "includeArchived": "Include archived",
-      "sort": "Sort by",
+      "allTransmissions": "All Transmissions",
+      "bodyType": "Body Type",
+      "allBodyTypes": "All Body Types",
+      "includeArchived": "Include Archived",
+      "sort": "Sort By",
       "order": "Order",
       "asc": "Ascending",
       "desc": "Descending",
-      "more": "More filters",
-      "less": "Hide filters",
-      "clear": "Clear all",
+      "more": "More Filters",
+      "less": "Hide Filters",
+      "clear": "Clear All",
       "active": "{count} filters active",
       "title": "Filters",
       "search": "Search",
       "any": "Any",
-      "anyMake": "Any brand",
-      "anyModel": "Any model",
+      "anyMake": "Any Brand",
+      "anyModel": "Any Model",
       "year": "Year",
       "groupVehicle": "Vehicle",
       "groupSpecs": "Specifications",
       "select": "Select",
-      "fuel": "Fuel type",
-      "mileageMin": "Mileage min",
-      "mileageMax": "Mileage max",
-      "acquisitionFrom": "Acquired from",
-      "acquisitionTo": "Acquired to",
+      "fuel": "Fuel Type",
+      "mileageMin": "Mileage Min",
+      "mileageMax": "Mileage Max",
+      "acquisitionFrom": "Acquired From",
+      "acquisitionTo": "Acquired To",
       "drawerTitle": "Filters",
       "drawerHint": "Narrow results with more options."
     },
     "sort": {
-      "created_at": "Date added",
-      "updated_at": "Last updated",
+      "created_at": "Date Added",
+      "updated_at": "Last Updated",
       "stock_number": "Stock ID",
       "year": "Year",
       "mileage": "Mileage",
       "status": "Status",
-      "purchase_date": "Purchase date",
+      "purchase_date": "Purchase Date",
       "make": "Brand",
       "model": "Model"
     },
@@ -1034,70 +1038,70 @@
     "pagination": {
       "summary": "Showing {from}–{to} of {total}",
       "pageOf": "Page {page} of {pages}",
-      "pageSize": "Rows per page",
+      "pageSize": "Rows Per Page",
       "previous": "Previous",
       "next": "Next",
       "showing": "Showing {from}–{to} of {total}"
     },
     "actions": {
-      "add": "Add vehicle",
+      "add": "Add Vehicle",
       "edit": "Edit",
-      "bookNow": "Book now",
-      "changeStatus": "Change status",
-      "transfer": "Move branch",
+      "bookNow": "Book Now",
+      "changeStatus": "Change Status",
+      "transfer": "Move Branch",
       "archive": "Archive",
-      "back": "Back to inventory",
-      "createSubmit": "Create vehicle",
-      "updateSubmit": "Update vehicle",
+      "back": "Back To Inventory",
+      "createSubmit": "Create Vehicle",
+      "updateSubmit": "Update Vehicle",
       "updating": "Updating…",
       "noChangesHint": "Change something to enable Update",
       "confirm": "Confirm",
       "cancel": "Cancel",
-      "viewExisting": "View existing vehicle",
-      "create": "Create vehicle",
-      "save": "Save changes",
+      "viewExisting": "View Existing Vehicle",
+      "create": "Create Vehicle",
+      "save": "Save Changes",
       "saving": "Saving…",
-      "retry": "Try again",
+      "retry": "Try Again",
       "loading": "Updating",
-      "backToList": "Back to inventory",
-      "viewAcquisition": "View acquisition",
-      "createAcquisition": "Create acquisition",
-      "addAcquisition": "Add acquisition details"
+      "backToList": "Back To Inventory",
+      "viewAcquisition": "View Acquisition",
+      "createAcquisition": "Create Acquisition",
+      "addAcquisition": "Add Acquisition Details"
     },
     "readyForSale": {
       "blockedTitle": "Not ready for sale",
-      "overrideToggle": "Override eligibility checks",
-      "overrideReason": "Override reason",
+      "overrideToggle": "Override Eligibility Checks",
+      "overrideReason": "Override Reason",
       "overrideReasonPlaceholder": "Why are you overriding the Ready for Sale checks?",
       "reasonOptional": "Note (optional)",
       "reasonPlaceholder": "Optional note for the status history"
     },
     "dialogs": {
       "status": {
-        "title": "Change status",
+        "title": "Change Status",
         "description": "Current status: {status}. Choose the next stage and record why.",
-        "newStatus": "New status",
+        "newStatus": "New Status",
         "reason": "Reason",
         "reasonPlaceholder": "Why is the status changing?",
         "noTransitions": "No further status changes are available for this vehicle.",
-        "submit": "Update status"
+        "submit": "Update Status"
       },
       "transfer": {
         "title": "Transfer to another branch",
         "description": "Move {stock} to a different branch or location.",
-        "branch": "Destination branch",
-        "location": "Destination location",
+        "branch": "Destination Branch",
+        "location": "Destination Location",
         "reason": "Reason",
         "reasonPlaceholder": "Why is the vehicle moving?",
-        "submit": "Transfer vehicle",
+        "submit": "Transfer Vehicle",
         "sameBranch": "Choose a different branch or location."
       },
       "archive": {
-        "title": "Archive vehicle",
+        "title": "Archive Vehicle",
         "description": "{stock} will be removed from active stock. Its history is kept.",
         "reason": "Reason",
         "reasonPlaceholder": "Why is this vehicle being archived?",
-        "submit": "Archive vehicle"
+        "submit": "Archive Vehicle"
       }
     },
     "toasts": {
@@ -1117,10 +1121,10 @@
       "noResults": "No vehicles match your filters",
       "noResultsHint": "Try a different search or clear the filters.",
       "loadFailed": "Vehicles could not be loaded",
-      "notFound": "Vehicle not found",
+      "notFound": "Vehicle Not Found",
       "notFoundHint": "It may have been removed, or you may not have access to it.",
       "hint": "Add your first vehicle to start managing stock.",
-      "filteredTitle": "No vehicles found",
+      "filteredTitle": "No Vehicles Found",
       "filteredHint": "Try changing your filters or search terms."
     },
     "tabs": {
@@ -1135,9 +1139,9 @@
       "sales": "Sales"
     },
     "acquisition": {
-      "emptyTitle": "No acquisition linked",
+      "emptyTitle": "No Acquisition Linked",
       "emptyHint": "Add acquisition details while editing this vehicle in Inventory.",
-      "previousTitle": "Previous acquisition",
+      "previousTitle": "Previous Acquisition",
       "formHint": "Enter how this vehicle was acquired. Leave blank to add acquisition details later.",
       "seller": "Seller",
       "totalLabel": "Total Acquisition Cost",
@@ -1161,12 +1165,12 @@
       "sharedEdit": "This purchase is shared with {stock}. Changes here apply to every unit bought together."
     },
     "stepper": {
-      "navLabel": "New vehicle steps",
+      "navLabel": "New Vehicle Steps",
       "progress": "Step {current} of {total}",
       "optional": "Optional",
       "continue": "Continue",
       "back": "Back",
-      "skip": "Skip for now",
+      "skip": "Skip For Now",
       "editStep": "Edit",
       "fixVehicle": "Complete the required vehicle details before continuing.",
       "steps": {
@@ -1182,7 +1186,7 @@
         "review": "Confirm everything looks right, then create the vehicle."
       },
       "review": {
-        "vehicleTitle": "Vehicle details",
+        "vehicleTitle": "Vehicle Details",
         "acquisitionTitle": "Acquisition",
         "photosTitle": "Photos",
         "documentsTitle": "Documents",
@@ -1197,11 +1201,11 @@
     },
     "tabEmpty": {
       "photos": {
-        "title": "No photos yet",
+        "title": "No Photos Yet",
         "description": "Add photos when creating or editing this vehicle."
       },
       "costs": {
-        "title": "No costs recorded",
+        "title": "No Costs Recorded",
         "description": "Acquisition and workshop costs will appear here when available."
       },
       "pricing": {
@@ -1209,15 +1213,15 @@
         "description": "Open the Pricing tab to set selling prices for this vehicle."
       },
       "documents": {
-        "title": "No documents yet",
+        "title": "No Documents Yet",
         "description": "Documents from acquisition, inspection, and workshop will appear here."
       },
       "workshop": {
-        "title": "No workshop jobs",
+        "title": "No Workshop Jobs",
         "description": "Workshop jobs for this vehicle will appear in the Workshop tab."
       },
       "sales": {
-        "title": "No sales activity",
+        "title": "No Sales Activity",
         "description": "Reservations and sales for this vehicle will appear here in a later phase."
       }
     },
@@ -1226,7 +1230,7 @@
       "view": "View",
       "download": "Download",
       "image": "Image",
-      "unavailable": "Preview unavailable",
+      "unavailable": "Preview Unavailable",
       "uploadedBy": "Uploaded by {name}",
       "loadFailed": "Unable to load documents",
       "costLoadFailed": "Unable to load costs",
@@ -1235,13 +1239,13 @@
       "emptySource": "No {source} documents have been uploaded yet.",
       "emptyHint": "Documents uploaded in Acquisition, Inspection, Workshop, or vehicle files appear here.",
       "sourceLoadFailed": "{source} documents could not be loaded.",
-      "costSummaryTitle": "Supporting cost summary",
+      "costSummaryTitle": "Supporting Cost Summary",
       "costSummaryHint": "Costs are calculated from Acquisition and Workshop. Pricing calculates profit separately.",
-      "purchaseCost": "Purchase cost",
-      "acquisitionExpenses": "Acquisition expenses",
-      "workshopCost": "Reconditioning / workshop",
-      "otherCosts": "Other costs",
-      "totalCost": "Total vehicle cost",
+      "purchaseCost": "Purchase Cost",
+      "acquisitionExpenses": "Acquisition Expenses",
+      "workshopCost": "Reconditioning / Workshop",
+      "otherCosts": "Other Costs",
+      "totalCost": "Total Vehicle Cost",
       "filters": {
         "all": "All",
         "general": "General",
@@ -1261,13 +1265,13 @@
       "identity": "Identification",
       "specs": "Specifications",
       "appearance": "Appearance",
-      "originLocation": "Origin and location",
+      "originLocation": "Origin And Location",
       "audit": "Record",
       "restricted": "Restricted",
       "mileageValue": "{value} {unit}"
     },
     "history": {
-      "statusHistory": "Status history",
+      "statusHistory": "Status History",
       "activity": "Activity",
       "initial": "Created",
       "changedBy": "by {name}",
@@ -1275,34 +1279,34 @@
       "reason": "Reason",
       "noStatus": "No status changes yet",
       "noStatusHint": "Status changes will be recorded here.",
-      "noActivity": "No activity yet",
+      "noActivity": "No Activity Yet",
       "noActivityHint": "Edits, transfers and archive actions will be recorded here.",
       "loadFailed": "History could not be loaded.",
-      "statusTitle": "Status history",
+      "statusTitle": "Status History",
       "activityTitle": "Activity",
       "emptyStatus": "No status changes yet.",
       "emptyActivity": "No activity recorded yet."
     },
     "form": {
-      "createTitle": "New vehicle",
-      "editTitle": "Edit vehicle",
+      "createTitle": "New Vehicle",
+      "editTitle": "Edit Vehicle",
       "createDescription": "Enter the vehicle details. Status starts as Acquired and changes through the lifecycle.",
       "editDescription": "Update vehicle details. Use Change status to move it through the lifecycle.",
       "metaFailed": "Branches and locations could not be loaded.",
-      "noLocation": "No specific location",
-      "selectBranch": "Select a branch",
+      "noLocation": "No Specific Location",
+      "selectBranch": "Select A Branch",
       "yearPlaceholder": "e.g. 2022",
       "dateHint": "Optional"
     },
     "title": "Inventory",
     "description": "Vehicles on the floor, in transit, and ready for sale.",
-    "newTitle": "Add vehicle",
+    "newTitle": "Add Vehicle",
     "newDescription": "Enter vehicle details. Stock ID is assigned automatically. Status starts as Acquired.",
-    "editTitle": "Edit vehicle",
+    "editTitle": "Edit Vehicle",
     "editDescription": "Update vehicle details. Use Change status to move through the lifecycle.",
     "detailTitle": "Vehicle",
     "hints": {
-      "stockAuto": "Auto-generated on save"
+      "stockAuto": "Auto-generated On Save"
     },
     "columns": {
       "stock": "Stock",
@@ -1340,10 +1344,10 @@
     },
     "statusDialog": {
       "current": "Current",
-      "next": "New status"
+      "next": "New Status"
     },
     "transferDialog": {
-      "current": "Current branch"
+      "current": "Current Branch"
     },
     "archiveDialog": {
       "confirm": "Are you sure? This vehicle will be removed from active inventory. History is kept."
@@ -1357,16 +1361,16 @@
       "notFoundHint": "It may have been removed, or you may not have access."
     },
     "placeholders": {
-      "photosTitle": "No photos yet",
+      "photosTitle": "No Photos Yet",
       "photosHint": "Add photos from the Photos tab or when editing this vehicle.",
-      "costsTitle": "Costs unavailable",
+      "costsTitle": "Costs Unavailable",
       "restricted": "You do not have permission to view this information.",
       "pricingHint": "Open the Pricing tab to manage selling prices.",
-      "documentsTitle": "No documents yet",
+      "documentsTitle": "No Documents Yet",
       "documentsHint": "Acquisition, inspection, and workshop documents appear in the Documents tab.",
-      "workshopTitle": "No workshop jobs",
+      "workshopTitle": "No Workshop Jobs",
       "workshopHint": "Workshop jobs appear in the Workshop tab.",
-      "salesTitle": "No sales activity",
+      "salesTitle": "No Sales Activity",
       "salesHint": "Reservations and sales come in a later phase."
     },
     "photos": {
@@ -1376,13 +1380,13 @@
       "camera": "Camera",
       "remove": "Delete Photo",
       "primary": "Primary",
-      "setPrimary": "Set as Primary",
-      "moveLeft": "Move left",
-      "moveRight": "Move right",
-      "emptyTitle": "No photos yet",
+      "setPrimary": "Set As Primary",
+      "moveLeft": "Move Left",
+      "moveRight": "Move Right",
+      "emptyTitle": "No Photos Yet",
       "emptyHint": "Add multiple vehicle photos. No categories required.",
       "emptyCategory": "No photos in this category.",
-      "retryUpload": "Retry upload",
+      "retryUpload": "Retry Upload",
       "uploadToCategory": "Uploading to: {category}",
       "filters": {
         "all": "All",
@@ -1415,26 +1419,26 @@
         "generic": "Something went wrong with photos. Please try again."
       },
       "progress": {
-        "title": "Uploading photos",
+        "title": "Uploading Photos",
         "uploading": "Uploading {percent}%",
         "saving": "Saving photo…"
       },
       "toasts": {
-        "uploaded": "Photo uploaded",
+        "uploaded": "Photo Uploaded",
         "uploadedMany": "{count} photos uploaded",
-        "removed": "Photo removed",
-        "primarySet": "Primary photo updated",
+        "removed": "Photo Removed",
+        "primarySet": "Primary Photo Updated",
         "partialUpload": "Vehicle created, but some photos could not be uploaded.",
-        "retrySuccess": "Photos uploaded successfully"
+        "retrySuccess": "Photos Uploaded Successfully"
       },
       "dropHint": "Or drag and drop images here",
       "confirmDelete": "Delete this vehicle photo?",
       "lightbox": {
         "counter": "{current} / {total}",
-        "previous": "Previous photo",
-        "next": "Next photo",
+        "previous": "Previous Photo",
+        "next": "Next Photo",
         "goTo": "Go to photo {current}",
-        "unavailable": "Preview unavailable"
+        "unavailable": "Preview Unavailable"
       }
     },
     "totals": {
@@ -1452,7 +1456,7 @@
       "totalValue": "Total {value}"
     },
     "statusUpdate": {
-      "title": "Update status",
+      "title": "Update Status",
       "triggerLabel": "Status: {status}. Update status",
       "to": "to",
       "bookedHint": "Booked cars are sold or released from the Bookings page, so the booking stays in sync.",
@@ -1469,8 +1473,8 @@
       },
       "confirm": {
         "ready_for_sale": "Mark ready for sale",
-        "reserved": "Continue to booking",
-        "sold": "Mark as sold"
+        "reserved": "Continue To Booking",
+        "sold": "Mark As Sold"
       },
       "units": "Units",
       "unitsInvalid": "Enter a whole number from 1 to {count}.",
@@ -1481,49 +1485,49 @@
     },
     "booking": {
       "title": "Booking",
-      "bookedBy": "Booked by",
-      "bookedOn": "Booked on",
-      "soldOn": "Sold on"
+      "bookedBy": "Booked By",
+      "bookedOn": "Booked On",
+      "soldOn": "Sold On"
     },
     "insights": {
       "cylinders": "{count, plural, one {# cyl} other {# cyl}}",
       "seatsDoors": "Seats · Doors",
       "seats": "{count, plural, one {# seat} other {# seats}}",
       "doors": "{count, plural, one {# door} other {# doors}}",
-      "noPhoto": "No photo yet",
-      "journey": "Vehicle journey",
-      "agreedPrice": "Agreed price (booking)",
-      "priceTitle": "Price & profit",
+      "noPhoto": "No Photo Yet",
+      "journey": "Vehicle Journey",
+      "agreedPrice": "Agreed Price (booking)",
+      "priceTitle": "Price & Profit",
       "priceHint": "What the car cost you against what it sells for.",
       "perUnitNote": "Per unit · {count} units on this record.",
       "margin": "Margin",
       "profit": "{amount} profit",
-      "ageTitle": "Days in stock",
+      "ageTitle": "Days In Stock",
       "ageHint": "Counted from the purchase date.",
       "ageSold": "From purchase to sale.",
       "days": "{count, plural, one {day} other {days}}",
-      "collected": "Collected from customer",
+      "collected": "Collected From Customer",
       "bookedBy": "Booked by {name}",
-      "datesTitle": "Key dates",
-      "addedToStock": "Added to stock",
+      "datesTitle": "Key Dates",
+      "addedToStock": "Added To Stock",
       "expiresIn": "{count, plural, =0 {Expires today} one {Expires in # day} other {Expires in # days}}",
       "expiredAgo": "{count, plural, one {Expired # day ago} other {Expired # days ago}}",
       "otherCosts": "Shipping, fees & repairs",
-      "totalCost": "Total cost"
+      "totalCost": "Total Cost"
     },
     "pipeline": {
-      "title": "Stock pipeline",
+      "title": "Stock Pipeline",
       "hint": "Where your units are right now.",
       "sellThrough": "Sell-through",
-      "available": "Available to sell"
+      "available": "Available To Sell"
     },
     "overview": {
       "copy": "Copy",
-      "copied": "Copied to clipboard",
+      "copied": "Copied To Clipboard",
       "copyFailed": "Couldn't copy. Select the text instead.",
       "created": "Created",
-      "updated": "Last updated",
-      "recordNotes": "Record & notes",
+      "updated": "Last Updated",
+      "recordNotes": "Record & Notes",
       "noNotes": "No notes added for this vehicle yet."
     }
   },
@@ -1531,35 +1535,35 @@
     "title": "Acquisitions",
     "description": "Manage vehicle purchase and intake into inventory.",
     "actions": {
-      "add": "New acquisition",
+      "add": "New Acquisition",
       "retry": "Retry",
       "loading": "Updating…",
       "previous": "Previous",
       "next": "Next",
-      "addExpense": "Add expense",
+      "addExpense": "Add Expense",
       "approve": "Approve",
-      "back": "Back to list",
+      "back": "Back To List",
       "cancel": "Cancel",
-      "cancelAcquisition": "Cancel acquisition",
-      "changeStatus": "Change status",
-      "createSubmit": "Create acquisition",
+      "cancelAcquisition": "Cancel Acquisition",
+      "changeStatus": "Change Status",
+      "createSubmit": "Create Acquisition",
       "delete": "Remove",
       "edit": "Edit",
-      "receive": "Mark received",
+      "receive": "Mark Received",
       "reject": "Reject",
-      "updateSubmit": "Update acquisition",
+      "updateSubmit": "Update Acquisition",
       "updating": "Updating…",
       "noChangesHint": "Change something to enable Update",
-      "viewExisting": "View acquisition",
-      "viewExistingVehicle": "View existing vehicle",
-      "viewVehicle": "View vehicle",
-      "addViaInventory": "Add vehicle"
+      "viewExisting": "View Acquisition",
+      "viewExistingVehicle": "View Existing Vehicle",
+      "viewVehicle": "View Vehicle",
+      "addViaInventory": "Add Vehicle"
     },
     "vehiclePicker": {
-      "modeLabel": "Vehicle source",
-      "useExisting": "Use existing vehicle",
-      "createNew": "Create new vehicle",
-      "selectExisting": "Select existing vehicle",
+      "modeLabel": "Vehicle Source",
+      "useExisting": "Use Existing Vehicle",
+      "createNew": "Create New Vehicle",
+      "selectExisting": "Select Existing Vehicle",
       "placeholder": "Search vehicle…",
       "searchPlaceholder": "Stock ID, VIN, chassis, brand, or model",
       "empty": "No acquired vehicles found",
@@ -1576,18 +1580,18 @@
     },
     "pagination": {
       "showing": "Showing {from}–{to} of {total}",
-      "pageSize": "Rows per page",
+      "pageSize": "Rows Per Page",
       "previous": "Previous",
       "next": "Next"
     },
     "empty": {
-      "title": "No acquisitions yet",
+      "title": "No Acquisitions Yet",
       "hint": "Add a vehicle in Inventory and enter acquisition details there.",
-      "filteredTitle": "No acquisitions found",
+      "filteredTitle": "No Acquisitions Found",
       "filteredHint": "Try changing your filters.",
       "expensesTitle": "No acquisition expenses have been recorded",
       "expensesHint": "Add transport, auction, or other intake costs.",
-      "notFound": "Acquisition not found",
+      "notFound": "Acquisition Not Found",
       "notFoundHint": "It may have been removed, or you may not have access."
     },
     "errors": {
@@ -1599,10 +1603,10 @@
     "summary": {
       "total": "Total",
       "draft": "Draft",
-      "pendingApproval": "Pending approval",
+      "pendingApproval": "Pending Approval",
       "approved": "Approved",
       "purchased": "Purchased",
-      "documentsPending": "Documents pending",
+      "documentsPending": "Documents Pending",
       "received": "Received",
       "cancelled": "Cancelled"
     },
@@ -1610,16 +1614,16 @@
       "draft": "Draft",
       "sourcing": "Sourcing",
       "negotiating": "Negotiating",
-      "pending_approval": "Pending approval",
+      "pending_approval": "Pending Approval",
       "approved": "Approved",
       "purchased": "Purchased",
-      "documents_pending": "Documents pending",
+      "documents_pending": "Documents Pending",
       "received": "Received",
       "cancelled": "Cancelled",
       "rejected": "Rejected"
     },
     "sourceTypes": {
-      "individual_owner": "Individual owner",
+      "individual_owner": "Individual Owner",
       "dealer": "Dealer",
       "auction": "Auction",
       "trade_in": "Trade-in",
@@ -1630,13 +1634,13 @@
       "other": "Other"
     },
     "expenseTypes": {
-      "purchase": "Purchase price",
+      "purchase": "Purchase Price",
       "transportation": "Transport",
-      "auction": "Auction fee",
-      "broker_fee": "Broker fee",
+      "auction": "Auction Fee",
+      "broker_fee": "Broker Fee",
       "registration": "Registration",
       "insurance": "Insurance",
-      "import_duty": "Import duty",
+      "import_duty": "Import Duty",
       "clearance": "Clearance",
       "inspection": "Inspection",
       "customs": "Customs",
@@ -1644,8 +1648,8 @@
     },
     "enums": {
       "paymentStatus": {
-        "not_paid": "Not paid",
-        "partially_paid": "Partially paid",
+        "not_paid": "Not Paid",
+        "partially_paid": "Partially Paid",
         "paid": "Paid"
       },
       "documentStatus": {
@@ -1654,29 +1658,29 @@
         "complete": "Complete"
       },
       "registrationStatus": {
-        "not_started": "Not started",
-        "in_progress": "In progress",
+        "not_started": "Not Started",
+        "in_progress": "In Progress",
         "completed": "Completed",
-        "not_required": "Not required"
+        "not_required": "Not Required"
       }
     },
     "sort": {
-      "created_at": "Created date",
-      "updated_at": "Updated date",
-      "acquisition_number": "Acquisition number",
-      "purchase_date": "Purchase date",
+      "created_at": "Created Date",
+      "updated_at": "Updated Date",
+      "acquisition_number": "Acquisition Number",
+      "purchase_date": "Purchase Date",
       "status": "Status",
-      "source_type": "Source type"
+      "source_type": "Source Type"
     },
     "table": {
       "number": "Acquisition #",
       "vehicle": "Vehicle",
       "source": "Source",
       "branch": "Branch",
-      "purchasePrice": "Purchase price",
+      "purchasePrice": "Purchase Price",
       "status": "Status",
-      "purchaseDate": "Purchase date",
-      "createdBy": "Created by",
+      "purchaseDate": "Purchase Date",
+      "createdBy": "Created By",
       "actions": "Actions",
       "view": "View",
       "expenseType": "Type",
@@ -1691,34 +1695,34 @@
       "searchPlaceholder": "Number, stock ID, VIN, source, brand, model…",
       "status": "Status",
       "branch": "Branch",
-      "sourceType": "Source type",
+      "sourceType": "Source Type",
       "make": "Brand",
       "model": "Model",
-      "purchaseDateFrom": "Purchase from",
-      "purchaseDateTo": "Purchase to",
-      "createdFrom": "Created from",
-      "createdTo": "Created to",
-      "paymentStatus": "Payment status",
-      "documentStatus": "Document status",
-      "registrationStatus": "Registration status",
-      "priceMin": "Min price",
-      "priceMax": "Max price",
-      "sort": "Sort by",
+      "purchaseDateFrom": "Purchase From",
+      "purchaseDateTo": "Purchase To",
+      "createdFrom": "Created From",
+      "createdTo": "Created To",
+      "paymentStatus": "Payment Status",
+      "documentStatus": "Document Status",
+      "registrationStatus": "Registration Status",
+      "priceMin": "Min Price",
+      "priceMax": "Max Price",
+      "sort": "Sort By",
       "order": "Order",
       "asc": "Ascending",
       "desc": "Descending",
-      "clear": "Clear all",
-      "more": "More filters",
-      "less": "Hide filters",
-      "allStatuses": "All statuses",
-      "allBranches": "All branches",
-      "allSourceTypes": "All source types",
-      "allPaymentStatuses": "All payment statuses",
-      "allDocumentStatuses": "All document statuses",
-      "allRegistrationStatuses": "All registration statuses",
-      "anyMake": "Any brand",
-      "anyModel": "Any model",
-      "groupSource": "Source & vehicle",
+      "clear": "Clear All",
+      "more": "More Filters",
+      "less": "Hide Filters",
+      "allStatuses": "All Statuses",
+      "allBranches": "All Branches",
+      "allSourceTypes": "All Source Types",
+      "allPaymentStatuses": "All Payment Statuses",
+      "allDocumentStatuses": "All Document Statuses",
+      "allRegistrationStatuses": "All Registration Statuses",
+      "anyMake": "Any Brand",
+      "anyModel": "Any Model",
+      "groupSource": "Source & Vehicle",
       "groupStatus": "Statuses",
       "groupDates": "Dates",
       "groupPrice": "Price",
@@ -1727,59 +1731,59 @@
       "drawerHint": "Narrow results with more options."
     },
     "fields": {
-      "number": "Acquisition number",
+      "number": "Acquisition Number",
       "status": "Status",
       "branch": "Branch",
-      "sourceType": "Source type",
-      "sourceName": "Source name",
+      "sourceType": "Source Type",
+      "sourceName": "Source Name",
       "sourceCompany": "Company",
       "sourcePhone": "Phone",
       "sourceEmail": "Email",
       "sourceReference": "Reference",
-      "lotNumber": "Lot number",
-      "askingPrice": "Asking price",
-      "purchasePrice": "Purchase price",
-      "expenseTotal": "Additional expenses",
-      "totalAcquisitionCost": "Total acquisition cost",
+      "lotNumber": "Lot Number",
+      "askingPrice": "Asking Price",
+      "purchasePrice": "Purchase Price",
+      "expenseTotal": "Additional Expenses",
+      "totalAcquisitionCost": "Total Acquisition Cost",
       "currency": "Currency",
-      "purchaseDate": "Purchase date",
-      "expectedArrivalDate": "Expected arrival",
-      "receivedDate": "Received date",
-      "paymentStatus": "Payment status",
-      "documentStatus": "Document status",
-      "registrationStatus": "Registration status",
+      "purchaseDate": "Purchase Date",
+      "expectedArrivalDate": "Expected Arrival",
+      "receivedDate": "Received Date",
+      "paymentStatus": "Payment Status",
+      "documentStatus": "Document Status",
+      "registrationStatus": "Registration Status",
       "notes": "Notes",
-      "notSet": "Not set",
+      "notSet": "Not Set",
       "selectPlaceholder": "Select…",
       "vin": "VIN",
       "vinHint": "17 characters. Leave blank if unknown.",
-      "chassis": "Chassis number",
+      "chassis": "Chassis Number",
       "make": "Brand",
       "model": "Model",
       "variant": "Variant",
       "year": "Year",
       "mileage": "Mileage",
-      "origin": "GCC status",
-      "countryOfOrigin": "Country of origin",
+      "origin": "GCC Status",
+      "countryOfOrigin": "Country Of Origin",
       "stockNumber": "Stock ID",
       "vehicle": "Vehicle",
-      "expenseType": "Expense type",
+      "expenseType": "Expense Type",
       "amount": "Amount",
-      "expenseDate": "Expense date",
+      "expenseDate": "Expense Date",
       "vendor": "Vendor",
       "reference": "Reference",
       "description": "Description",
-      "approvedBy": "Approved by",
-      "approvedAt": "Approved at",
-      "approvalNote": "Approval note",
-      "rejectedBy": "Rejected by",
-      "rejectedAt": "Rejected at",
-      "rejectionReason": "Rejection reason",
-      "cancelReason": "Cancel reason",
+      "approvedBy": "Approved By",
+      "approvedAt": "Approved At",
+      "approvalNote": "Approval Note",
+      "rejectedBy": "Rejected By",
+      "rejectedAt": "Rejected At",
+      "rejectionReason": "Rejection Reason",
+      "cancelReason": "Cancel Reason",
       "createdAt": "Created",
-      "createdBy": "Created by",
+      "createdBy": "Created By",
       "updatedAt": "Updated",
-      "updatedBy": "Updated by",
+      "updatedBy": "Updated By",
       "brand": "Brand"
     },
     "sections": {
@@ -1788,15 +1792,15 @@
       "purchase": "Purchase",
       "expenses": "Expenses",
       "notes": "Notes",
-      "linkedVehicle": "Linked vehicle",
+      "linkedVehicle": "Linked Vehicle",
       "documents": "Acquisition Documents"
     },
     "detail": {
       "overview": "Overview",
-      "purchase": "Purchase & logistics",
+      "purchase": "Purchase & Logistics",
       "financial": "Financial",
       "approval": "Approval",
-      "audit": "Record info"
+      "audit": "Record Info"
     },
     "tabs": {
       "overview": "Overview",
@@ -1806,65 +1810,65 @@
       "documents": "Documents"
     },
     "form": {
-      "editTitle": "Edit acquisition",
+      "editTitle": "Edit Acquisition",
       "editDescription": "Update source, purchase terms, or vehicle identity.",
       "metaFailed": "Unable to load form options. You can still enter values manually."
     },
     "dialogs": {
       "status": {
-        "title": "Change status",
-        "newStatus": "New status",
+        "title": "Change Status",
+        "newStatus": "New Status",
         "reason": "Reason",
         "reasonPlaceholder": "Why is this status changing?",
-        "submit": "Update status",
+        "submit": "Update Status",
         "noTransitions": "No further status changes are available.",
         "description": "Current status: {status}"
       },
       "approval": {
-        "approveTitle": "Approve acquisition",
+        "approveTitle": "Approve Acquisition",
         "approveDescription": "Confirm the purchase terms and authorise this acquisition.",
         "approveSubmit": "Approve",
-        "rejectTitle": "Reject acquisition",
+        "rejectTitle": "Reject Acquisition",
         "rejectDescription": "Provide a reason for rejecting this acquisition.",
         "rejectSubmit": "Reject",
-        "note": "Approval note",
+        "note": "Approval Note",
         "notePlaceholder": "Optional note for the record",
-        "reason": "Rejection reason",
-        "reasonPlaceholder": "Required reason"
+        "reason": "Rejection Reason",
+        "reasonPlaceholder": "Required Reason"
       },
       "cancel": {
         "reasonPrompt": "Reason for cancelling this acquisition:"
       },
       "expense": {
-        "addTitle": "Add expense",
-        "editTitle": "Edit expense",
+        "addTitle": "Add Expense",
+        "editTitle": "Edit Expense",
         "description": "Line-item costs linked to this acquisition.",
-        "addSubmit": "Add expense",
-        "updateSubmit": "Save expense"
+        "addSubmit": "Add Expense",
+        "updateSubmit": "Save Expense"
       }
     },
     "history": {
-      "statusHistory": "Status history",
+      "statusHistory": "Status History",
       "activity": "Activity",
       "initial": "Created",
       "changedBy": "by {name}",
       "system": "System",
       "noStatus": "No status changes yet",
       "noStatusHint": "Status updates will appear here.",
-      "noActivity": "No activity yet",
+      "noActivity": "No Activity Yet",
       "noActivityHint": "Approvals, expenses, and updates will appear here."
     },
     "toasts": {
       "created": "Acquisition {number} created",
-      "updated": "Acquisition updated",
-      "approved": "Acquisition approved",
-      "rejected": "Acquisition rejected",
-      "cancelled": "Acquisition cancelled",
+      "updated": "Acquisition Updated",
+      "approved": "Acquisition Approved",
+      "rejected": "Acquisition Rejected",
+      "cancelled": "Acquisition Cancelled",
       "received": "Acquisition marked as received",
-      "statusChanged": "Status updated",
-      "expenseAdded": "Expense added",
-      "expenseUpdated": "Expense updated",
-      "expenseRemoved": "Expense removed",
+      "statusChanged": "Status Updated",
+      "expenseAdded": "Expense Added",
+      "expenseUpdated": "Expense Updated",
+      "expenseRemoved": "Expense Removed",
       "error": "Something went wrong. Please try again."
     },
     "documents": {
@@ -1879,7 +1883,7 @@
       "chooseFile": "Click to upload a file",
       "dropHint": "or drag and drop it here",
       "changeFile": "Change",
-      "removeFile": "Remove file",
+      "removeFile": "Remove File",
       "documentName": "Document Name",
       "referenceNumber": "Reference Number",
       "referencePlaceholder": "INV-2026-1024",
@@ -1895,7 +1899,7 @@
       "failed": "Failed",
       "retryUpload": "Retry Upload",
       "confirmDelete": "Delete this document? This cannot be undone.",
-      "emptyTitle": "No documents yet",
+      "emptyTitle": "No Documents Yet",
       "emptyHint": "Add purchase invoices, auction papers, or transport documents.",
       "loadFailed": "Unable to load documents",
       "errors": {
@@ -1904,14 +1908,14 @@
         "fileRequired": "Choose a file to upload."
       },
       "toasts": {
-        "uploaded": "Document uploaded",
-        "uploadFailed": "Document upload failed",
-        "deleted": "Document deleted",
+        "uploaded": "Document Uploaded",
+        "uploadFailed": "Document Upload Failed",
+        "deleted": "Document Deleted",
         "deleteFailed": "Unable to delete document",
-        "replaced": "Document replaced",
+        "replaced": "Document Replaced",
         "replaceFailed": "Unable to replace document",
         "partialUpload": "Acquisition created, but some documents could not be uploaded.",
-        "retrySuccess": "Documents uploaded successfully"
+        "retrySuccess": "Documents Uploaded Successfully"
       },
       "categories": {
         "purchase_invoice": "Purchase Invoice",
@@ -1935,30 +1939,30 @@
     "title": "Workshop",
     "description": "Repair and refurbishment work to prepare vehicles for sale.",
     "actions": {
-      "add": "New workshop order",
-      "edit": "Edit order",
-      "save": "Save changes",
-      "create": "Create order",
-      "back": "Back to workshop",
+      "add": "New Workshop Order",
+      "edit": "Edit Order",
+      "save": "Save Changes",
+      "create": "Create Order",
+      "back": "Back To Workshop",
       "retry": "Retry",
       "loading": "Updating…",
-      "myJobs": "My jobs",
-      "submitApproval": "Submit for approval",
+      "myJobs": "My Jobs",
+      "submitApproval": "Submit For Approval",
       "approve": "Approve",
-      "reject": "Reject / return",
+      "reject": "Reject / Return",
       "schedule": "Schedule",
-      "start": "Start work",
+      "start": "Start Work",
       "submitQuality": "Submit for quality check",
-      "qualityCheck": "Quality check",
-      "cancel": "Cancel order",
+      "qualityCheck": "Quality Check",
+      "cancel": "Cancel Order",
       "startJob": "Start",
       "completeJob": "Complete",
-      "waitingParts": "Waiting for parts",
-      "waitingVendor": "Waiting for vendor",
+      "waitingParts": "Waiting For Parts",
+      "waitingVendor": "Waiting For Vendor",
       "resumeJob": "Resume",
-      "viewOrder": "View order",
-      "viewVehicle": "View vehicle",
-      "qualityCheckAction": "Quality check"
+      "viewOrder": "View Order",
+      "viewVehicle": "View Vehicle",
+      "qualityCheckAction": "Quality Check"
     },
     "pagination": {
       "showing": "Showing {from}–{to} of {total}",
@@ -1972,12 +1976,12 @@
       "filteredHint": "Try changing search or filters.",
       "notFound": "Workshop order not found",
       "notFoundHint": "It may have been removed, or you may not have access.",
-      "jobsTitle": "No jobs yet",
+      "jobsTitle": "No Jobs Yet",
       "jobsHint": "Add jobs manually or convert inspection findings.",
       "photosTitle": "No photos uploaded.",
       "myJobsTitle": "No jobs assigned.",
       "myJobsHint": "Assigned workshop jobs will appear here.",
-      "jobNotFound": "Job not found"
+      "jobNotFound": "Job Not Found"
     },
     "errors": {
       "loadTitle": "Unable to load workshop data",
@@ -1986,30 +1990,30 @@
       "budgetExceeded": "Budget exceeded"
     },
     "summary": {
-      "openOrders": "Open orders",
+      "openOrders": "Open Orders",
       "scheduled": "Scheduled",
-      "inProgress": "In progress",
-      "waitingForParts": "Waiting for parts",
-      "waitingForVendor": "Waiting for vendor",
-      "qualityCheck": "Quality check",
+      "inProgress": "In Progress",
+      "waitingForParts": "Waiting For Parts",
+      "waitingForVendor": "Waiting For Vendor",
+      "qualityCheck": "Quality Check",
       "completed": "Completed",
       "overdue": "Overdue",
-      "estimatedCost": "Estimated cost",
-      "actualCost": "Actual cost",
-      "costVariance": "Cost variance",
-      "costs": "Cost summary"
+      "estimatedCost": "Estimated Cost",
+      "actualCost": "Actual Cost",
+      "costVariance": "Cost Variance",
+      "costs": "Cost Summary"
     },
     "filters": {
       "search": "Search",
       "searchPlaceholder": "Order #, stock ID, VIN, make, model…",
       "status": "Status",
       "priority": "Priority",
-      "workshopType": "Workshop type",
-      "overdue": "Overdue only",
-      "allStatuses": "All statuses",
-      "allPriorities": "All priorities",
-      "allTypes": "All types",
-      "clear": "Clear filters"
+      "workshopType": "Workshop Type",
+      "overdue": "Overdue Only",
+      "allStatuses": "All Statuses",
+      "allPriorities": "All Priorities",
+      "allTypes": "All Types",
+      "clear": "Clear Filters"
     },
     "columns": {
       "order": "Order #",
@@ -2026,40 +2030,40 @@
       "vehicle": "Vehicle",
       "vehicleId": "Vehicle ID",
       "branch": "Branch",
-      "branchDefault": "Use vehicle branch",
-      "workshopType": "Workshop type",
+      "branchDefault": "Use Vehicle Branch",
+      "workshopType": "Workshop Type",
       "priority": "Priority",
       "description": "Description",
       "notes": "Notes",
-      "estimated": "Estimated cost",
-      "actual": "Actual cost",
+      "estimated": "Estimated Cost",
+      "actual": "Actual Cost",
       "variance": "Variance",
       "jobs": "Jobs",
-      "scheduledStart": "Scheduled start",
-      "scheduledEnd": "Scheduled end",
-      "inspectionFinding": "Inspection finding"
+      "scheduledStart": "Scheduled Start",
+      "scheduledEnd": "Scheduled End",
+      "inspectionFinding": "Inspection Finding"
     },
     "status": {
       "draft": "Draft",
-      "pending_approval": "Pending approval",
+      "pending_approval": "Pending Approval",
       "approved": "Approved",
       "scheduled": "Scheduled",
-      "in_progress": "In progress",
-      "waiting_for_parts": "Waiting for parts",
-      "waiting_for_vendor": "Waiting for vendor",
-      "quality_check": "Quality check",
+      "in_progress": "In Progress",
+      "waiting_for_parts": "Waiting For Parts",
+      "waiting_for_vendor": "Waiting For Vendor",
+      "quality_check": "Quality Check",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "on_hold": "On hold",
+      "on_hold": "On Hold",
       "pending": "Pending",
       "assigned": "Assigned"
     },
     "jobStatus": {
       "pending": "Pending",
       "assigned": "Assigned",
-      "in_progress": "In progress",
-      "waiting_for_parts": "Waiting for parts",
-      "waiting_for_vendor": "Waiting for vendor",
+      "in_progress": "In Progress",
+      "waiting_for_parts": "Waiting For Parts",
+      "waiting_for_vendor": "Waiting For Vendor",
       "completed": "Completed",
       "cancelled": "Cancelled"
     },
@@ -2072,12 +2076,12 @@
     },
     "workshopType": {
       "internal": "Internal",
-      "external_vendor": "External vendor"
+      "external_vendor": "External Vendor"
     },
     "jobType": {
       "mechanical": "Mechanical",
       "electrical": "Electrical",
-      "body_repair": "Body repair",
+      "body_repair": "Body Repair",
       "paint": "Paint",
       "tyres": "Tyres",
       "brakes": "Brakes",
@@ -2101,14 +2105,14 @@
     },
     "badges": {
       "overdue": "Overdue",
-      "budgetExceeded": "Budget exceeded"
+      "budgetExceeded": "Budget Exceeded"
     },
     "costs": {
       "restricted": "Cost details are hidden for your role.",
-      "breakdown": "Cost breakdown",
+      "breakdown": "Cost Breakdown",
       "parts": "Parts",
       "labour": "Labour",
-      "expenses": "Other expenses"
+      "expenses": "Other Expenses"
     },
     "sections": {
       "jobs": "Jobs",
@@ -2116,31 +2120,31 @@
       "history": "History"
     },
     "quality": {
-      "title": "Quality check",
+      "title": "Quality Check",
       "pass": "Pass",
       "fail": "Fail",
-      "rework": "Requires rework",
+      "rework": "Requires Rework",
       "notesPlaceholder": "Quality notes…",
       "checklist": {
         "jobsCompleted": "All required jobs completed",
-        "partsRecorded": "Required parts recorded",
-        "photosPresent": "Required photos present",
+        "partsRecorded": "Required Parts Recorded",
+        "photosPresent": "Required Photos Present",
         "criticalResolved": "Critical repair findings resolved",
-        "conditionAcceptable": "Vehicle condition acceptable"
+        "conditionAcceptable": "Vehicle Condition Acceptable"
       }
     },
     "myJobs": {
-      "title": "My workshop jobs",
+      "title": "My Workshop Jobs",
       "description": "Jobs assigned to you.",
       "groups": {
-        "inProgress": "In progress",
+        "inProgress": "In Progress",
         "waiting": "Waiting",
         "assigned": "Assigned",
         "completed": "Completed"
       }
     },
     "vehiclePanel": {
-      "title": "Workshop orders",
+      "title": "Workshop Orders",
       "empty": "No workshop orders for this vehicle yet."
     },
     "vehiclePicker": {
@@ -2157,32 +2161,32 @@
       "branch": "Branch: {branch}"
     },
     "fromInspection": {
-      "title": "Create workshop order",
+      "title": "Create Workshop Order",
       "hint": "Select inspection findings that require workshop action.",
-      "create": "Create workshop order"
+      "create": "Create Workshop Order"
     },
     "prompts": {
       "rejectReason": "Reason for rejection / return",
-      "cancelReason": "Cancellation reason"
+      "cancelReason": "Cancellation Reason"
     },
     "toasts": {
-      "created": "Workshop order created",
-      "updated": "Workshop order updated",
+      "created": "Workshop Order Created",
+      "updated": "Workshop Order Updated",
       "createdFromInspection": "Workshop order created from inspection",
-      "submitted": "Submitted for approval",
-      "approved": "Workshop order approved",
-      "rejected": "Returned for changes",
-      "scheduled": "Workshop order scheduled",
-      "started": "Workshop work started",
+      "submitted": "Submitted For Approval",
+      "approved": "Workshop Order Approved",
+      "rejected": "Returned For Changes",
+      "scheduled": "Workshop Order Scheduled",
+      "started": "Workshop Work Started",
       "qualitySubmitted": "Submitted for quality check",
-      "qualityPassed": "Quality check passed",
+      "qualityPassed": "Quality Check Passed",
       "qualityFailed": "Quality check failed / rework required",
-      "cancelled": "Workshop order cancelled",
-      "jobStarted": "Job started",
-      "jobCompleted": "Job completed",
+      "cancelled": "Workshop Order Cancelled",
+      "jobStarted": "Job Started",
+      "jobCompleted": "Job Completed",
       "waitingParts": "Marked waiting for parts",
       "waitingVendor": "Marked waiting for vendor",
-      "jobResumed": "Job resumed"
+      "jobResumed": "Job Resumed"
     }
   },
   "pricing": {
@@ -2191,100 +2195,100 @@
       "description": "Set selling prices and review gross profitability by vehicle."
     },
     "panel": {
-      "title": "Pricing & profitability"
+      "title": "Pricing & Profitability"
     },
     "salesView": {
       "title": "Pricing",
-      "maxDiscount": "Maximum discount",
+      "maxDiscount": "Maximum Discount",
       "maxDiscountHint": "{percent} of the target price",
       "notSet": "Not set yet. Ask a Super Admin."
     },
     "sections": {
-      "costBreakdown": "Vehicle cost summary",
+      "costBreakdown": "Vehicle Cost Summary",
       "profitability": "Profitability",
-      "edit": "Edit pricing",
-      "history": "Price history",
-      "approval": "Approval required"
+      "edit": "Edit Pricing",
+      "history": "Price History",
+      "approval": "Approval Required"
     },
     "fields": {
-      "minimum": "Minimum selling price",
-      "target": "Target selling price",
-      "maxDiscountAmount": "Maximum discount amount",
-      "maxDiscountPercent": "Maximum discount %",
-      "notes": "Pricing notes",
-      "changeReason": "Change reason",
+      "minimum": "Minimum Selling Price",
+      "target": "Target Selling Price",
+      "maxDiscountAmount": "Maximum Discount Amount",
+      "maxDiscountPercent": "Maximum Discount %",
+      "notes": "Pricing Notes",
+      "changeReason": "Change Reason",
       "overrideMinimum": "Override minimum selling price",
-      "overrideReason": "Override reason",
+      "overrideReason": "Override Reason",
       "maxDiscountPercentHint": "Calculated from the discount amount and the target selling price."
     },
     "cost": {
-      "purchase": "Purchase price",
-      "acquisitionExpenses": "Acquisition expenses",
-      "workshop": "Workshop / repairs",
-      "other": "Other costs"
+      "purchase": "Purchase Price",
+      "acquisitionExpenses": "Acquisition Expenses",
+      "workshop": "Workshop / Repairs",
+      "other": "Other Costs"
     },
     "summary": {
-      "totalCost": "Total vehicle cost",
-      "expectedProfit": "Expected gross profit",
-      "margin": "Expected margin",
-      "maxDiscount": "Maximum discount"
+      "totalCost": "Total Vehicle Cost",
+      "expectedProfit": "Expected Gross Profit",
+      "margin": "Expected Margin",
+      "maxDiscount": "Maximum Discount"
     },
     "status": {
       "draft": "Draft",
-      "pending_approval": "Pending approval",
+      "pending_approval": "Pending Approval",
       "approved": "Approved",
       "active": "Active",
-      "discount_approval_required": "Discount approval required",
-      "below_minimum": "Below minimum",
+      "discount_approval_required": "Discount Approval Required",
+      "below_minimum": "Below Minimum",
       "sold": "Sold",
       "cancelled": "Cancelled"
     },
     "reasons": {
-      "market_adjustment": "Market adjustment",
-      "competitor_pricing": "Competitor pricing",
-      "customer_negotiation": "Customer negotiation",
+      "market_adjustment": "Market Adjustment",
+      "competitor_pricing": "Competitor Pricing",
+      "customer_negotiation": "Customer Negotiation",
       "clearance": "Clearance",
-      "vehicle_condition": "Vehicle condition",
-      "management_decision": "Management decision",
+      "vehicle_condition": "Vehicle Condition",
+      "management_decision": "Management Decision",
       "promotion": "Promotion",
-      "initial_pricing": "Initial pricing",
-      "cost_refresh": "Cost refresh",
+      "initial_pricing": "Initial Pricing",
+      "cost_refresh": "Cost Refresh",
       "approval": "Approval",
       "override": "Override",
       "other": "Other"
     },
     "warnings": {
-      "belowMinimumTitle": "Below minimum price",
+      "belowMinimumTitle": "Below Minimum Price",
       "belowMinimumBody": "Current selling price is below the minimum approved selling price.",
-      "lossTitle": "Expected loss",
+      "lossTitle": "Expected Loss",
       "lossBody": "Expected gross profit is negative at the current selling price."
     },
     "actions": {
-      "save": "Save pricing",
+      "save": "Save Pricing",
       "approve": "Approve",
       "reject": "Reject",
-      "openFull": "Open pricing page",
-      "viewVehicle": "View vehicle",
-      "back": "Back to pricing"
+      "openFull": "Open Pricing Page",
+      "viewVehicle": "View Vehicle",
+      "back": "Back To Pricing"
     },
     "table": {
       "vehicle": "Vehicle",
       "stock": "Stock ID",
-      "status": "Pricing status"
+      "status": "Pricing Status"
     },
     "history": {
-      "unknownUser": "Unknown user"
+      "unknownUser": "Unknown User"
     },
     "restricted": {
-      "title": "Pricing restricted",
+      "title": "Pricing Restricted",
       "description": "You do not have permission to view pricing for this vehicle."
     },
     "empty": {
-      "title": "No vehicles found",
+      "title": "No Vehicles Found",
       "description": "Adjust filters or add vehicles to inventory first.",
       "loadFailed": "Pricing could not be loaded",
       "loadFailedHint": "Try again in a moment.",
-      "notFound": "Pricing not found",
+      "notFound": "Pricing Not Found",
       "notFoundHint": "This vehicle may be missing or you may not have access."
     },
     "toasts": {
@@ -2299,12 +2303,12 @@
       "discountExceedsTarget": "Discount cannot exceed the target selling price."
     },
     "visual": {
-      "corridorTitle": "Price corridor",
+      "corridorTitle": "Price Corridor",
       "corridorHint": "Every price for this car on one line, from cost to the asking price.",
       "markers": {
         "cost": "Cost",
         "minimum": "Minimum",
-        "floor": "Max discount",
+        "floor": "Max Discount",
         "target": "Target",
         "advertised": "Advertised"
       },
@@ -2319,14 +2323,14 @@
         "negotiation": "room for discounts"
       },
       "costMixTitle": "Where the cost comes from",
-      "historyTitle": "Price trend",
+      "historyTitle": "Price Trend",
       "historyHint": "Target and minimum price after each change.",
       "notEnoughHistory": "The trend appears after the price has been changed at least once.",
       "noChanges": "No price changes yet.",
       "stats": {
-        "atTarget": "Profit at target",
-        "atMinimum": "Profit at minimum",
-        "room": "Discount room"
+        "atTarget": "Profit At Target",
+        "atMinimum": "Profit At Minimum",
+        "room": "Discount Room"
       },
       "now": "Now"
     }
@@ -2334,15 +2338,15 @@
   "bookings": {
     "title": "Bookings",
     "description": "Cars held for customers with a deposit. Booking a car marks it Booked; cancelling returns it to Ready for sale.",
-    "new": "New booking",
+    "new": "New Booking",
     "book": "Book",
-    "newTitle": "New booking",
+    "newTitle": "New Booking",
     "newDescription": "Hold a Ready-for-sale car for a customer.",
-    "sellTitle": "Mark as sold",
+    "sellTitle": "Mark As Sold",
     "sellDescription": "Record who bought the car, their sales executive and the selling price.",
     "sellAmountReceived": "Amount received (full selling price)",
     "sellPaidInFull": "The customer pays the entire selling price; the car is marked sold.",
-    "create": "Create booking",
+    "create": "Create Booking",
     "created": "Booking created.",
     "assignedToColleague": "This customer belongs to {name}, so the booking is in {name}'s bookings.",
     "cancelled": "Booking cancelled.",
@@ -2352,25 +2356,25 @@
     "noVehicles": "No cars are ready for sale",
     "customer": "Customer",
     "existingCustomer": "Existing",
-    "newCustomer": "New customer",
-    "selectCustomer": "Select a customer",
-    "noCustomers": "No customers yet",
-    "firstName": "First name",
-    "lastName": "Last name",
+    "newCustomer": "New Customer",
+    "selectCustomer": "Select A Customer",
+    "noCustomers": "No Customers Yet",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "phone": "Phone",
     "deposit": "Deposit (AED)",
     "notes": "Notes",
     "number": "Booking #",
     "status": "Status",
     "empty": "No bookings here yet.",
-    "markSold": "Mark as sold",
+    "markSold": "Mark As Sold",
     "requestHold": "Ask to keep booking",
-    "reviewHold": "Review keep request",
+    "reviewHold": "Review Keep Request",
     "requestHoldShort": "Ask to keep booking",
     "requestHoldHint": "No deposit yet? Ask a Super Admin to stop this booking from being cancelled automatically.",
     "reviewHoldShort": "Review",
     "holdChip": {
-      "pending": "Waiting for approval",
+      "pending": "Waiting For Approval",
       "approved": "Kept · won't auto-cancel",
       "rejected": "Not approved · deposit due"
     },
@@ -2395,61 +2399,61 @@
       "tooManyUnits": "That is more units than are available.",
       "exceedsBalance": "The amount received is more than the balance due."
     },
-    "salesperson": "Sales executive",
+    "salesperson": "Sales Executive",
     "selectSalesperson": "Select the sales executive",
     "noSalespeople": "No sales executives yet",
     "salespersonLinked": "This customer always stays with their sales executive.",
     "salespersonSelf": "New customers you add are linked to you.",
     "useExisting": "Use {name} instead",
-    "sellingPrice": "Selling price (AED)",
-    "myTitle": "My bookings",
+    "sellingPrice": "Selling Price (AED)",
+    "myTitle": "My Bookings",
     "myDescription": "Cars you booked for your customers. Booking a car marks it Booked; cancelling returns it to Ready for sale.",
     "edit": "Edit",
-    "editTitle": "Edit booking",
+    "editTitle": "Edit Booking",
     "updated": "Booking updated.",
-    "units": "Units to book",
+    "units": "Units To Book",
     "unitsHint": "{count} units available. The rest stay Ready for sale.",
     "sellingTotal": "Total for {count} units: {total}",
-    "editAction": "Edit booking",
-    "cancelAction": "Cancel booking",
+    "editAction": "Edit Booking",
+    "cancelAction": "Cancel Booking",
     "moreActions": "More actions for {number}",
     "filters": {
       "active": "Active",
-      "attention": "Needs attention",
+      "attention": "Needs Attention",
       "sold": "Sold",
       "closed": "Closed",
       "all": "All"
     },
     "searchPlaceholder": "Search booking, car, customer or phone",
-    "clearSearch": "Clear search",
+    "clearSearch": "Clear Search",
     "noMatches": "No bookings match your search.",
     "attentionEmpty": "Nothing needs attention. Every booking is on track.",
     "pagination": {
       "showing": "Showing {from}–{to} of {total}",
-      "pageSize": "Per page",
+      "pageSize": "Per Page",
       "previous": "Previous",
       "next": "Next"
     },
     "actions": {
-      "loading": "Loading bookings"
+      "loading": "Loading Bookings"
     },
     "view": "Open booking {number}",
     "bookedOn": "Booked {date}",
     "soldOn": "Sold {date}",
     "summary": {
-      "active": "Active bookings",
+      "active": "Active Bookings",
       "activeHint": "{amount} on hold",
-      "attention": "Needs attention",
+      "attention": "Needs Attention",
       "attentionHint": "{deposit} no deposit · {overdue} overdue",
-      "attentionNone": "All on track",
+      "attentionNone": "All On Track",
       "sold": "Sold",
       "soldHint": "{amount} in sales",
-      "toCollect": "To collect",
+      "toCollect": "To Collect",
       "toCollectHint": "Balances on active bookings"
     },
     "deadline": {
       "deposit": "Deposit due in {duration}",
-      "depositNow": "Deposit due now",
+      "depositNow": "Deposit Due Now",
       "balance": "Full payment due in {duration}",
       "balanceNow": "Full payment due now",
       "overdue": "Payment overdue by {duration}"
@@ -2457,47 +2461,47 @@
     "progress": {
       "paidOf": "<strong>{paid}</strong> of {total} paid",
       "toCollect": "{amount} to collect",
-      "paidInFull": "Paid in full"
+      "paidInFull": "Paid In Full"
     },
     "unitsBadge": "{count} units",
     "payment": {
       "title": "Payment",
       "price": "Price",
       "deposit": "Deposit",
-      "balanceDue": "Balance due",
-      "balanceReceived": "Balance received",
+      "balanceDue": "Balance Due",
+      "balanceReceived": "Balance Received",
       "outstanding": "Outstanding"
     },
     "sold": {
-      "title": "Mark as sold",
-      "sellingPrice": "Selling price",
+      "title": "Mark As Sold",
+      "sellingPrice": "Selling Price",
       "totalUnits": "Selling price × {count} units",
-      "depositPaid": "Deposit paid",
-      "balanceDue": "Balance due",
-      "balanceReceived": "Balance amount received",
+      "depositPaid": "Deposit Paid",
+      "balanceDue": "Balance Due",
+      "balanceReceived": "Balance Amount Received",
       "paidInFull": "Paid in full.",
       "effect": "The booking closes and the car moves to Sold. This can't be undone from the bookings screen.",
-      "confirm": "Confirm sale",
+      "confirm": "Confirm Sale",
       "fullBalanceHint": "The full balance is recorded as received, so the booking is paid in full."
     },
     "cancelDialog": {
-      "title": "Cancel booking",
+      "title": "Cancel Booking",
       "effect": "The car goes back to Ready for sale so it can be booked again.",
       "reason": "Reason (optional)",
       "reasonPlaceholder": "e.g. Customer changed their mind",
-      "confirm": "Cancel booking"
+      "confirm": "Cancel Booking"
     },
     "holdDialog": {
       "title": "Keep this booking without a deposit?",
       "effect": "No deposit has been received yet. Ask a Super Admin to keep this booking active. While they review it, the booking won't be cancelled automatically.",
       "reason": "Why should this booking be kept?",
       "reasonPlaceholder": "e.g. Customer is transferring the deposit on Sunday",
-      "confirm": "Send request",
+      "confirm": "Send Request",
       "sent": "Request sent to the Super Admins"
     },
     "reviewDialog": {
       "title": "Keep this booking without a deposit?",
-      "requestedBy": "Requested by",
+      "requestedBy": "Requested By",
       "reason": "Reason",
       "effect": "Approve to keep the booking active without auto-cancellation. Reject to apply the deposit deadline again; if it has passed, the booking is cancelled right away.",
       "note": "Note (optional)",
@@ -2518,9 +2522,9 @@
       "payment": {
         "title": "Payment",
         "deposit": "Deposit",
-        "balanceReceived": "Balance received",
+        "balanceReceived": "Balance Received",
         "outstanding": "Outstanding",
-        "total": "Total price",
+        "total": "Total Price",
         "collected": "Collected",
         "paid": "paid",
         "perUnit": "{price} × {count} units",
@@ -2530,10 +2534,10 @@
         "noPrice": "No selling price set for this booking."
       },
       "nextDeadline": {
-        "title": "Next deadline",
+        "title": "Next Deadline",
         "left": "left",
         "now": "due",
-        "deposit": "Deposit due in",
+        "deposit": "Deposit Due In",
         "balance": "Full payment due in",
         "applying": "Applying…",
         "depositMissed": "If missed: booking cancelled automatically.",
@@ -2545,24 +2549,24 @@
       "people": {
         "title": "People",
         "customer": "Customer",
-        "salesperson": "Sales executive",
-        "bookedBy": "Booked by"
+        "salesperson": "Sales Executive",
+        "bookedBy": "Booked By"
       },
       "timeline": {
         "title": "Timeline",
-        "booked": "Car booked",
+        "booked": "Car Booked",
         "depositReceived": "Deposit received · {amount}",
         "depositDue": "Deposit",
         "depositBy": "Deadline was {date}",
         "depositMissed": "Not received by {date}",
         "dueBy": "Due by {date}",
-        "balanceDue": "Full payment",
-        "paidInFull": "Paid in full",
+        "balanceDue": "Full Payment",
+        "paidInFull": "Paid In Full",
         "balanceAlerted": "Overdue · alert sent {date}",
         "balanceMissed": "Overdue since {date}",
-        "sold": "Marked as sold",
-        "cancelled": "Booking cancelled",
-        "autoCancelled": "Cancelled automatically",
+        "sold": "Marked As Sold",
+        "cancelled": "Booking Cancelled",
+        "autoCancelled": "Cancelled Automatically",
         "hold": {
           "pending": "Keep request under review · deadline paused",
           "approved": "Kept without a deposit · no deadline",
@@ -2587,47 +2591,47 @@
   },
   "customers": {
     "title": "Customers",
-    "myTitle": "My customers",
+    "myTitle": "My Customers",
     "description": "Buyers and contacts across the showroom, with their bookings and sales executive.",
     "myDescription": "Customers you own or added, with their bookings.",
-    "newBooking": "New booking",
+    "newBooking": "New Booking",
     "kpis": {
       "total": "Customers",
-      "active": "Active buyers",
-      "new": "New this month",
+      "active": "Active Buyers",
+      "new": "New This Month",
       "unassigned": "Unassigned",
-      "bookings": "Total bookings",
+      "bookings": "Total Bookings",
       "totalHint": "{count, plural, one {{formatted} booking} other {{formatted} bookings}} in total",
       "activeHint": "A car on hold right now",
-      "newHint": "Added this month",
-      "none": "No bookings yet",
+      "newHint": "Added This Month",
+      "none": "No Bookings Yet",
       "noneHint": "Ready for a first booking",
       "unassignedHint": "No sales executive yet"
     },
     "filters": {
       "all": "All",
-      "active": "Active booking",
-      "new": "New this month",
-      "none": "No bookings",
+      "active": "Active Booking",
+      "new": "New This Month",
+      "none": "No Bookings",
       "unassigned": "Unassigned"
     },
     "searchPlaceholder": "Search name, phone, email or code",
-    "clearSearch": "Clear search",
+    "clearSearch": "Clear Search",
     "columns": {
       "customer": "Customer",
       "contact": "Contact",
       "branch": "Branch",
-      "salesperson": "Sales executive",
+      "salesperson": "Sales Executive",
       "bookings": "Bookings",
       "added": "Added"
     },
     "unassigned": "Unassigned",
-    "noBookings": "No bookings",
+    "noBookings": "No Bookings",
     "activeCount": "{count, plural, one {# active} other {# active}}",
     "totalCount": "{count, plural, one {{formatted} booking} other {{formatted} bookings}}",
-    "empty": "No customers yet",
+    "empty": "No Customers Yet",
     "emptyHint": "Customers are added when you create a booking.",
-    "noMatches": "No matching customers",
+    "noMatches": "No Matching Customers",
     "noMatchesHint": "Try a different name, phone number, or filter.",
     "newBadge": "New",
     "ownedBy": "Sales executive: {name}",
@@ -2635,14 +2639,14 @@
     "addedOn": "Added {when} · no bookings yet",
     "status": {
       "active": "{count, plural, one {Active booking} other {# active bookings}}",
-      "past": "Booked before",
-      "none": "No bookings yet"
+      "past": "Booked Before",
+      "none": "No Bookings Yet"
     },
     "sort": {
-      "label": "Sort customers",
-      "newest": "Newest first",
-      "recent": "Recently booked",
-      "bookings": "Most bookings",
+      "label": "Sort Customers",
+      "newest": "Newest First",
+      "recent": "Recently Booked",
+      "bookings": "Most Bookings",
       "name": "Name A–Z"
     },
     "actions": {
@@ -2650,12 +2654,12 @@
       "whatsapp": "WhatsApp",
       "email": "Email",
       "viewBookings": "Bookings",
-      "book": "Book a car",
-      "loading": "Loading customers"
+      "book": "Book A Car",
+      "loading": "Loading Customers"
     },
     "pagination": {
       "showing": "Showing {from}–{to} of {total}",
-      "pageSize": "Per page",
+      "pageSize": "Per Page",
       "previous": "Previous",
       "next": "Next"
     }
@@ -2666,19 +2670,19 @@
     "minutes": "{count, plural, one {# minute} other {# minutes}}"
   },
   "documents": {
-    "title": "My documents",
+    "title": "My Documents",
     "description": "Keep your important documents in one private place. Only you and Super Admins can see them.",
-    "upload": "Upload document",
-    "uploadTitle": "Upload a document",
+    "upload": "Upload Document",
+    "uploadTitle": "Upload A Document",
     "uploadDescription": "PDF, image or Word file, up to 10 MB.",
     "dropzone": "Choose a file or drag it here",
     "fileTypes": "PDF, JPG, PNG, WEBP, HEIC, DOC, DOCX · max 10 MB",
-    "removeFile": "Remove file",
+    "removeFile": "Remove File",
     "category": "Type",
     "titleLabel": "Title",
     "titlePlaceholder": "e.g. Emirates ID (front and back)",
-    "expiresOn": "Expiry date",
-    "noExpiry": "No expiry date",
+    "expiresOn": "Expiry Date",
+    "noExpiry": "No Expiry Date",
     "notes": "Notes",
     "cancel": "Cancel",
     "uploaded": "Document uploaded.",
@@ -2687,20 +2691,20 @@
       "emirates_id": "Emirates ID",
       "passport": "Passport",
       "visa": "Visa",
-      "driving_license": "Driving licence",
+      "driving_license": "Driving Licence",
       "contract": "Contract",
       "certificate": "Certificate",
       "other": "Other"
     },
     "allCategories": "All",
     "scope": {
-      "label": "Whose documents",
+      "label": "Whose Documents",
       "mine": "Mine",
       "all": "Everyone"
     },
-    "search": "Search documents",
-    "clearSearch": "Clear search",
-    "empty": "No documents yet",
+    "search": "Search Documents",
+    "clearSearch": "Clear Search",
+    "empty": "No Documents Yet",
     "emptyHint": "Upload your Emirates ID, passport, visa or any other document you need to keep handy.",
     "noMatches": "No documents match your filters.",
     "attention": "{count, plural, one {# document has expired or expires within 30 days.} other {# documents have expired or expire within 30 days.}}",
@@ -2711,7 +2715,7 @@
     "view": "View",
     "download": "Download",
     "delete": "Delete",
-    "deleteTitle": "Delete document",
+    "deleteTitle": "Delete Document",
     "deleteDescription": "“{title}” will be permanently deleted. This can't be undone.",
     "errors": {
       "fileRequired": "Choose a file to upload.",

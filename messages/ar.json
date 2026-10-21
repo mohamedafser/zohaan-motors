@@ -274,7 +274,11 @@
     "clearAll": "مسح الكل",
     "open": "فتح",
     "unreadLabel": "غير مقروء:",
-    "filters": { "all": "الكل", "unread": "غير المقروءة", "type": "التصفية حسب النوع" },
+    "filters": {
+      "all": "الكل",
+      "unread": "غير المقروءة",
+      "type": "التصفية حسب النوع"
+    },
     "categories": {
       "all": "كل الأنواع",
       "booking": "حجوزات جديدة",
@@ -995,7 +999,12 @@
       "marketType": "الحالة",
       "allMarketTypes": "كل الحالات",
       "drawerTitle": "عوامل التصفية",
-      "drawerHint": "ضيّق النتائج بمزيد من الخيارات."
+      "drawerHint": "ضيّق النتائج بمزيد من الخيارات.",
+      "fuel": "نوع الوقود",
+      "mileageMin": "أقل عداد",
+      "mileageMax": "أعلى عداد",
+      "acquisitionFrom": "تاريخ الشراء من",
+      "acquisitionTo": "تاريخ الشراء إلى"
     },
     "sort": {
       "created_at": "تاريخ الإضافة",
