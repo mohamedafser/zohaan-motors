@@ -114,7 +114,7 @@ create index if not exists vehicles_make_id_idx on public.vehicles (make_id);
 create index if not exists vehicles_model_id_idx on public.vehicles (model_id);
 create index if not exists vehicles_acquisition_date_idx on public.vehicles (purchase_date);
 create index if not exists vehicles_updated_at_idx on public.vehicles (updated_at);
-create index if not exists vehicles_chassis_trgm_idx on public.vehicles using gin (chassis_number gin_trgm_ops);
+create index if not exists vehicles_chassis_trgm_idx on public.vehicles using gin (chassis_number extensions.gin_trgm_ops);
 
 -- Location must belong to the vehicle's branch.
 create or replace function public.enforce_vehicle_location_branch()

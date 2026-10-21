@@ -130,26 +130,6 @@ join public.permissions p on p.key not in ('payment.refund')
 where r.key = 'admin'
 on conflict do nothing;
 
--- Lead sources
-insert into public.lead_sources (key, name, sort_order)
-values
-  ('website', 'Website', 10),
-  ('whatsapp', 'WhatsApp', 20),
-  ('instagram', 'Instagram', 30),
-  ('facebook', 'Facebook', 40),
-  ('dubizzle', 'Dubizzle', 50),
-  ('yallamotor', 'YallaMotor', 60),
-  ('walk_in', 'Walk-in', 70),
-  ('phone', 'Phone', 80),
-  ('referral', 'Referral', 90),
-  ('other', 'Other', 100)
-on conflict (key) do update
-set
-  name = excluded.name,
-  sort_order = excluded.sort_order,
-  is_active = true,
-  updated_at = timezone('utc', now());
-
 -- Document types
 insert into public.document_types (key, name, description)
 values
@@ -179,57 +159,6 @@ set
   description = excluded.description,
   is_active = true,
   updated_at = timezone('utc', now());
-
--- UAE VAT development rate (5%). Not a production tax engine.
-insert into public.tax_rates (name, rate, country, is_active, effective_from)
-select 'UAE VAT 5%', 0.0500, 'AE', true, date '2018-01-01'
-where not exists (
-  select 1 from public.tax_rates where name = 'UAE VAT 5%' and country = 'AE'
-);
-
--- Default inspection template
-with template as (
-  insert into public.inspection_templates (name, description, is_active)
-  select 'Standard Pre-Sale Inspection', 'Default checklist for used vehicles', true
-  where not exists (
-    select 1 from public.inspection_templates where name = 'Standard Pre-Sale Inspection'
-  )
-  returning id
-),
-existing as (
-  select id from public.inspection_templates where name = 'Standard Pre-Sale Inspection'
-),
-template_id as (
-  select id from template
-  union all
-  select id from existing
-  limit 1
-)
-insert into public.inspection_template_items (template_id, section_key, name, category, description, sort_order, is_required)
-select t.id, item.section_key, item.name, item.category, item.description, item.sort_order, true
-from template_id t
-cross join (
-  values
-    ('exterior', 'Body panels', 'Exterior', 'Check dents, scratches, and panel gaps', 10),
-    ('exterior', 'Paint condition', 'Exterior', 'Check paint consistency and repairs', 20),
-    ('exterior', 'Lights and indicators', 'Exterior', 'Check all exterior lights', 30),
-    ('interior', 'Seats and cabin trim', 'Interior', 'Check wear, stains, and function', 40),
-    ('interior', 'Controls and switches', 'Interior', 'Check cabin controls', 50),
-    ('engine', 'Engine start and idle', 'Mechanical', 'Check cold/hot start and idle quality', 60),
-    ('transmission', 'Transmission operation', 'Mechanical', 'Check gear engagement', 70),
-    ('electrical', 'Battery and charging', 'Electrical', 'Check battery health and charging system', 80),
-    ('electrical', 'Infotainment and sensors', 'Electrical', 'Check electronics and warning lights', 90),
-    ('tyres_wheels', 'Tyre tread and condition', 'Tyres', 'Check tread depth and sidewall damage', 100),
-    ('brakes', 'Brakes and ABS', 'Safety', 'Check braking performance and ABS lights', 110),
-    ('safety', 'Airbags and belts', 'Safety', 'Check restraint systems', 120)
-) as item(section_key, name, category, description, sort_order)
-where not exists (
-  select 1
-  from public.inspection_template_items i
-  where i.template_id = t.id
-    and i.name = item.name
-    and i.category = item.category
-);
 
 -- Optional demo branch (no financial records).
 insert into public.branches (

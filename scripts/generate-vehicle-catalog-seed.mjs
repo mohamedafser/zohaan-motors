@@ -1064,11 +1064,6 @@ on conflict (model_year_id, slug) do update set
 `);
 
 lines.push(`
--- ---------------------------------------------------------------------------
--- 5. Map existing inventory text → catalog ids (safe; unmatched reported)
--- ---------------------------------------------------------------------------
-select * from public.map_vehicles_to_catalog();
-
 commit;
 `);
 
