@@ -33,7 +33,7 @@ export const updateVehiclePhotoSchema = z
   });
 
 export const reorderVehiclePhotosSchema = z.object({
-  orderedIds: z.array(z.string().uuid()).min(1),
+  orderedIds: z.array(z.string().uuid()).min(1).max(200),
 });
 
 export type AddVehiclePhotoValues = z.infer<typeof addVehiclePhotoSchema>;

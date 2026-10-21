@@ -21,48 +21,8 @@ import { sql } from "drizzle-orm";
 import { profiles } from "./identity";
 import { branches } from "./branches";
 import { vehicles } from "./inventory";
-import { customers, leads } from "./crm";
+import { customers } from "./crm";
 import { reservationStatus, saleStatus } from "./enums";
-
-export const salePriceHistory = pgTable(
-  "sale_price_history",
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    saleId: uuid("sale_id").notNull(),
-    oldAmount: numeric("old_amount", { precision: 14, scale: 2 }),
-    newAmount: numeric("new_amount", { precision: 14, scale: 2 }).notNull(),
-    reason: text(),
-    changedBy: uuid("changed_by"),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.changedBy],
-      foreignColumns: [profiles.id],
-      name: "sale_price_history_changed_by_fkey",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.saleId],
-      foreignColumns: [sales.id],
-      name: "sale_price_history_sale_id_fkey",
-    }).onDelete("cascade"),
-    pgPolicy("sale_price_history_select", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-      using: sql`(EXISTS ( SELECT 1
-   FROM sales s
-  WHERE ((s.id = sale_price_history.sale_id) AND has_permission_for_branch('sale.view'::text, s.branch_id))))`,
-    }),
-    check("sale_price_history_new_non_negative", sql`new_amount >= (0)::numeric`),
-    check(
-      "sale_price_history_old_non_negative",
-      sql`(old_amount IS NULL) OR (old_amount >= (0)::numeric)`,
-    ),
-  ],
-).enableRLS();
 
 export const reservations = pgTable(
   "reservations",
@@ -71,7 +31,6 @@ export const reservations = pgTable(
     reservationNumber: text("reservation_number").notNull(),
     vehicleId: uuid("vehicle_id").notNull(),
     customerId: uuid("customer_id").notNull(),
-    leadId: uuid("lead_id"),
     salespersonId: uuid("salesperson_id"),
     branchId: uuid("branch_id").notNull(),
     amount: numeric({ precision: 14, scale: 2 }).default("0").notNull(),
@@ -85,7 +44,10 @@ export const reservations = pgTable(
     cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "string" }),
     cancelReason: text("cancel_reason"),
     autoCancelled: boolean("auto_cancelled").default(false).notNull(),
-    balanceOverdueNotifiedAt: timestamp("balance_overdue_notified_at", { withTimezone: true, mode: "string" }),
+    balanceOverdueNotifiedAt: timestamp("balance_overdue_notified_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
     balanceReceived: numeric("balance_received", { precision: 14, scale: 2 }),
     soldAt: timestamp("sold_at", { withTimezone: true, mode: "string" }),
     soldBy: uuid("sold_by"),
@@ -93,9 +55,15 @@ export const reservations = pgTable(
     cancellationHoldStatus: text("cancellation_hold_status"),
     cancellationHoldReason: text("cancellation_hold_reason"),
     cancellationHoldRequestedBy: uuid("cancellation_hold_requested_by"),
-    cancellationHoldRequestedAt: timestamp("cancellation_hold_requested_at", { withTimezone: true, mode: "string" }),
+    cancellationHoldRequestedAt: timestamp("cancellation_hold_requested_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
     cancellationHoldReviewedBy: uuid("cancellation_hold_reviewed_by"),
-    cancellationHoldReviewedAt: timestamp("cancellation_hold_reviewed_at", { withTimezone: true, mode: "string" }),
+    cancellationHoldReviewedAt: timestamp("cancellation_hold_reviewed_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
     cancellationHoldReviewNote: text("cancellation_hold_review_note"),
     notes: text(),
     createdBy: uuid("created_by"),
@@ -123,6 +91,23 @@ export const reservations = pgTable(
       "btree",
       table.vehicleId.asc().nullsLast().op("uuid_ops"),
     ),
+    index("reservations_salesperson_id_idx").using(
+      "btree",
+      table.salespersonId.asc().nullsLast().op("uuid_ops"),
+    ),
+    index("reservations_branch_id_idx").using(
+      "btree",
+      table.branchId.asc().nullsLast().op("uuid_ops"),
+    ),
+    index("reservations_reserved_at_idx").using(
+      "btree",
+      table.reservedAt.desc().nullsFirst().op("timestamptz_ops"),
+    ),
+    index("reservations_status_reserved_at_idx").using(
+      "btree",
+      table.status.asc().nullsLast().op("enum_ops"),
+      table.reservedAt.asc().nullsLast().op("timestamptz_ops"),
+    ),
     foreignKey({
       columns: [table.branchId],
       foreignColumns: [branches.id],
@@ -138,11 +123,6 @@ export const reservations = pgTable(
       foreignColumns: [customers.id],
       name: "reservations_customer_id_fkey",
     }).onDelete("restrict"),
-    foreignKey({
-      columns: [table.leadId],
-      foreignColumns: [leads.id],
-      name: "reservations_lead_id_fkey",
-    }).onDelete("set null"),
     foreignKey({
       columns: [table.salespersonId],
       foreignColumns: [profiles.id],

@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { requireSupabaseEnv } from "@/lib/supabase/env";
 
 export function safePhotoFileName(name: string) {
@@ -17,6 +16,8 @@ export async function uploadVehiclePhotoFile(
   path: string,
   onProgress?: (percent: number) => void,
 ) {
+  // Loaded on first upload: keeps the Supabase client out of the page bundle.
+  const { createClient } = await import("@/lib/supabase/client");
   const supabase = createClient();
   const { url, key } = requireSupabaseEnv();
   const {

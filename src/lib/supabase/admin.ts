@@ -1,6 +1,9 @@
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
 
 import { requireSupabaseEnv } from "@/lib/supabase/env";
+import { fetchWithTimeout } from "@/lib/supabase/timeout";
 import type { Database } from "@/types/database";
 
 export function getServiceRoleKey() {
@@ -28,6 +31,8 @@ export function createServiceRoleClient() {
       autoRefreshToken: false,
       persistSession: false,
     },
+    // Longer than request queries: staff document uploads go through this client.
+    global: { fetch: fetchWithTimeout(60_000) },
   });
 }
 

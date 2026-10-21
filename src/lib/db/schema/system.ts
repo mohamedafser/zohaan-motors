@@ -16,7 +16,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { profiles } from "./identity";
-import { branches } from "./branches";
 
 export const notifications = pgTable(
   "notifications",
@@ -43,6 +42,11 @@ export const notifications = pgTable(
     index("notifications_user_id_idx").using(
       "btree",
       table.userId.asc().nullsLast().op("uuid_ops"),
+    ),
+    index("notifications_user_id_created_at_idx").using(
+      "btree",
+      table.userId.asc().nullsLast().op("uuid_ops"),
+      table.createdAt.desc().nullsFirst().op("timestamptz_ops"),
     ),
     index("notifications_user_unread_idx")
       .using(
@@ -155,61 +159,6 @@ export const auditLogs = pgTable(
     }),
     check("audit_logs_action_not_blank", sql`length(TRIM(BOTH FROM action)) > 0`),
     check("audit_logs_entity_type_not_blank", sql`length(TRIM(BOTH FROM entity_type)) > 0`),
-  ],
-).enableRLS();
-
-export const vendors = pgTable(
-  "vendors",
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    name: text().notNull(),
-    contactName: text("contact_name"),
-    phone: text(),
-    email: text(),
-    branchId: uuid("branch_id"),
-    locationText: text("location_text"),
-    status: text().default("active").notNull(),
-    notes: text(),
-    createdBy: uuid("created_by"),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    index("vendors_branch_id_idx").using("btree", table.branchId.asc().nullsLast().op("uuid_ops")),
-    index("vendors_status_idx").using("btree", table.status.asc().nullsLast().op("text_ops")),
-    foreignKey({
-      columns: [table.branchId],
-      foreignColumns: [branches.id],
-      name: "vendors_branch_id_fkey",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.createdBy],
-      foreignColumns: [profiles.id],
-      name: "vendors_created_by_fkey",
-    }).onDelete("set null"),
-    pgPolicy("vendors_select", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-      using: sql`(has_permission_for_optional_branch('workshop.view'::text, branch_id) OR has_permission_for_optional_branch('workshop.job.view'::text, branch_id))`,
-    }),
-    pgPolicy("vendors_mutate", {
-      as: "permissive",
-      for: "all",
-      to: ["authenticated"],
-      using: sql`(has_permission_for_optional_branch('workshop.edit'::text, branch_id) OR has_permission_for_optional_branch('workshop.create'::text, branch_id))`,
-      withCheck: sql`(has_permission_for_optional_branch('workshop.edit'::text, branch_id) OR has_permission_for_optional_branch('workshop.create'::text, branch_id))`,
-    }),
-    check(
-      "vendors_email_format",
-      sql`(email IS NULL) OR (email ~* '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'::text)`,
-    ),
-    check("vendors_name_not_blank", sql`length(TRIM(BOTH FROM name)) > 0`),
-    check("vendors_status_valid", sql`status = ANY (ARRAY['active'::text, 'inactive'::text])`),
   ],
 ).enableRLS();
 

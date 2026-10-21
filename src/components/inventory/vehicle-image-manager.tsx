@@ -149,6 +149,7 @@ function PhotoThumb({
               uploading && "opacity-80",
             )}
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="bg-muted absolute inset-0 flex items-center justify-center">

@@ -60,12 +60,6 @@ select pg_temp.assert(
 );
 
 select pg_temp.assert(
-  'rls_payments',
-  (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relname = 'payments')
-);
-
-select pg_temp.assert(
   'rls_audit_logs',
   (select relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relname = 'audit_logs')
@@ -83,14 +77,6 @@ select pg_temp.assert(
   exists (
     select 1 from pg_policies
     where schemaname = 'public' and tablename = 'vehicles' and policyname = 'vehicles_select'
-  )
-);
-
-select pg_temp.assert(
-  'policy_payments_select',
-  exists (
-    select 1 from pg_policies
-    where schemaname = 'public' and tablename = 'payments' and policyname = 'payments_select'
   )
 );
 

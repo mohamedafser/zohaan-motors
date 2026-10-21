@@ -29,9 +29,11 @@ const arabic = Noto_Sans_Arabic({
   display: "swap",
 });
 
+// Codes and figures only: not worth a preload on every page.
 const mono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+  preload: false,
 });
 
 export const metadata: Metadata = {

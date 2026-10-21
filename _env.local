@@ -1,9 +1,0 @@
-
-# Outgoing email for user invitations (Gmail: create an App Password under
-# Google Account → Security → 2-Step Verification → App passwords).
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_USER=
-SMTP_PASS=
-# Optional display sender, e.g. "Zohaan Motors <you@gmail.com>". Defaults to SMTP_USER.
-SMTP_FROM=

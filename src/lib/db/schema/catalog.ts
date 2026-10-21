@@ -15,7 +15,6 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { vehicles } from "./inventory";
 import { driveType, fuelType, transmissionType } from "./enums";
 
 export const vehicleMakes = pgTable(
@@ -230,36 +229,5 @@ export const vehicleVariants = pgTable(
       sql`(seating_capacity IS NULL) OR (seating_capacity > 0)`,
     ),
     check("vehicle_variants_slug_not_blank", sql`length(TRIM(BOTH FROM slug)) > 0`),
-  ],
-).enableRLS();
-
-export const vehicleCatalogMappingUnmatched = pgTable(
-  "vehicle_catalog_mapping_unmatched",
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    vehicleId: uuid("vehicle_id").notNull(),
-    stockNumber: text("stock_number"),
-    makeText: text("make_text"),
-    modelText: text("model_text"),
-    variantText: text("variant_text"),
-    year: integer(),
-    reason: text().notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    foreignKey({
-      columns: [table.vehicleId],
-      foreignColumns: [vehicles.id],
-      name: "vehicle_catalog_mapping_unmatched_vehicle_id_fkey",
-    }).onDelete("cascade"),
-    unique("vehicle_catalog_mapping_unmatched_vehicle_unique").on(table.vehicleId),
-    pgPolicy("vehicle_catalog_mapping_unmatched_select", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-      using: sql`(has_permission('settings.manage'::text) OR is_super_admin())`,
-    }),
   ],
 ).enableRLS();

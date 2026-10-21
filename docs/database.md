@@ -25,16 +25,16 @@ Primary market: UAE. Primary currency: AED. Timestamps: UTC (`timestamptz`).
 | IDs | UUID primary keys via `gen_random_uuid()`. |
 | Auth | Supabase Auth owns credentials. `profiles.id` = `auth.users.id`. |
 | Expenses | Single `vehicle_expenses` ledger. Optional `acquisition_id`. No duplicate `acquisition_expenses` table. |
-| Payments | `payments` + `payment_allocations` so one payment can cover multiple sales later. `payments.sale_id` remains a convenience link for the common single-sale case. |
-| Soft delete | `deleted_at` / `deleted_by` on vehicles, customers, leads, documents, profiles. |
-| Financial voiding | Sales, payments, invoices, reservations use status (`cancelled`, `refunded`, …). Do not hard-delete. |
+| Payments | Booking deposits and sale payments are recorded on `reservations` / `sales`. The unused `payments`, `payment_allocations`, `invoices` and `tax_rates` tables were dropped in 00063. |
+| Soft delete | `deleted_at` / `deleted_by` on vehicles, customers, documents, profiles. |
+| Financial voiding | Sales and reservations use status (`cancelled`, `refunded`, …). Do not hard-delete. |
 | Emirates | PostgreSQL enum `uae_emirate` (single source of truth). |
-| Lead sources / document types | Lookup tables (seeded), not enums — business can add values. |
+| Document types | Lookup table (seeded), not enums — business can add values. |
 | Reservation integrity | Partial unique index: one `status = 'active'` reservation per `vehicle_id`. Trigger blocks active reservations when vehicle is `sold` / `delivered` / `archived`. |
 | Sale integrity | Partial unique index: one non-cancelled sale per vehicle. |
 | Storage | Private buckets only. Metadata in Postgres; binaries in Storage. |
 | RLS | Enabled on all business tables. Deny-by-default except own profile/notifications bootstrap. Phase 4 adds permission policies. |
-| Audit | Selective triggers on vehicles, acquisitions, inspections, reservations, sales, payments, profiles, roles, user_roles. Plus automatic vehicle status/price history tables. |
+| Audit | Selective triggers on vehicles, acquisitions, reservations, sales, profiles, roles, user_roles. Plus automatic vehicle status history. |
 
 ## Migration layout
 
@@ -113,26 +113,16 @@ psql "$DATABASE_URL" -f supabase/tests/constraint_checks.sql
 
 - `vehicles`
 - `vehicle_expenses`
-- `vehicle_price_history`
 - `vehicle_status_history`
 - `vehicle_photos`
 - `suppliers`
 - `acquisitions`
 
-### Inspection & workshop
-
-- `inspection_templates`, `inspection_template_items`
-- `inspections`, `inspection_items`, `inspection_photos`
-- `workshop_orders`, `workshop_items`
-
 ### CRM & sales
 
 - `customers`
-- `lead_sources`, `leads`, `lead_activities`
-- `reservations`
-- `sales`, `sale_price_history`
-- `payments`, `payment_allocations`
-- `tax_rates`, `invoices`
+- `reservations` (bookings)
+- `sales`
 
 ### Shared
 
@@ -164,7 +154,6 @@ Vehicle status values: `acquired`, `under_inspection`, `inspection_failed`, `und
 | `handle_new_user()` | Creates `profiles` row on `auth.users` insert |
 | `write_audit_log()` / `audit_row_change()` | Selective audit trail |
 | `track_vehicle_status_change()` | Appends `vehicle_status_history` |
-| `track_vehicle_price_change()` | Appends `vehicle_price_history` |
 | `enforce_reservation_vehicle_state()` | Blocks active reservations on sold/delivered/archived vehicles |
 
 ## Seed data
@@ -173,10 +162,7 @@ Reference data only:
 
 - System roles (Super Admin → Viewer)
 - Permission catalog and Super Admin / Admin / Viewer mappings
-- Lead sources (Website, WhatsApp, …)
 - Document types
-- UAE VAT 5% tax rate row
-- Standard inspection template + items (Exterior, Interior, Mechanical, Electrical, Tyres, Safety)
 - Optional demo branch `DXB-01`
 
 No fake customers, sales, or payments.
@@ -189,7 +175,6 @@ Private buckets:
 | --- | --- |
 | `vehicle-photos` | Inventory photography |
 | `vehicle-documents` | Registration, customs, purchase docs |
-| `inspection-photos` | Inspection evidence |
 | `customer-documents` | Customer uploads |
 | `sales-documents` | Sale contracts / invoices files |
 
@@ -197,7 +182,7 @@ Authenticated read/write policies are temporary and will be tightened in Phase 4
 
 ## Branch strategy
 
-Direct `branch_id` on vehicles, acquisitions, inspections, workshop orders, leads, reservations, sales, invoices, and optionally customers/documents/payments. Profiles and `user_roles.branch_id` prepare scoped RBAC in Phase 4.
+Direct `branch_id` on vehicles, acquisitions, reservations, sales, and optionally customers/documents. Profiles and `user_roles.branch_id` prepare scoped RBAC in Phase 4.
 
 ## ER diagram
 

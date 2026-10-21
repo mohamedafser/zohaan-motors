@@ -270,7 +270,17 @@ const LIST_SELECT = `
   branch_locations:location_id ( id, name )
 `;
 
-function applyVehicleListFilters<T extends { eq: Function; neq: Function; ilike: Function; gte: Function; lte: Function; or: Function }>(
+/** The PostgREST filter methods used below (method syntax keeps the builder's generics assignable). */
+type VehicleFilterBuilder = {
+  eq(column: string, value: unknown): unknown;
+  neq(column: string, value: unknown): unknown;
+  ilike(column: string, pattern: string): unknown;
+  gte(column: string, value: unknown): unknown;
+  lte(column: string, value: unknown): unknown;
+  or(filters: string): unknown;
+};
+
+function applyVehicleListFilters<T extends VehicleFilterBuilder>(
   builder: T,
   query: Partial<
     Pick<
@@ -1101,8 +1111,7 @@ export async function archiveVehicle(
   return getVehicle(id, context);
 }
 
-// The DB function still reports legacy inspection/workshop checks (never blocking since
-// 00039/00040). Only these still apply in the app.
+// Checks and blockers the app shows (the DB function reports only these since 00063).
 const READY_FOR_SALE_CHECKS = new Set(["documents", "status"]);
 const READY_FOR_SALE_BLOCKERS = new Set(["document_missing", "invalid_status", "branch_denied"]);
 

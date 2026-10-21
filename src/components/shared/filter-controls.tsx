@@ -99,11 +99,14 @@ export function FilterGroup({
   activeCount?: number;
 }) {
   const initiallyOpen = defaultOpen ?? (collapsible ? activeCount > 0 : true);
-  const [open, setOpen] = useState(initiallyOpen);
+  const [open, setOpen] = useState(initiallyOpen || activeCount > 0);
 
-  useEffect(() => {
+  // Open the section as soon as it gets active filters (during render, not in an effect).
+  const [seenActiveCount, setSeenActiveCount] = useState(activeCount);
+  if (activeCount !== seenActiveCount) {
+    setSeenActiveCount(activeCount);
     if (activeCount > 0) setOpen(true);
-  }, [activeCount]);
+  }
 
   const fields = (
     <div className={cn("grid gap-3", dense ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4")}>
