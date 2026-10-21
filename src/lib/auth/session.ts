@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient, hasServiceRoleKey } from "@/lib/supabase/admin";
@@ -53,7 +54,10 @@ function permissionKeyFromJoin(permissions: PermissionJoinRow["permissions"]): s
  * Prefer SECURITY DEFINER RPCs when Phase 4 helpers are applied.
  * Fall back to a service-role read scoped to the JWT user when RPCs/RLS are missing.
  */
-async function loadRolesAndPermissions(userId: string, supabase: Awaited<ReturnType<typeof createClient>>): Promise<{
+async function loadRolesAndPermissions(
+  userId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<{
   roles: string[];
   permissions: Permission[];
   roleBranches: UserRoleBranchRow[];
@@ -201,7 +205,8 @@ export async function requireUser() {
   return user;
 }
 
-export async function getUserContext(): Promise<UserContext | null> {
+/** Memoized per request: layouts, pages and helpers share one lookup. */
+export const getUserContext = cache(async (): Promise<UserContext | null> => {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createClient();
@@ -212,22 +217,19 @@ export async function getUserContext(): Promise<UserContext | null> {
   const userId = claims.sub;
   const email = typeof claims.email === "string" ? claims.email : null;
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select(
-      "id, display_name, employee_code, phone, avatar_url, branch_id, status, deleted_at",
-    )
-    .eq("id", userId)
-    .maybeSingle();
+  const [{ data: profile, error: profileError }, { roles, permissions, roleBranches }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, display_name, employee_code, phone, avatar_url, branch_id, status, deleted_at")
+        .eq("id", userId)
+        .maybeSingle(),
+      loadRolesAndPermissions(userId, supabase),
+    ]);
 
   if (profileError || !profile) return null;
   const profileRow = profile as ProfileRow;
   if (profileRow.deleted_at) return null;
-
-  const { roles, permissions, roleBranches } = await loadRolesAndPermissions(
-    userId,
-    supabase,
-  );
   const { accessibleBranchIds, branchScope } = deriveBranchScope(
     roleBranches,
     profileRow.branch_id,
@@ -248,7 +250,7 @@ export async function getUserContext(): Promise<UserContext | null> {
     accessibleBranchIds,
     branchScope,
   };
-}
+});
 
 export async function requireUserContext(): Promise<UserContext> {
   const context = await getUserContext();

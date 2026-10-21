@@ -88,7 +88,6 @@ export type Database = {
       vehicle_expenses: GenericTable;
       vehicle_status_history: GenericTable;
       vehicle_photos: GenericTable;
-      vehicle_price_history: GenericTable;
       vehicle_pricing: GenericTable;
       vehicle_pricing_history: GenericTable;
       vehicle_makes: GenericTable;
@@ -96,36 +95,13 @@ export type Database = {
       vehicle_models: GenericTable;
       vehicle_model_years: GenericTable;
       vehicle_variants: GenericTable;
-      vehicle_catalog_mapping_unmatched: GenericTable;
       branch_locations: GenericTable;
       acquisitions: GenericTable;
-      inspections: GenericTable;
-      inspection_templates: GenericTable;
-      inspection_template_items: GenericTable;
-      inspection_sections: GenericTable;
-      inspection_items: GenericTable;
-      inspection_findings: GenericTable;
-      inspection_recommendations: GenericTable;
-      inspection_photos: GenericTable;
-      inspection_status_history: GenericTable;
-      workshop_orders: GenericTable;
-      workshop_items: GenericTable;
-      workshop_jobs: GenericTable;
-      workshop_job_parts: GenericTable;
-      workshop_job_labour: GenericTable;
-      workshop_expenses: GenericTable;
-      workshop_status_history: GenericTable;
-      workshop_photos: GenericTable;
-      workshop_quality_checks: GenericTable;
-      vendors: GenericTable;
       customers: GenericTable;
-      leads: GenericTable;
       acquisition_status_history: GenericTable;
       suppliers: GenericTable;
       reservations: GenericTable;
       sales: GenericTable;
-      payments: GenericTable;
-      invoices: GenericTable;
       documents: GenericTable;
       notifications: GenericTable;
       push_subscriptions: GenericTable;
@@ -307,90 +283,6 @@ export type Database = {
       };
       receive_acquisition: {
         Args: { p_acquisition_id: string; p_reason?: string | null };
-        Returns: Record<string, unknown>;
-      };
-      next_inspection_number: { Args: Record<PropertyKey, never>; Returns: string };
-      populate_inspection_checklist: {
-        Args: { p_inspection_id: string };
-        Returns: Record<string, unknown>;
-      };
-      read_inspection_costs: {
-        Args: { p_inspection_id: string };
-        Returns: {
-          finding_id: string | null;
-          finding_title: string | null;
-          finding_estimated_cost: number | null;
-          recommendation_id: string | null;
-          recommendation_estimated_cost: number | null;
-          currency: string | null;
-          findings_total: number | null;
-          recommendations_total: number | null;
-        }[];
-      };
-      change_inspection_status: {
-        Args: {
-          p_inspection_id: string;
-          p_new_status: string;
-          p_reason?: string | null;
-        };
-        Returns: Record<string, unknown>;
-      };
-      assign_inspection: {
-        Args: {
-          p_inspection_id: string;
-          p_assigned_to: string;
-          p_reason?: string | null;
-        };
-        Returns: Record<string, unknown>;
-      };
-      start_inspection: {
-        Args: { p_inspection_id: string };
-        Returns: Record<string, unknown>;
-      };
-      submit_inspection: {
-        Args: {
-          p_inspection_id: string;
-          p_overall_result?: string | null;
-          p_overall_score?: number | null;
-          p_summary?: string | null;
-          p_recommendation?: string | null;
-          p_notes?: string | null;
-          p_override_incomplete?: boolean;
-        };
-        Returns: Record<string, unknown>;
-      };
-      approve_inspection: {
-        Args: {
-          p_inspection_id: string;
-          p_note?: string | null;
-          p_override_critical?: boolean;
-        };
-        Returns: Record<string, unknown>;
-      };
-      update_approved_inspection_outcome: {
-        Args: {
-          p_inspection_id: string;
-          p_result: string;
-          p_note?: string | null;
-          p_override_critical?: boolean;
-          p_vehicle_status?: string | null;
-        };
-        Returns: Record<string, unknown>;
-      };
-      reject_inspection: {
-        Args: { p_inspection_id: string; p_reason: string };
-        Returns: Record<string, unknown>;
-      };
-      cancel_inspection: {
-        Args: { p_inspection_id: string; p_reason: string };
-        Returns: Record<string, unknown>;
-      };
-      request_reinspection: {
-        Args: {
-          p_inspection_id: string;
-          p_reason: string;
-          p_assigned_to?: string | null;
-        };
         Returns: Record<string, unknown>;
       };
       next_workshop_order_number: { Args: Record<PropertyKey, never>; Returns: string };

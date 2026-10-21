@@ -32,9 +32,12 @@ export function VehiclePhotoLightbox({
   const touchStartX = useRef<number | null>(null);
   const [safeIndex, setSafeIndex] = useState(index);
 
-  useEffect(() => {
+  // Follow the requested photo whenever the lightbox opens or the index changes.
+  const [synced, setSynced] = useState({ index, open });
+  if (synced.index !== index || synced.open !== open) {
+    setSynced({ index, open });
     if (open) setSafeIndex(index);
-  }, [index, open]);
+  }
 
   const total = photos.length;
   const current = photos[safeIndex] ?? null;
@@ -182,6 +185,7 @@ export function VehiclePhotoLightbox({
                         alt=""
                         className="size-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <span className="block size-full bg-white/10" />

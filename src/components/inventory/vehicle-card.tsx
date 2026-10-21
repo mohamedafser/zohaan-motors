@@ -76,6 +76,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleListItem }) {
               alt={vehicleTitle(vehicle)}
               className="size-full object-cover transition-transform duration-700 ease-(--ease-out-expo) group-hover/vehicle:scale-105"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <VehiclePhotoPlaceholder className="sm:pt-8" />

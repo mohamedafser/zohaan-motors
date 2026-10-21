@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { requireSupabaseEnv } from "@/lib/supabase/env";
 import type { AcquisitionDocumentCategory } from "@/types/acquisition-document";
 
@@ -23,6 +22,8 @@ export async function uploadAcquisitionDocumentFile(
   path: string,
   onProgress?: (percent: number) => void,
 ) {
+  // Loaded on first upload: keeps the Supabase client out of the page bundle.
+  const { createClient } = await import("@/lib/supabase/client");
   const supabase = createClient();
   const { url, key } = requireSupabaseEnv();
   const {

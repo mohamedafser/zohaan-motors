@@ -1,15 +1,19 @@
 "use client";
 
-import { ar, enUS } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useLocale } from "next-intl";
 
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { appConfig, isAppLocale } from "@/config/app";
 import { formatDate } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
+
+const DateFieldCalendar = dynamic(
+  () => import("@/components/forms/date-field-calendar").then((mod) => mod.DateFieldCalendar),
+  { ssr: false, loading: () => <div className="h-72 w-64" /> },
+);
 
 export function DateField({
   id,
@@ -50,12 +54,7 @@ export function DateField({
         {value ? formatDate(value, locale, "medium") : placeholder}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={value}
-          onSelect={onChange}
-          locale={locale === "ar" ? ar : enUS}
-        />
+        <DateFieldCalendar value={value} onChange={onChange} locale={locale} />
       </PopoverContent>
     </Popover>
   );

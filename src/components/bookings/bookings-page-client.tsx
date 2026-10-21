@@ -749,6 +749,7 @@ function BookingRow({
               src={vehicle.photoUrl}
               alt=""
               loading="lazy"
+              decoding="async"
               className="size-full object-cover transition-transform duration-500 group-hover/booking:scale-105"
             />
           ) : (

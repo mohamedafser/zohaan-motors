@@ -22,6 +22,11 @@ import { CUSTOM_VARIANT_VALUE, type MakeOption } from "@/types/vehicle";
 
 type FormInput = z.input<typeof vehicleFormSchema>;
 
+type CatalogRows<T extends (id: string | null) => { data?: unknown }> = NonNullable<ReturnType<T>["data"]>;
+const NO_MODELS: CatalogRows<typeof useCatalogModels> = [];
+const NO_YEARS: CatalogRows<typeof useCatalogYears> = [];
+const NO_VARIANTS: CatalogRows<typeof useCatalogVariants> = [];
+
 type Props = {
   control: Control<FormInput>;
   setValue: UseFormSetValue<FormInput>;
@@ -53,9 +58,10 @@ export function VehicleCatalogFields({
   const yearsQuery = useCatalogYears(modelId || null);
   const variantsQuery = useCatalogVariants(modelYearId || null);
 
-  const models = modelsQuery.data ?? [];
-  const years = yearsQuery.data ?? [];
-  const variants = variantsQuery.data ?? [];
+  // Stable fallbacks: a new [] each render would re-run the effects below while loading.
+  const models = modelsQuery.data ?? NO_MODELS;
+  const years = yearsQuery.data ?? NO_YEARS;
+  const variants = variantsQuery.data ?? NO_VARIANTS;
 
   const isCustomVariant = customMode || (Boolean(customVariant) && !variantId);
 

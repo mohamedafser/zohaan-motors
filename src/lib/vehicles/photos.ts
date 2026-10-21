@@ -405,15 +405,18 @@ export async function reorderVehiclePhotos(
   if (access.error) return { data: null, error: access.error };
 
   const supabase = await createClient();
-  for (let index = 0; index < values.orderedIds.length; index += 1) {
-    const id = values.orderedIds[index]!;
-    const { error } = await supabase
-      .from("vehicle_photos")
-      .update({ sort_order: index })
-      .eq("id", id)
-      .eq("vehicle_id", vehicleId);
-    if (error) return { data: null, error: mapDbError(error) };
-  }
+  // sort_order has no unique constraint, so the updates can run in parallel.
+  const results = await Promise.all(
+    values.orderedIds.map((id, index) =>
+      supabase
+        .from("vehicle_photos")
+        .update({ sort_order: index })
+        .eq("id", id)
+        .eq("vehicle_id", vehicleId),
+    ),
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) return { data: null, error: mapDbError(failed.error) };
 
   await writeAudit(supabase, "VEHICLE_IMAGE_REORDERED", vehicleId, null, {
     ordered_ids: values.orderedIds,

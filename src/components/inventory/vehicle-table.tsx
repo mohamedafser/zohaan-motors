@@ -50,6 +50,7 @@ export function VehicleTable({
                   alt=""
                   className="size-full object-cover"
                   loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <VehiclePhotoPlaceholder size="sm" />

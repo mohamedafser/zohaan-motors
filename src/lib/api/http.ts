@@ -22,12 +22,15 @@ export function jsonError(
   status: number,
   extras?: { fieldErrors?: Record<string, string>; details?: unknown },
 ) {
+  // Server errors carry raw database/driver text: log it, never send it to the browser.
+  const serverError = status >= 500;
+  if (serverError) console.error(`[api] ${error}: ${message}`, extras?.details ?? "");
   const body: ApiErrorBody = {
     status: "error",
     error,
-    message,
+    message: serverError ? "Something went wrong. Please try again." : message,
     ...(extras?.fieldErrors ? { fieldErrors: extras.fieldErrors } : {}),
-    ...(extras?.details !== undefined ? { details: extras.details } : {}),
+    ...(!serverError && extras?.details !== undefined ? { details: extras.details } : {}),
   };
   return NextResponse.json(body, { status });
 }
@@ -49,10 +52,7 @@ export async function requireApiUser(
     };
   }
 
-  if (
-    permission &&
-    !hasPermission(context.permissions, permission, context.roles)
-  ) {
+  if (permission && !hasPermission(context.permissions, permission, context.roles)) {
     return {
       response: jsonError("forbidden", "You do not have permission to perform this action.", 403),
     };

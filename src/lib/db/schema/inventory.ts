@@ -119,50 +119,6 @@ export const vehicleExpenses = pgTable(
   ],
 ).enableRLS();
 
-export const vehiclePriceHistory = pgTable(
-  "vehicle_price_history",
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    vehicleId: uuid("vehicle_id").notNull(),
-    oldPrice: numeric("old_price", { precision: 14, scale: 2 }),
-    newPrice: numeric("new_price", { precision: 14, scale: 2 }).notNull(),
-    reason: text(),
-    changedBy: uuid("changed_by"),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .default(sql`timezone('utc'::text, now())`)
-      .notNull(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    index("vehicle_price_history_vehicle_id_idx").using(
-      "btree",
-      table.vehicleId.asc().nullsLast().op("uuid_ops"),
-    ),
-    foreignKey({
-      columns: [table.changedBy],
-      foreignColumns: [profiles.id],
-      name: "vehicle_price_history_changed_by_fkey",
-    }).onDelete("set null"),
-    foreignKey({
-      columns: [table.vehicleId],
-      foreignColumns: [vehicles.id],
-      name: "vehicle_price_history_vehicle_id_fkey",
-    }).onDelete("cascade"),
-    pgPolicy("vehicle_price_history_select", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-      using: sql`(EXISTS ( SELECT 1
-   FROM vehicles v
-  WHERE ((v.id = vehicle_price_history.vehicle_id) AND (v.deleted_at IS NULL) AND has_permission_for_branch('vehicle.price.view'::text, v.branch_id))))`,
-    }),
-    check("vehicle_price_history_new_non_negative", sql`new_price >= (0)::numeric`),
-    check(
-      "vehicle_price_history_old_non_negative",
-      sql`(old_price IS NULL) OR (old_price >= (0)::numeric)`,
-    ),
-  ],
-).enableRLS();
-
 export const vehicleStatusHistory = pgTable(
   "vehicle_status_history",
   {

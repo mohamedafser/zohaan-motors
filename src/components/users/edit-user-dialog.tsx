@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -90,7 +90,10 @@ export function EditUserDialog({ user, open, onOpenChange, roles, onSuccess }: P
     if (submitted) validate(next);
   }
 
-  useEffect(() => {
+  // Reset the form whenever a different user is opened (during render, not in an effect).
+  const [loadedUser, setLoadedUser] = useState<typeof user | null>(null);
+  if (user !== loadedUser) {
+    setLoadedUser(user);
     if (user) {
       setEmail(user.email ?? "");
       setFirstName(user.firstName ?? "");
@@ -101,7 +104,7 @@ export function EditUserDialog({ user, open, onOpenChange, roles, onSuccess }: P
       setFormError(null);
       setSubmitted(false);
     }
-  }, [user]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
